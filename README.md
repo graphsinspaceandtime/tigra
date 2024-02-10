@@ -14,8 +14,18 @@ TODO:
 
 ## Set up Conda environment
 
+### Install Conda
+
+#### Ubuntu
+
 ```sh
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash
+```
+
+### Fedora
+
+```sh
+sudo dnf install conda
 ```
 
 ```sh
@@ -27,9 +37,9 @@ conda env create -f environment.yaml
 ```
 
 ```sh
-pip -u install -r requirements.txt
+conda activate tigra
 ```
 
 ```sh
-conda activate tigra
+pip install --user -r requirements.txt
 ```
