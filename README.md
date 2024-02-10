@@ -15,11 +15,19 @@ TODO:
 ## Set up Conda environment
 
 ```sh
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash
+```
+
+```sh
 conda init
 ```
 
 ```sh
 conda env create -f environment.yaml
+```
+
+```sh
+pip -u install -r requirements.txt
 ```
 
 ```sh
