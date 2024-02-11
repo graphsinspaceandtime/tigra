@@ -2,6 +2,9 @@ name: Test
 on:
   push:
 
+env:
+  CONDA_ENV: tigra
+
 jobs:
   lint:
     name: Lint
@@ -17,12 +20,32 @@ jobs:
     name: Type check
     runs-on: ubuntu-latest
     needs: lint
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
-        name: Conda
+        name: Setup mamba
         with:
-          activate-environment: tigra
-          environment-file: environment.yaml
+          miniforge-variant: Mambaforge
+          activate-environment: ${{ env.CONDA_ENV }}
+          use-mamba: true
+      - uses: actions/cache@v4
+        name: Cache / mamba
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/miniconda3/envs/${{ env.CONDA_ENV }}
+          key: ${{ runner.os }}-mamba-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yaml') }}
+        id: cache-mamba
+      - name: Update environment
+        run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yaml
+        if: steps.cache-mamba.outputs.cache-hit != 'true'
+      - uses: actions/cache@v4
+        name: Cache / pip
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
       - run: pip install -r requirements.txt
       - run: pyright
