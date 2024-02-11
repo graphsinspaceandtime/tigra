@@ -24,5 +24,7 @@ jobs:
         with:
           activate-environment: tigra
           environment-file: environment.yaml
-      - run: pip install -r requirements.txt
+      - run: |
+          conda activate tigra
+          pip install -r requirements.txt
       - run: pyright
