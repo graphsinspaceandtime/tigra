@@ -1,0 +1,20 @@
+{
+	"name": "Tigra Miniconda",
+	"build": {
+		"context": "..",
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"GitHub.vscode-github-actions",
+				"ms-python.black-formatter",
+				"ms-python.python",
+				"VisualStudioExptTeam.vscodeintellicode",
+				"donjayamanne.python-environment-manager",
+				"KevinRose.vsc-python-indent",
+				"LittleFoxTeam.vscode-python-test-adapter"
+			]
+		}
+	}
+}
