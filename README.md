@@ -63,6 +63,7 @@ handle. Windows and macOS should be straight forward if you follow the Conda
 
 ```sh
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash
+echo 'export PATH="$PATH:$HOME/miniconda3/condabin"' | tee -a $HOME/.bash_profile
 ```
 
 #### Fedora
