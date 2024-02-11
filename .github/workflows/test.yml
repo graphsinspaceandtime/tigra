@@ -20,9 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v3
+        env:
+          CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ hashFiles('environment.yaml') }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yaml') }}
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -32,6 +34,7 @@ jobs:
         with:
           activate-environment: tigra
           environment-file: environment.yaml
+          use-only-tar-bz2: true
       - shell: bash -el {0}
         run: pip install -r requirements.txt
       - shell: bash -el {0}
