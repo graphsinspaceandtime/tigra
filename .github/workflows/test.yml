@@ -25,5 +25,6 @@ jobs:
           activate-environment: tigra
           environment-file: environment.yaml
           auto-activate-base: false
+      - run: pip install -r requirements.txt
       - uses: jakebailey/pyright-action@v2
         name: Pyright
