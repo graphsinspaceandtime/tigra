@@ -12,6 +12,45 @@ TODO:
 - tutorijali
 - etc.
 
+## Pulling the datasets (Git LFS)
+
+Since datasets can consume a lot of space, we store them on Git LFS (Large File
+Storage). It reduces the repository size and makes it easier to track code. It
+does however require some extra steps when cloning the repository.
+
+### Install Git LFS
+
+#### Ubuntu
+
+```sh
+sudo apt install git-lfs
+```
+
+#### Fedora
+
+```sh
+sudo dnf install git-lfs
+```
+
+#### Windows and macOS
+
+Download from https://git-lfs.com/.
+
+### Use Git LFS
+
+After cloning, you'll need to pull all the LFS assets (datasets).
+
+```sh
+git lfs pull
+```
+
+Each other time you pull new commits from upstream, you'll also need to pull the
+LFS assets (if there are any changes to them).
+
+The whole `data/` directory is tracked so there is no need to make any changes
+to LFS configuration. Just adding files to the directory and commiting them will
+commit them to the LFS.
+
 ## Set up Conda environment
 
 ### Install Conda
