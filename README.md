@@ -26,13 +26,13 @@ handle. Windows and macOS should be straight forward if you follow the Conda
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash
 ```
 
-### Fedora
+#### Fedora
 
 ```sh
 sudo dnf install conda
 ```
 
-# Configure Conda environment
+### Configure Conda environment
 
 Initialize Conda for shell interaction. This is requred before doing any of the
 following steps. It is recommended to restart the shell session (terminal
