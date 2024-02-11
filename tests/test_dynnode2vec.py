@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("..")
 sys.dont_write_bytecode = True
 
@@ -20,4 +21,3 @@ dn2v.make_embedding(dg)
 for emb in dn2v.embeddings:
     print("\n")
     print(emb)
-

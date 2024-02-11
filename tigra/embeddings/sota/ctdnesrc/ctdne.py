@@ -7,18 +7,31 @@ from .parallel import parallel_generate_walks
 
 
 class CTDNE:
-    FIRST_TRAVEL_KEY = 'first_travel_key'
-    PROBABILITIES_KEY = 'probabilities'
-    NEIGHBORS_KEY = 'neighbors'
-    NEIGHBORS_TIME_KEY = 'neighbors_time'
-    WEIGHT_KEY = 'weight'
-    NUM_WALKS_KEY = 'num_walks'
-    WALK_LENGTH_KEY = 'walk_length'
-    P_KEY = 'p'
-    Q_KEY = 'q'
+    FIRST_TRAVEL_KEY = "first_travel_key"
+    PROBABILITIES_KEY = "probabilities"
+    NEIGHBORS_KEY = "neighbors"
+    NEIGHBORS_TIME_KEY = "neighbors_time"
+    WEIGHT_KEY = "weight"
+    NUM_WALKS_KEY = "num_walks"
+    WALK_LENGTH_KEY = "walk_length"
+    P_KEY = "p"
+    Q_KEY = "q"
 
-    def __init__(self, graph, dimensions=128, walk_length=80, num_walks=10, p=1, q=1, weight_key='weight',
-                 workers=1, sampling_strategy=None, quiet=False, use_linear=True, half_life=1):
+    def __init__(
+        self,
+        graph,
+        dimensions=128,
+        walk_length=80,
+        num_walks=10,
+        p=1,
+        q=1,
+        weight_key="weight",
+        workers=1,
+        sampling_strategy=None,
+        quiet=False,
+        use_linear=True,
+        half_life=1,
+    ):
         """
         Initiates the Node2Vec object, precomputes walking probabilities and generates the walks.
         :param graph: Input graph
@@ -40,7 +53,8 @@ class CTDNE:
         :param sampling_strategy: Node specific sampling strategies, supports setting node specific 'q', 'p', 'num_walks' and 'walk_length'.
         Use these keys exactly. If not set, will use the global ones which were passed on the object initialization
         :param use_linear: Regarding the time decay types: 'linear' and 'exp', if this param is True then use linear or else exp
-        :param half_life: Only relevant if use_linear==False, and then the value is used to rescale the timeline"""
+        :param half_life: Only relevant if use_linear==False, and then the value is used to rescale the timeline
+        """
         self.graph = graph
         self.dimensions = dimensions
         self.walk_length = walk_length
@@ -68,17 +82,18 @@ class CTDNE:
         d_graph = defaultdict(dict)
         first_travel_done = set()
 
-        nodes_generator = self.graph.nodes() if self.quiet \
-            else tqdm(self.graph.nodes(), desc='Computing transition probabilities')
+        nodes_generator = (
+            self.graph.nodes()
+            if self.quiet
+            else tqdm(self.graph.nodes(), desc="Computing transition probabilities")
+        )
 
         for source in nodes_generator:
-
             # Init probabilities dict for first travel
             if self.PROBABILITIES_KEY not in d_graph[source]:
                 d_graph[source][self.PROBABILITIES_KEY] = dict()
 
             for current_node in self.graph.neighbors(source):
-
                 # Init probabilities dict
                 if self.PROBABILITIES_KEY not in d_graph[current_node]:
                     d_graph[current_node][self.PROBABILITIES_KEY] = dict()
@@ -89,33 +104,61 @@ class CTDNE:
 
                 # Calculate unnormalized weights
                 for destination in self.graph.neighbors(current_node):
-
-                    p = self.sampling_strategy[current_node].get(self.P_KEY,
-                                                                 self.p) if current_node in self.sampling_strategy else self.p
-                    q = self.sampling_strategy[current_node].get(self.Q_KEY,
-                                                                 self.q) if current_node in self.sampling_strategy else self.q
+                    p = (
+                        self.sampling_strategy[current_node].get(self.P_KEY, self.p)
+                        if current_node in self.sampling_strategy
+                        else self.p
+                    )
+                    q = (
+                        self.sampling_strategy[current_node].get(self.Q_KEY, self.q)
+                        if current_node in self.sampling_strategy
+                        else self.q
+                    )
 
                     if destination == source:  # Backwards probability
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1) * 1 / p
-                    elif destination in self.graph[source]:  # If the neighbor is connected to the source
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1)
+                        ss_weight = (
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                            * 1
+                            / p
+                        )
+                    elif (
+                        destination in self.graph[source]
+                    ):  # If the neighbor is connected to the source
+                        ss_weight = self.graph[current_node][destination].get(
+                            self.weight_key, 1
+                        )
                     else:
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1) * 1 / q
+                        ss_weight = (
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                            * 1
+                            / q
+                        )
 
                     # Assign the unnormalized sampling strategy weight, normalize during random walk
                     unnormalized_weights.append(ss_weight)
                     if current_node not in first_travel_done:
-                        first_travel_weights.append(self.graph[current_node][destination].get(self.weight_key, 1))
+                        first_travel_weights.append(
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                        )
                     d_neighbors.append(destination)
 
                 # Normalize
                 unnormalized_weights = np.array(unnormalized_weights)
-                d_graph[current_node][self.PROBABILITIES_KEY][
-                    source] = unnormalized_weights / unnormalized_weights.sum()
+                d_graph[current_node][self.PROBABILITIES_KEY][source] = (
+                    unnormalized_weights / unnormalized_weights.sum()
+                )
 
                 if current_node not in first_travel_done:
                     unnormalized_weights = np.array(first_travel_weights)
-                    d_graph[current_node][self.FIRST_TRAVEL_KEY] = unnormalized_weights / unnormalized_weights.sum()
+                    d_graph[current_node][self.FIRST_TRAVEL_KEY] = (
+                        unnormalized_weights / unnormalized_weights.sum()
+                    )
                     first_travel_done.add(current_node)
 
                 # Save neighbors
@@ -125,13 +168,15 @@ class CTDNE:
                 neighbor2times = {}
                 for neighbor in d_neighbors:
                     neighbor2times[neighbor] = []
-                    if 'time' in self.graph[current_node][neighbor]:
-                        neighbor2times[neighbor].append(self.graph[current_node][neighbor]['time'])
+                    if "time" in self.graph[current_node][neighbor]:
+                        neighbor2times[neighbor].append(
+                            self.graph[current_node][neighbor]["time"]
+                        )
                     else:
                         for att in list(self.graph[current_node][neighbor].values()):
-                            if 'time' not in att:
-                                raise ('no time attribute')
-                            neighbor2times[neighbor].append(att['time'])
+                            if "time" not in att:
+                                raise ("no time attribute")
+                            neighbor2times[neighbor].append(att["time"])
                 d_graph[current_node][self.NEIGHBORS_TIME_KEY] = neighbor2times
 
         return d_graph
@@ -146,22 +191,25 @@ class CTDNE:
 
         # Split num_walks for each worker
         num_walks_lists = np.array_split(range(self.num_walks), self.workers)
-        walk_results = Parallel(n_jobs=self.workers)(delayed(parallel_generate_walks)(self.d_graph,
-                                                                                      self.walk_length,
-                                                                                      len(num_walks),
-                                                                                      idx,
-                                                                                      self.sampling_strategy,
-                                                                                      self.NUM_WALKS_KEY,
-                                                                                      self.WALK_LENGTH_KEY,
-                                                                                      self.NEIGHBORS_KEY,
-                                                                                      self.NEIGHBORS_TIME_KEY,
-                                                                                      self.PROBABILITIES_KEY,
-                                                                                      self.FIRST_TRAVEL_KEY,
-                                                                                      self.quiet,
-                                                                                      self.use_linear,
-                                                                                      self.half_life) for
-                                                     idx, num_walks
-                                                     in enumerate(num_walks_lists, 1))
+        walk_results = Parallel(n_jobs=self.workers)(
+            delayed(parallel_generate_walks)(
+                self.d_graph,
+                self.walk_length,
+                len(num_walks),
+                idx,
+                self.sampling_strategy,
+                self.NUM_WALKS_KEY,
+                self.WALK_LENGTH_KEY,
+                self.NEIGHBORS_KEY,
+                self.NEIGHBORS_TIME_KEY,
+                self.PROBABILITIES_KEY,
+                self.FIRST_TRAVEL_KEY,
+                self.quiet,
+                self.use_linear,
+                self.half_life,
+            )
+            for idx, num_walks in enumerate(num_walks_lists, 1)
+        )
 
         walks = flatten(walk_results)
 
@@ -175,10 +223,10 @@ class CTDNE:
         :return: A gensim word2vec model
         """
 
-        if 'workers' not in skip_gram_params:
-            skip_gram_params['workers'] = self.workers
+        if "workers" not in skip_gram_params:
+            skip_gram_params["workers"] = self.workers
 
-        if 'size' not in skip_gram_params:
-            skip_gram_params['vector_size'] = self.dimensions
+        if "size" not in skip_gram_params:
+            skip_gram_params["vector_size"] = self.dimensions
 
         return gensim.models.Word2Vec(self.walks, **skip_gram_params)

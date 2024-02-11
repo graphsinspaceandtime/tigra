@@ -8,9 +8,10 @@ Module defining core classes for dynamic/temporal graphs
 
 import networkx as nx
 
+
 class Graph:
     """
-    Model class for TIGRA static graphs based on networkx 
+    Model class for TIGRA static graphs based on networkx
     """
 
     def __init__(self, name, directed=True, nx_graph=None):
@@ -28,17 +29,15 @@ class Graph:
         else:
             self.G = nx.DiGraph() if directed else nx.Graph()
 
-    
     def is_directed(self):
         """
         Returns boolean flag indicating wheather the graph is directed (if false then the graph is undirected)
         """
-        return isinstance(self.G, nx.DiGraph) 
-
+        return isinstance(self.G, nx.DiGraph)
 
     def add_node(self, node_id, node_label=None, node_data=None):
         """
-        Adds a new node to the graph, users can provide node label and a data object attached to the node 
+        Adds a new node to the graph, users can provide node label and a data object attached to the node
         """
         if node_label != None and node_data != None:
             self.G.add_node(node_id, node_label=node_label, node_data=node_data)
@@ -49,20 +48,17 @@ class Graph:
         else:
             self.G.add_node(node_id)
 
-
     def update_node_label(self, node_id, node_label):
         """
         Updates the label of the node, use this method if nodes are created via calling add_edge
         """
         self.G.nodes[node_id]["node_label"] = node_label
 
-
     def update_node_data(self, node_id, node_vector):
         """
         Updates node data, use this method if nodes are created via calling add_edge
         """
         self.G.nodes[node_id]["node_data"] = node_vector
-
 
     def add_edge(self, src, dst, weight=None, edge_data=None):
         """
@@ -77,7 +73,6 @@ class Graph:
         else:
             self.G.add_edge(src, dst)
 
-
     def print_graph(self):
         """
         Prints all nodes and edges in the graph
@@ -89,12 +84,12 @@ class Graph:
             if "node_label" in self.G.nodes[n]:
                 label = self.G.nodes[n]["node_label"]
 
-            data = ""    
+            data = ""
             if "node_data" in self.G.nodes[n]:
                 data = self.G.nodes[n]["node_data"]
-            
+
             print(n, label, data)
-        
+
         print("#edges", len(self.G.edges()))
         for e in self.G.edges():
             src, dst = e
@@ -109,48 +104,41 @@ class Graph:
 
             print(src, dst, weight, data)
 
-
     def remove_selfloop_edges(self):
         """
         Removes selfloop edges from the graph.
         """
         self.G.remove_edges_from(nx.selfloop_edges(self.G))
 
-    
     def to_undirected(self):
         """
         This method returns the undirected version of the graph.
         """
         return Graph(self.name + "-undirected", self.G.to_undirected())
-    
 
     def is_empty(self):
         """
         Returns true for graphs without nodes
         """
         return self.G == None or len(self.G.nodes()) == 0
-    
 
     def num_nodes(self):
         """
         Returns the number of nodes
         """
         return len(self.G.nodes())
-    
 
     def num_edges(self):
         """
         Returns the number of links
         """
         return len(self.G.edges())
-    
 
     def has_edge(self, src, dst):
         """
         Checks whether the graph contains edge src --> dst
         """
         return self.G.has_edge(src, dst)
-        
 
 
 class Event:
@@ -178,20 +166,17 @@ class Event:
         self.weight = weight
         self.event_data = event_data
 
-    
     def __lt__(self, other):
         """
         < for timestamps
         """
         return self.timestamp < other.timestamp
 
-    
     def __le__(self, other):
         """
         <= for timestamps
         """
         return self.timestamp <= other.timestamp
-
 
     def __str__(self):
         s = str(self.src) + "--" + str(self.dst) + ", t = " + str(self.timestamp)
@@ -199,17 +184,16 @@ class Event:
             s += ", w = " + str(self.weight)
         if self.event_data != None:
             s += ", data = " + str(self.event_data)
-        
-        return s
 
+        return s
 
 
 class EventSequence:
     """
     Base class for all event sequences
     """
-    
-    def __init__(self, list_of_events:[Event]=None):
+
+    def __init__(self, list_of_events: [Event] = None):
         """
         Parameters
         list_of_events
@@ -222,12 +206,11 @@ class EventSequence:
             self.events = list_of_events
             self.events.sort()
 
-    
     def add_event(self, event: Event):
         """
         Adds a new event to the sequence while perserving sorting order by timestemp
         This method should be avoided since it is extremely time inefficient,
-        (EventSequence should be instantiated with a list of events) 
+        (EventSequence should be instantiated with a list of events)
         """
         num_events = len(self.events)
         if num_events == 0 or self.events[num_events - 1] < event:
@@ -242,15 +225,13 @@ class EventSequence:
 
             self.events.insert(pos, event)
 
-
     def print_events(self):
         """
         Prints events in the sequence
-        """    
+        """
         print("Timespan", self.get_timespan())
         for e in self.events:
             print(e)
-
 
     def num_events(self):
         """
@@ -258,34 +239,29 @@ class EventSequence:
         """
         return len(self.events)
 
-
     def get_events(self):
         """
         Returns the list of events
         """
         return self.events
-    
 
     def get_timespan(self):
         """
         Returns the timespan of the sequence
         """
         return self.events[-1].timestamp - self.events[0].timestamp
-    
 
     def get_timespan_in_days(self):
         """
         Returns the timespan of the sequence in days
         """
-        return self.get_timespan() / (24 * 60 * 60) 
-    
+        return self.get_timespan() / (24 * 60 * 60)
 
     def is_empty(self):
         """
         Returns true if the sequence is empty
         """
         return len(self.events) == 0
-    
 
     def __getitem__(self, index):
         """
@@ -293,7 +269,6 @@ class EventSequence:
         """
         return self.events[index]
 
-    
 
 class DynamicGraph:
     """
@@ -307,7 +282,8 @@ class DynamicGraph:
         a sequence of graphs for initialization
         if None an empty sequence is created
     """
-    def __init__(self, list_of_graphs:[Graph]=None):
+
+    def __init__(self, list_of_graphs: [Graph] = None):
         if list_of_graphs == None:
             self.graphs = []
             self.timespan_in_days = None
@@ -319,8 +295,13 @@ class DynamicGraph:
                     self.directed = True
                     break
 
-        
-    def init_from_event_sequence(self, event_sequence: EventSequence, time_resolution: str, directed=True, cumulative=False):
+    def init_from_event_sequence(
+        self,
+        event_sequence: EventSequence,
+        time_resolution: str,
+        directed=True,
+        cumulative=False,
+    ):
         """
         Creates a dynamic graph from the given sequence of events
         time_resolution can be: day, week, month, 3-months, 6-months or year
@@ -329,7 +310,7 @@ class DynamicGraph:
         if cumulative is set to True then snapshosts are cumulative (the next snapshots starts with the previous graph)
         """
         # time resoultion for one day
-        tr = 24 * 60 * 60       
+        tr = 24 * 60 * 60
         if time_resolution == "day":
             pass
         elif time_resolution == "week":
@@ -337,11 +318,11 @@ class DynamicGraph:
         elif time_resolution == "month":
             tr *= 31
         elif time_resolution == "3-months":
-            tr *= (31 * 3)
+            tr *= 31 * 3
         elif time_resolution == "6-months":
-            tr *= (31 * 6)
+            tr *= 31 * 6
         else:
-            tr *= (31 * 12)
+            tr *= 31 * 12
 
         if event_sequence.is_empty():
             return
@@ -351,7 +332,12 @@ class DynamicGraph:
         id = 0
         g = Graph("t-" + str(id), directed=directed)
         start_time = event_sequence[0].timestamp
-        g.add_edge(event_sequence[0].src, event_sequence[0].dst, event_sequence[0].weight, event_sequence[0].event_data)
+        g.add_edge(
+            event_sequence[0].src,
+            event_sequence[0].dst,
+            event_sequence[0].weight,
+            event_sequence[0].event_data,
+        )
 
         i = 1
         while i < event_sequence.num_events():
@@ -365,17 +351,21 @@ class DynamicGraph:
                     g = Graph(sid, nx_graph=nx_copy, directed=directed)
                 else:
                     g = Graph(sid, directed=directed)
-                
+
                 start_time = curr_time
-            
-            g.add_edge(event_sequence[i].src, event_sequence[i].dst, event_sequence[i].weight, event_sequence[i].event_data)
+
+            g.add_edge(
+                event_sequence[i].src,
+                event_sequence[i].dst,
+                event_sequence[i].weight,
+                event_sequence[i].event_data,
+            )
             i += 1
-            
+
         if not g.is_empty():
             self.graphs.append(g)
 
         self.timespan_in_days = event_sequence.get_timespan_in_days()
-
 
     def info(self):
         """
@@ -387,37 +377,42 @@ class DynamicGraph:
         s = ""
         for g in self.graphs:
             g_type = "D" if g.is_directed() else "U"
-            s += "[" + g.name + "-" + str(g.num_nodes()) + "-" + str(g.num_edges()) + "-" + g_type + "]"
+            s += (
+                "["
+                + g.name
+                + "-"
+                + str(g.num_nodes())
+                + "-"
+                + str(g.num_edges())
+                + "-"
+                + g_type
+                + "]"
+            )
         print(s)
-
 
     def get_graph_sequence(self):
         return self.graphs
-    
 
     def is_directed(self):
         return self.directed
 
-    
     def get_nx_graph_sequence(self):
         return [g.G for g in self.graphs]
-    
-    
+
     def get_nx_undirected_graph_sequence(self):
         return [g.G.to_undirected() for g in self.graphs]
-
 
 
 class DynamicAggregateGraph:
     """
     Aggregate representation of temporal/dynamic graphs
     """
+
     def __init__(self, name, event_sequence: EventSequence, directed=True):
         self.event_sequence = event_sequence
         self.agg_graph = Graph(name + "-agg", directed=directed)
         self.form()
 
-    
     def form(self):
         for event in self.event_sequence:
             src, dst = event.src, event.dst
@@ -427,10 +422,8 @@ class DynamicAggregateGraph:
                 edge_data = (event.timestamp, event_data)
                 self.agg_graph.add_edge(src, dst, weight=weight, edge_data=edge_data)
 
-
     def get_aggregate_graph(self):
         return self.agg_graph
-
 
 
 """

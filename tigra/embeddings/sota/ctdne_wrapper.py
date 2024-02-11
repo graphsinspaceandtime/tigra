@@ -12,8 +12,9 @@ from ..embedding import Embedding, SingletonEmbedding
 from ...core.dgraph import DynamicAggregateGraph
 from tigra.embeddings.sota.ctdnesrc.ctdne import CTDNE
 
+
 class Ctdne(Embedding):
-    def __init__(self, dim, p=1., q=1., walk_length=10, num_walks=10, workers=4):
+    def __init__(self, dim, p=1.0, q=1.0, walk_length=10, num_walks=10, workers=4):
         super().__init__(dim)
         self.p = p
         self.q = q
@@ -21,13 +22,14 @@ class Ctdne(Embedding):
         self.num_walks = num_walks
         self.workers = workers
 
-
     def construct(self, data) -> [SingletonEmbedding]:
         if not isinstance(data, DynamicAggregateGraph):
             raise Exception(
-                "{} works with DynamicAggregateGraph objects.".format(type(self).__name__)
+                "{} works with DynamicAggregateGraph objects.".format(
+                    type(self).__name__
+                )
             )
-        
+
         graph = data.get_aggregate_graph().G
         if not isinstance(graph, nx.Graph):
             raise Exception(
@@ -38,10 +40,13 @@ class Ctdne(Embedding):
         for e in graph.edges():
             edge2time[e] = graph.edges[e]["edge_data"][0]
 
-        nx.set_edge_attributes(graph, edge2time, 'time')
-        CTDNE_model = CTDNE(graph, dimensions=self.dim, 
-            walk_length=self.walk_length, num_walks=self.num_walks, 
-            workers=self.workers
+        nx.set_edge_attributes(graph, edge2time, "time")
+        CTDNE_model = CTDNE(
+            graph,
+            dimensions=self.dim,
+            walk_length=self.walk_length,
+            num_walks=self.num_walks,
+            workers=self.workers,
         )
 
         model = CTDNE_model.fit(window=10, min_count=1, batch_words=4)
@@ -54,6 +59,3 @@ class Ctdne(Embedding):
             singleton.add_embedding_vector(node, vector)
 
         return [singleton]
-        
-
-        

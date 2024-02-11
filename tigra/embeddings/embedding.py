@@ -8,11 +8,12 @@ Main base class for dynamic/temporal graph embeddings
 
 from abc import ABC, abstractmethod
 
+
 class SingletonEmbedding:
     """
     Embedding of one snapshot or an aggregate dynamic graph representation
     """
-    
+
     def __init__(self):
         self.embedding = dict()
 
@@ -27,7 +28,6 @@ class SingletonEmbedding:
         return s
 
 
-
 class Embedding(ABC):
     """
     Base class for dynamic/temporal graph embeddings
@@ -37,21 +37,17 @@ class Embedding(ABC):
         self.embeddings = []
         self.dim = dim
 
-
     def num_embeddings(self):
         return len(self.embeddings)
 
-
     def is_singleton_embedding(self):
         return len(self.embeddings) == 1
-
 
     def __getitem__(self, index):
         """
         Returns the embedding at given index
         """
         return self._embedding[index]
-    
 
     @abstractmethod
     def construct(self, data) -> [SingletonEmbedding]:
@@ -60,7 +56,5 @@ class Embedding(ABC):
         """
         pass
 
-
     def make_embedding(self, data):
         self.embeddings = self.construct(data)
-    

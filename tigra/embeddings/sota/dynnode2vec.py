@@ -11,15 +11,23 @@ from ...core.dgraph import DynamicGraph
 
 from dynnode2vec.dynnode2vec import DynNode2Vec
 
+
 class Dynnode2vec(Embedding):
-    def __init__(self, dim, p=1., q=1., walk_length=10, n_walks_per_node=10, parallel_processes=4):
+    def __init__(
+        self,
+        dim,
+        p=1.0,
+        q=1.0,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
         super().__init__(dim)
         self.p = p
         self.q = q
         self.walk_length = walk_length
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
-
 
     def construct(self, data) -> [SingletonEmbedding]:
         if not isinstance(data, DynamicGraph):
@@ -32,11 +40,15 @@ class Dynnode2vec(Embedding):
                 "{} works with undirected graphs.".format(type(self).__name__)
             )
 
-        dynnode2vec = DynNode2Vec(p=self.p, q=self.q, 
-            walk_length=self.walk_length, n_walks_per_node=self.n_walks_per_node, 
-            embedding_size=self.dim, parallel_processes=self.parallel_processes
+        dynnode2vec = DynNode2Vec(
+            p=self.p,
+            q=self.q,
+            walk_length=self.walk_length,
+            n_walks_per_node=self.n_walks_per_node,
+            embedding_size=self.dim,
+            parallel_processes=self.parallel_processes,
         )
-    
+
         graph_sequence = data.get_nx_graph_sequence()
         embs = dynnode2vec.compute_embeddings(graph_sequence)
 
@@ -55,4 +67,3 @@ class Dynnode2vec(Embedding):
             embeddings.append(singleton)
 
         return embeddings
-

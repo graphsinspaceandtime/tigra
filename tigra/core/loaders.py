@@ -10,6 +10,7 @@ import re
 
 from .dgraph import EventSequence, Event
 
+
 def load_netrep_dataset(path):
     events = []
 
@@ -18,7 +19,7 @@ def load_netrep_dataset(path):
             line = line.strip()
             if line.startswith("%"):
                 continue
-            toks = re.split('\s+', line)
+            toks = re.split("\s+", line)
             for i in range(len(toks)):
                 toks[i] = toks[i].strip()
 
@@ -32,8 +33,6 @@ def load_netrep_dataset(path):
     events_sequence = EventSequence(list_of_events=events)
 
     return events_sequence
-
-
 
 
 """

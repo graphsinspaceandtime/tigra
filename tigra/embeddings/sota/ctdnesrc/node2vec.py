@@ -7,17 +7,28 @@ from .parallel import parallel_generate_walks
 
 
 class Node2Vec:
-    FIRST_TRAVEL_KEY = 'first_travel_key'
-    PROBABILITIES_KEY = 'probabilities'
-    NEIGHBORS_KEY = 'neighbors'
-    WEIGHT_KEY = 'weight'
-    NUM_WALKS_KEY = 'num_walks'
-    WALK_LENGTH_KEY = 'walk_length'
-    P_KEY = 'p'
-    Q_KEY = 'q'
+    FIRST_TRAVEL_KEY = "first_travel_key"
+    PROBABILITIES_KEY = "probabilities"
+    NEIGHBORS_KEY = "neighbors"
+    WEIGHT_KEY = "weight"
+    NUM_WALKS_KEY = "num_walks"
+    WALK_LENGTH_KEY = "walk_length"
+    P_KEY = "p"
+    Q_KEY = "q"
 
-    def __init__(self, graph, dimensions=128, walk_length=80, num_walks=10, p=1, q=1, weight_key='weight',
-                 workers=1, sampling_strategy=None, quiet=False):
+    def __init__(
+        self,
+        graph,
+        dimensions=128,
+        walk_length=80,
+        num_walks=10,
+        p=1,
+        q=1,
+        weight_key="weight",
+        workers=1,
+        sampling_strategy=None,
+        quiet=False,
+    ):
         """
         Initiates the Node2Vec object, precomputes walking probabilities and generates the walks.
         :param graph: Input graph
@@ -64,17 +75,18 @@ class Node2Vec:
         d_graph = defaultdict(dict)
         first_travel_done = set()
 
-        nodes_generator = self.graph.nodes() if self.quiet \
-            else tqdm(self.graph.nodes(), desc='Computing transition probabilities')
+        nodes_generator = (
+            self.graph.nodes()
+            if self.quiet
+            else tqdm(self.graph.nodes(), desc="Computing transition probabilities")
+        )
 
         for source in nodes_generator:
-
             # Init probabilities dict for first travel
             if self.PROBABILITIES_KEY not in d_graph[source]:
                 d_graph[source][self.PROBABILITIES_KEY] = dict()
 
             for current_node in self.graph.neighbors(source):
-
                 # Init probabilities dict
                 if self.PROBABILITIES_KEY not in d_graph[current_node]:
                     d_graph[current_node][self.PROBABILITIES_KEY] = dict()
@@ -85,33 +97,61 @@ class Node2Vec:
 
                 # Calculate unnormalized weights
                 for destination in self.graph.neighbors(current_node):
-
-                    p = self.sampling_strategy[current_node].get(self.P_KEY,
-                                                                 self.p) if current_node in self.sampling_strategy else self.p
-                    q = self.sampling_strategy[current_node].get(self.Q_KEY,
-                                                                 self.q) if current_node in self.sampling_strategy else self.q
+                    p = (
+                        self.sampling_strategy[current_node].get(self.P_KEY, self.p)
+                        if current_node in self.sampling_strategy
+                        else self.p
+                    )
+                    q = (
+                        self.sampling_strategy[current_node].get(self.Q_KEY, self.q)
+                        if current_node in self.sampling_strategy
+                        else self.q
+                    )
 
                     if destination == source:  # Backwards probability
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1) * 1 / p
-                    elif destination in self.graph[source]:  # If the neighbor is connected to the source
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1)
+                        ss_weight = (
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                            * 1
+                            / p
+                        )
+                    elif (
+                        destination in self.graph[source]
+                    ):  # If the neighbor is connected to the source
+                        ss_weight = self.graph[current_node][destination].get(
+                            self.weight_key, 1
+                        )
                     else:
-                        ss_weight = self.graph[current_node][destination].get(self.weight_key, 1) * 1 / q
+                        ss_weight = (
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                            * 1
+                            / q
+                        )
 
                     # Assign the unnormalized sampling strategy weight, normalize during random walk
                     unnormalized_weights.append(ss_weight)
                     if current_node not in first_travel_done:
-                        first_travel_weights.append(self.graph[current_node][destination].get(self.weight_key, 1))
+                        first_travel_weights.append(
+                            self.graph[current_node][destination].get(
+                                self.weight_key, 1
+                            )
+                        )
                     d_neighbors.append(destination)
 
                 # Normalize
                 unnormalized_weights = np.array(unnormalized_weights)
-                d_graph[current_node][self.PROBABILITIES_KEY][
-                    source] = unnormalized_weights / unnormalized_weights.sum()
+                d_graph[current_node][self.PROBABILITIES_KEY][source] = (
+                    unnormalized_weights / unnormalized_weights.sum()
+                )
 
                 if current_node not in first_travel_done:
                     unnormalized_weights = np.array(first_travel_weights)
-                    d_graph[current_node][self.FIRST_TRAVEL_KEY] = unnormalized_weights / unnormalized_weights.sum()
+                    d_graph[current_node][self.FIRST_TRAVEL_KEY] = (
+                        unnormalized_weights / unnormalized_weights.sum()
+                    )
                     first_travel_done.add(current_node)
 
                 # Save neighbors
@@ -130,19 +170,22 @@ class Node2Vec:
         # Split num_walks for each worker
         num_walks_lists = np.array_split(range(self.num_walks), self.workers)
 
-        walk_results = Parallel(n_jobs=self.workers)(delayed(parallel_generate_walks)(self.d_graph,
-                                                                                      self.walk_length,
-                                                                                      len(num_walks),
-                                                                                      idx,
-                                                                                      self.sampling_strategy,
-                                                                                      self.NUM_WALKS_KEY,
-                                                                                      self.WALK_LENGTH_KEY,
-                                                                                      self.NEIGHBORS_KEY,
-                                                                                      self.PROBABILITIES_KEY,
-                                                                                      self.FIRST_TRAVEL_KEY,
-                                                                                      self.quiet) for
-                                                     idx, num_walks
-                                                     in enumerate(num_walks_lists, 1))
+        walk_results = Parallel(n_jobs=self.workers)(
+            delayed(parallel_generate_walks)(
+                self.d_graph,
+                self.walk_length,
+                len(num_walks),
+                idx,
+                self.sampling_strategy,
+                self.NUM_WALKS_KEY,
+                self.WALK_LENGTH_KEY,
+                self.NEIGHBORS_KEY,
+                self.PROBABILITIES_KEY,
+                self.FIRST_TRAVEL_KEY,
+                self.quiet,
+            )
+            for idx, num_walks in enumerate(num_walks_lists, 1)
+        )
 
         walks = flatten(walk_results)
 
@@ -156,10 +199,10 @@ class Node2Vec:
         :return: A gensim word2vec model
         """
 
-        if 'workers' not in skip_gram_params:
-            skip_gram_params['workers'] = self.workers
+        if "workers" not in skip_gram_params:
+            skip_gram_params["workers"] = self.workers
 
-        if 'size' not in skip_gram_params:
-            skip_gram_params['size'] = self.dimensions
+        if "size" not in skip_gram_params:
+            skip_gram_params["size"] = self.dimensions
 
         return gensim.models.Word2Vec(self.walks, **skip_gram_params)

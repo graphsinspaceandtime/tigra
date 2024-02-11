@@ -12,4 +12,4 @@ jobs:
         name: Black formatter
         with:
           options: --check --verbose
-          src: ./tigra
+          src: tigra tests

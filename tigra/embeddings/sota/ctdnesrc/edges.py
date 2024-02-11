@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 
 class EdgeEmbedder(ABC):
-
     def __init__(self, keyed_vectors, quiet=False):
         """
         :param keyed_vectors: KeyedVectors containing nodes and embeddings to calculate edges for
@@ -30,13 +29,17 @@ class EdgeEmbedder(ABC):
 
     def __getitem__(self, edge):
         if not isinstance(edge, tuple) or not len(edge) == 2:
-            raise ValueError('edge must be a tuple of two nodes')
+            raise ValueError("edge must be a tuple of two nodes")
 
         if edge[0] not in self.kv.index2word:
-            raise KeyError('node {} does not exist in given KeyedVectors'.format(edge[0]))
+            raise KeyError(
+                "node {} does not exist in given KeyedVectors".format(edge[0])
+            )
 
         if edge[1] not in self.kv.index2word:
-            raise KeyError('node {} does not exist in given KeyedVectors'.format(edge[1]))
+            raise KeyError(
+                "node {} does not exist in given KeyedVectors".format(edge[1])
+            )
 
         return self._embed(edge)
 
@@ -50,10 +53,13 @@ class EdgeEmbedder(ABC):
 
         if not self.quiet:
             vocab_size = len(self.kv.vocab)
-            total_size = reduce(lambda x, y: x * y, range(1, vocab_size + 2)) / \
-                         (2 * reduce(lambda x, y: x * y, range(1, vocab_size)))
+            total_size = reduce(lambda x, y: x * y, range(1, vocab_size + 2)) / (
+                2 * reduce(lambda x, y: x * y, range(1, vocab_size))
+            )
 
-            edge_generator = tqdm(edge_generator, desc='Generating edge features', total=total_size)
+            edge_generator = tqdm(
+                edge_generator, desc="Generating edge features", total=total_size
+            )
 
         # Generate features
         tokens = []
@@ -67,9 +73,7 @@ class EdgeEmbedder(ABC):
 
         # Build KV instance
         edge_kv = KeyedVectors(vector_size=self.kv.vector_size)
-        edge_kv.add(
-            entities=tokens,
-            weights=features)
+        edge_kv.add(entities=tokens, weights=features)
 
         return edge_kv
 
