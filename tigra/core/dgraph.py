@@ -7,6 +7,7 @@ Module defining core classes for dynamic/temporal graphs
 """
 
 import networkx as nx
+from typing import List, Union
 
 
 class Graph:
@@ -193,7 +194,7 @@ class EventSequence:
     Base class for all event sequences
     """
 
-    def __init__(self, list_of_events: [Event] = None):
+    def __init__(self, list_of_events: Union[List[Event], None] = None):
         """
         Parameters
         list_of_events
@@ -283,7 +284,7 @@ class DynamicGraph:
         if None an empty sequence is created
     """
 
-    def __init__(self, list_of_graphs: [Graph] = None):
+    def __init__(self, list_of_graphs: Union[List[Graph], None] = None):
         if list_of_graphs == None:
             self.graphs = []
             self.timespan_in_days = None

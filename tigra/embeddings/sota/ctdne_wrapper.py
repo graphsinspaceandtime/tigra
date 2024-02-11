@@ -7,6 +7,7 @@ Wrapper for CTDNE
 """
 
 import networkx as nx
+from typing import List
 
 from ..embedding import Embedding, SingletonEmbedding
 from ...core.dgraph import DynamicAggregateGraph
@@ -22,7 +23,7 @@ class Ctdne(Embedding):
         self.num_walks = num_walks
         self.workers = workers
 
-    def construct(self, data) -> [SingletonEmbedding]:
+    def construct(self, data) -> List[SingletonEmbedding]:
         if not isinstance(data, DynamicAggregateGraph):
             raise Exception(
                 "{} works with DynamicAggregateGraph objects.".format(

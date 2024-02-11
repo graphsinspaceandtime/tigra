@@ -175,7 +175,7 @@ class CTDNE:
                     else:
                         for att in list(self.graph[current_node][neighbor].values()):
                             if "time" not in att:
-                                raise ("no time attribute")
+                                raise Exception("no time attribute")
                             neighbor2times[neighbor].append(att["time"])
                 d_graph[current_node][self.NEIGHBORS_TIME_KEY] = neighbor2times
 

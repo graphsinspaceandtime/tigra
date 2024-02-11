@@ -1,0 +1,9 @@
+{
+  "include": [
+    "tigra",
+    "tests",
+  ],
+  "exclude": [
+    "tigra/embeddings/sota/ctdnesrc/",
+  ],
+}

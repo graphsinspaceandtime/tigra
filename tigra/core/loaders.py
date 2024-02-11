@@ -19,7 +19,7 @@ def load_netrep_dataset(path):
             line = line.strip()
             if line.startswith("%"):
                 continue
-            toks = re.split("\s+", line)
+            toks = re.split(r"\s+", line)
             for i in range(len(toks)):
                 toks[i] = toks[i].strip()
 

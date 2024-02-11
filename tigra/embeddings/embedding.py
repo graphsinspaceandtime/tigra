@@ -7,6 +7,7 @@ Main base class for dynamic/temporal graph embeddings
 """
 
 from abc import ABC, abstractmethod
+from typing import List
 
 
 class SingletonEmbedding:
@@ -17,7 +18,7 @@ class SingletonEmbedding:
     def __init__(self):
         self.embedding = dict()
 
-    def add_embedding_vector(self, id, vector: [float]):
+    def add_embedding_vector(self, id, vector: List[float]):
         self.embedding[id] = vector
 
     def __str__(self):
@@ -47,10 +48,10 @@ class Embedding(ABC):
         """
         Returns the embedding at given index
         """
-        return self._embedding[index]
+        return self.embeddings[index]
 
     @abstractmethod
-    def construct(self, data) -> [SingletonEmbedding]:
+    def construct(self, data) -> List[SingletonEmbedding]:
         """
         Embedding algorithm that must be implemented in subclasses.
         """

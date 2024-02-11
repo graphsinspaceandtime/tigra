@@ -13,3 +13,17 @@ jobs:
         with:
           options: --check --verbose
           src: tigra tests
+  types:
+    name: Type check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        name: Conda
+        with:
+          activate-environment: tigra
+          environment-file: environment.yaml
+          auto-activate-base: false
+      - uses: jakebailey/pyright-action@v2
+        name: Pyright

@@ -6,6 +6,7 @@ TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Comp
 Wrapper for dynnode2vec
 """
 
+from typing import List
 from ..embedding import Embedding, SingletonEmbedding
 from ...core.dgraph import DynamicGraph
 
@@ -29,7 +30,7 @@ class Dynnode2vec(Embedding):
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
 
-    def construct(self, data) -> [SingletonEmbedding]:
+    def construct(self, data) -> List[SingletonEmbedding]:
         if not isinstance(data, DynamicGraph):
             raise Exception(
                 "{} works with DynamicGraph objects.".format(type(self).__name__)
