@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 
 sys.path.append("..")
 sys.dont_write_bytecode = True
@@ -12,7 +13,7 @@ print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
 
 dg = DynamicGraph()
-dg.init_from_event_sequence(es, time_resolution="month", directed=False)
+dg.init_from_event_sequence(es, time_resolution=timedelta(days=31), directed=False)
 dg.info()
 
 dn2v = Dynnode2vec(5)
