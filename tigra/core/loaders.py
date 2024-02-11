@@ -24,7 +24,7 @@ def load_netrep_dataset(path):
 
             src = int(toks[0])
             dst = int(toks[1])
-            weight = int(toks[2])
+            weight = float(toks[2])
             time = int(toks[3])
 
             events.append(Event(src, dst, time, weight=weight))
