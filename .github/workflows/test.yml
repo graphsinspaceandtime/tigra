@@ -1,0 +1,15 @@
+name: Test
+on:
+  push:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+        name: Black formatter
+        with:
+          options: --check --verbose
+          src: ./tigra
