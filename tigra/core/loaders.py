@@ -11,7 +11,7 @@ import re
 from .dgraph import EventSequence, Event
 
 
-def load_netrep_dataset(path):
+def load_netrep_dataset(path, has_weight=True) -> EventSequence:
     events = []
 
     with open(path) as f:
@@ -19,14 +19,20 @@ def load_netrep_dataset(path):
             line = line.strip()
             if line.startswith("%"):
                 continue
-            toks = re.split(r"\s+", line)
+            # split at nondigit characters
+            # TODO: will break on float data
+            toks = re.split(r"\D+", line)
             for i in range(len(toks)):
                 toks[i] = toks[i].strip()
 
             src = int(toks[0])
             dst = int(toks[1])
-            weight = float(toks[2])
-            time = int(toks[3])
+            next_index = 2
+            weight = None
+            if has_weight:
+                weight = float(toks[2])
+                next_index += 1
+            time = int(toks[next_index])
 
             events.append(Event(src, dst, time, weight=weight))
 
