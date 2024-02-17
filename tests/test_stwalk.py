@@ -5,7 +5,7 @@ sys.dont_write_bytecode = True
 
 from tigra.core.loaders import load_netrep_dataset
 from tigra.core.dgraph import DynamicGraph
-from tigra.embeddings.sota.STWalk import STWalk
+from tigra.embeddings.sota.stwalk import STWalk
 
 es = load_netrep_dataset("../data/netrep/ia-radoslaw-email.edges")
 print(es)

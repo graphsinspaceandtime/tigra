@@ -1,3 +1,11 @@
+"""
+TIGRA software library
+
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
+
+Implementation based on STWalk1 implementation available at https://github.com/supriya-gdptl/STWalk
+"""
+
 #####################
 # STWalk1
 # Learns trajectory representation of graph nodes by considering spatial and temporal neighbors together
@@ -5,17 +13,14 @@
 import sys
 from typing import List
 
-sys.path.append("../")
-sys.dont_write_bytecode = True
-
 
 import random
 from gensim.models import Word2Vec
 import networkx as nx
 import time
 
-from tigra.embeddings.embedding import Embedding
-from tigra.embeddings.embedding import SingletonEmbedding
+from ..embedding import Embedding
+from ..embedding import SingletonEmbedding
 
 
 class STWalk(Embedding):
