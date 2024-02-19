@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 
 sys.path.append("..")
 sys.dont_write_bytecode = True
@@ -10,7 +11,14 @@ es = load_netrep_dataset("../data/netrep/ia-radoslaw-email.edges")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
 
-res = ["day", "week", "month", "3-months", "6-months", "year"]
+res = [
+    timedelta(days=1),
+    timedelta(weeks=1),
+    timedelta(days=31),
+    timedelta(days=31 * 3),
+    timedelta(days=31 * 6),
+    timedelta(days=365),
+]
 for r in res:
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, time_resolution=r, cumulative=True, directed=False)
