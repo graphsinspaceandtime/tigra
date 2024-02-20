@@ -1,0 +1,4 @@
+# these are machine specific settings which can be set for ease of use
+name: tigra
+variables:
+  NUM_CPUS: 4

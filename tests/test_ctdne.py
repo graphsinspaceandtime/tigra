@@ -1,4 +1,7 @@
 import sys
+import os
+
+workers = int(os.environ.get('NUM_CPUS', 4))
 
 sys.path.append("..")
 sys.dont_write_bytecode = True
@@ -14,7 +17,7 @@ print("time-span =", es.get_timespan_in_days())
 dag = DynamicAggregateGraph("radoslaw", es, directed=False)
 print("DIRECTED = ", dag.get_aggregate_graph().is_directed())
 
-ctdne = Ctdne(5)
+ctdne = Ctdne(5, workers=workers)
 ctdne.make_embedding(dag)
 print(ctdne.is_singleton_embedding())
 print(ctdne.embeddings[0])
