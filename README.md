@@ -97,6 +97,17 @@ execute the command all the time, only when the yaml file changes.
 conda env update -f environment.yaml
 ```
 
+There is also an option to add machine specific configuration of the
+environment such as some variables. This will allows easier maintanance and
+configuration between machines with different hardware specifications. In this
+repository it is a convention to use the `local.yaml` configuration file for
+that. An example of such file is available in [local.example.yaml](./local.example.yaml)
+file. It can be applied by updating the created environment.
+
+```sh
+conda env update -f local.yaml
+```
+
 Activate the conda environment. This configures shell parameters to use packages
 and libraries that are installed in the environment.
 
