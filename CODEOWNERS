@@ -1,0 +1,5 @@
+.devcontainers/ @dusansimic
+.github/ @dusansimic
+environment.yaml @dusansimic
+pyrightconfig.json @dusansimic
+requirements.txt @dusansimic
