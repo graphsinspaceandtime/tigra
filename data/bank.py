@@ -51,7 +51,7 @@ def get_data(dataset: Datasets) -> EventSequence:
         raise Exception("{} dataset is not available".format(dataset))
 
 
-def get_keys():
+def get_keys() -> typing.List[Datasets]:
     return filename_map.keys()
 
 
