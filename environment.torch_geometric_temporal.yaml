@@ -92,4 +92,3 @@ dependencies:
   - zlib=1.2.13=hd590300_5
   - pip:
       - torch-geometric-temporal==0.54.0
-prefix: /home/dusan/.conda/envs/tigra_torch_geometric_temporal
