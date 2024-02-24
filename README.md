@@ -1,8 +1,7 @@
-# tigra
+# TIGRA
 
-TIGRA
-
-Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
+> Graphs in Space and Time : Graph Embeddings for Machine Learning in Complex
+> Dynamical Systems
 
 Tigra software library
 
