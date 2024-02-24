@@ -52,25 +52,13 @@ def load_snap_dataset(path, has_weight=False) -> EventSequence:
             tokens = re.split(r"\D+", line)
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].strip()
-            
+
             src = int(tokens[0])
             tgt = int(tokens[1])
             time = int(tokens[2])
 
             events.append(Event(src=src, dst=tgt, timestamp=time))
 
-
     events_sequence = EventSequence(list_of_events=events)
 
     return events_sequence
-
-
-"""
-# quick tests 
-if __name__ == "__main__":
-    es = load_netrep_dataset("../../data/netrep/ia-radoslaw-email.edges")
-    print(es.num_events())
-
-    es = load_netrep_dataset("../../data/netrep/soc-epinions-trust-dir.edges")
-    print(es.num_events())
-"""
