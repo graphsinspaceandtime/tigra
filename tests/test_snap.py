@@ -6,8 +6,9 @@ sys.dont_write_bytecode = True
 from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+import data.bank as databank
 
-es = load_snap_dataset("../data/snap/sx-askubuntu.txt")
+es = databank.get_data("email-Eu-core-temporal")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
 
