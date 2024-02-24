@@ -7,7 +7,7 @@ sys.path.append("..")
 
 from tigra.core.dgraph import EventSequence, Event
 
-Datasets = typing.Literal[
+Dataset = typing.Literal[
     "radoslaw-email",
     "CollegeMsg",
     "email-Eu-core-temporal",
@@ -21,7 +21,7 @@ data_path = Path(__file__).parent
 netrep_path = data_path / "netrep"
 snap_path = data_path / "snap"
 
-filename_map = {
+filename_map: typing.Dict[Dataset, Path] = {
     "radoslaw-email": netrep_path / "ia-radoslaw-email.edges",
     "CollegeMsg": snap_path / "CollegeMsg.txt",
     "email-Eu-core-temporal": snap_path / "email-Eu-core-temporal.txt",
@@ -32,7 +32,7 @@ filename_map = {
 }
 
 
-def get_data(dataset: Datasets) -> EventSequence:
+def get_data(dataset: Dataset) -> EventSequence:
     """
     Read a specified dataset and return an EventSequence object.
     """
@@ -51,11 +51,11 @@ def get_data(dataset: Datasets) -> EventSequence:
         raise Exception("{} dataset is not available".format(dataset))
 
 
-def get_keys() -> typing.List[Datasets]:
-    return filename_map.keys()
+def get_keys() -> typing.List[Dataset]:
+    return list(filename_map.keys())
 
 
-def __read_radoslaw(filename: str) -> EventSequence:
+def __read_radoslaw(filename: Path) -> EventSequence:
     events = []
     with open(filename, "r") as f:
         separator_pat = r"\W+"
@@ -65,7 +65,7 @@ def __read_radoslaw(filename: str) -> EventSequence:
     return EventSequence(list_of_events=events)
 
 
-def __read_three_whitespace_separated_columns(filename: str) -> EventSequence:
+def __read_three_whitespace_separated_columns(filename: Path) -> EventSequence:
     events = []
     with open(filename, "r") as f:
         separator_pat = r"\W+"
@@ -75,7 +75,7 @@ def __read_three_whitespace_separated_columns(filename: str) -> EventSequence:
 
 
 def __read_rows(
-    f: any, separator: str, comment: typing.Union[str, None] = None
+    f: typing.TextIO, separator: str, comment: typing.Union[str, None] = None
 ) -> typing.Generator[typing.List[str], None, None]:
     if separator == None:
         raise Exception("separator expression cannot be None")
