@@ -2,6 +2,7 @@
   "include": [
     "tigra",
     "tests",
+    "data",
   ],
   "exclude": [
     "tigra/embeddings/sota/ctdnesrc/",
