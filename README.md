@@ -37,9 +37,11 @@ Download from https://git-lfs.com/.
 
 ### Use Git LFS
 
-After cloning, you'll need to pull all the LFS assets (datasets).
+After cloning, you'll need to install git LFS hooks and pull all the LFS assets
+(datasets).
 
 ```sh
+git lfs install
 git lfs pull
 ```
 
