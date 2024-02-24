@@ -24,16 +24,29 @@ from ..embedding import SingletonEmbedding
 
 
 class STWalk(Embedding):
-    
-    def __init__(self, number_restart, walk_length, dimension, time_step,
-            time_window_size, workers, vocab_window_size):
+
+    def __init__(
+        self,
+        number_restart,
+        walk_length,
+        dimension,
+        time_step,
+        time_window_size,
+        workers,
+        vocab_window_size,
+    ):
         """
         This function generates representation for all nodes in space-time-graph of all nodes of graph at t=time_step
         however we will consider only representations of nodes present in graph at t = time_step
         """
         if time_window_size > time_step:
-            sys.exit("ERROR: time_window_size(=" + str(time_window_size) + ") cannot be more than time_step(=" + str(
-                time_step) + "):")
+            sys.exit(
+                "ERROR: time_window_size(="
+                + str(time_window_size)
+                + ") cannot be more than time_step(="
+                + str(time_step)
+                + "):"
+            )
 
         self.number_restart = number_restart
         self.walk_length = walk_length
@@ -78,12 +91,13 @@ class STWalk(Embedding):
                 start_node = past_node
         return G
 
-
-    def random_walk(self, SpaceTimegraph, path_length, rand=random.Random(0), start=None):
-        """ Returns a truncated random walk.
-            path_length: Length of the random walk.
-            removed = alpha: probability of restarts.
-            start: the start node of the random walk.
+    def random_walk(
+        self, SpaceTimegraph, path_length, rand=random.Random(0), start=None
+    ):
+        """Returns a truncated random walk.
+        path_length: Length of the random walk.
+        removed = alpha: probability of restarts.
+        start: the start node of the random walk.
         """
         G = SpaceTimegraph
         if start:
@@ -99,8 +113,16 @@ class STWalk(Embedding):
                 break
         return path
 
-
-    def create_vocab(self, G_list, num_restart, path_length, nodes, time_step, rand=random.Random(0), time_window=1):
+    def create_vocab(
+        self,
+        G_list,
+        num_restart,
+        path_length,
+        nodes,
+        time_step,
+        rand=random.Random(0),
+        time_window=1,
+    ):
         walks = []
 
         nodes = list(nodes)
@@ -111,33 +133,48 @@ class STWalk(Embedding):
             start = time.time()
             for node in list(nodes):
                 G = self.createSpaceTimeGraph(G_list, time_window, str(node), time_step)
-                walks.append(self.random_walk(SpaceTimegraph=G, path_length=path_length, rand=rand, start=node))
-        #print("Vocabulary created")
+                walks.append(
+                    self.random_walk(
+                        SpaceTimegraph=G, path_length=path_length, rand=rand, start=node
+                    )
+                )
+        # print("Vocabulary created")
         return walks
-
 
     def construct(self, data) -> List[SingletonEmbedding]:
         # get list of nodes
         graph_list = data.get_nx_graph_sequence()
         nodes = graph_list[-1].nodes()
-        #print("Creating vocabulary...")
+        # print("Creating vocabulary...")
         seq = []
 
         for t in range(0, len(graph_list)):
             if (t + 1) % self.time_window_size == 0:
                 seq.append(t)
         # time-step is decremented by 1, because, time steps are from 0 to time_step-1=total time_step length
-        #print("Generating representation...")
-        
+        # print("Generating representation...")
+
         embedding = []
         for t in seq:
-            walks = self.create_vocab(graph_list, num_restart=self.number_restart, path_length=self.walk_length, nodes=nodes,
-                    rand=random.Random(0), time_step=t, time_window=self.time_window_size)
-            model = Word2Vec(walks, window=self.vocab_window_size, min_count=0, workers=self.workers, vector_size=self.dimension)
+            walks = self.create_vocab(
+                graph_list,
+                num_restart=self.number_restart,
+                path_length=self.walk_length,
+                nodes=nodes,
+                rand=random.Random(0),
+                time_step=t,
+                time_window=self.time_window_size,
+            )
+            model = Word2Vec(
+                walks,
+                window=self.vocab_window_size,
+                min_count=0,
+                workers=self.workers,
+                vector_size=self.dimension,
+            )
             curr_emb = SingletonEmbedding()
             for node in nodes:
                 curr_emb.add_embedding_vector(node, model.wv.get_vector(node))
             embedding.append(curr_emb)
-        
-        return embedding
 
+        return embedding

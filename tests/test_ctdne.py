@@ -1,7 +1,7 @@
 import sys
 import os
 
-workers = int(os.environ.get('NUM_CPUS', 4))
+workers = int(os.environ.get("NUM_CPUS", 4))
 
 sys.path.append("..")
 sys.dont_write_bytecode = True
