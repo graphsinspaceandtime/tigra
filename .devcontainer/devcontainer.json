@@ -13,7 +13,8 @@
 				"VisualStudioExptTeam.vscodeintellicode",
 				"donjayamanne.python-environment-manager",
 				"KevinRose.vsc-python-indent",
-				"LittleFoxTeam.vscode-python-test-adapter"
+				"LittleFoxTeam.vscode-python-test-adapter",
+				"darkriszty.markdown-table-prettify"
 			]
 		}
 	}

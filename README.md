@@ -11,46 +11,20 @@ TODO:
 - tutorijali
 - etc.
 
-## Pulling the datasets (Git LFS)
+## Downloading datasets
 
-Since datasets can consume a lot of space, we store them on Git LFS (Large File
-Storage). It reduces the repository size and makes it easier to track code. It
-does however require some extra steps when cloning the repository.
-
-### Install Git LFS
-
-#### Ubuntu
+The datasets are not stored inside the git repository since they are quite
+large. They can however be downloaded using a simple bash script
+[get_datasets.sh](data/get_datasets.sh). You can run it using the `bash`
+command.
 
 ```sh
-sudo apt install git-lfs
+cd data
+bash get_datasets.sh
 ```
 
-#### Fedora
-
-```sh
-sudo dnf install git-lfs
-```
-
-#### Windows and macOS
-
-Download from https://git-lfs.com/.
-
-### Use Git LFS
-
-After cloning, you'll need to install git LFS hooks and pull all the LFS assets
-(datasets).
-
-```sh
-git lfs install
-git lfs pull
-```
-
-Each other time you pull new commits from upstream, you'll also need to pull the
-LFS assets (if there are any changes to them).
-
-The whole `data/` directory is tracked so there is no need to make any changes
-to LFS configuration. Just adding files to the directory and commiting them will
-commit them to the LFS.
+This scripts depends on `curl` command so make sure it's installed on your
+system.
 
 ## Set up Conda environment
 
@@ -129,6 +103,17 @@ deactivating it.
 ```sh
 conda deactivate
 ```
+
+### Other environments
+
+There are some other conda environments which are used for libraries that are
+hard to configure with other environments. To activate them, run the same
+commands for creating, updating, activating and deactivating as for the main
+environment but with a different file specified.
+
+| Environment                | File                                                                                   |
+|----------------------------|----------------------------------------------------------------------------------------|
+| PyTorch Geometric Temporal | [environment.torch_geometric_temporal.yaml](environment.torch_geometric_temporal.yaml) |
 
 ### Conda FAQ
 
