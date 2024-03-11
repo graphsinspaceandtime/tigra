@@ -22,7 +22,7 @@ netrep_path = data_path / "netrep"
 snap_path = data_path / "snap"
 
 filename_map: typing.Dict[Dataset, Path] = {
-    "radoslaw-email": netrep_path / "ia-radoslaw-email.edges",
+    "radoslaw-email": netrep_path / "radoslaw_email" / "radoslaw_email.edges",
     "CollegeMsg": snap_path / "CollegeMsg.txt",
     "email-Eu-core-temporal": snap_path / "email-Eu-core-temporal.txt",
     "sx-askubuntu": snap_path / "sx-askubuntu.txt",
