@@ -1,13 +1,14 @@
 import sys
+import os
 
-sys.path.append("..")
+sys.path.append(os.path.join("..", ".."))
 sys.dont_write_bytecode = True
 
-from tigra.core.loaders import load_netrep_dataset
 from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+import data.bank as databank
 
-es = load_netrep_dataset("../data/netrep/ia-radoslaw-email.edges")
+es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
 
