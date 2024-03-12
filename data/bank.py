@@ -37,8 +37,8 @@ def get_data(dataset: Dataset) -> EventSequence:
     Read a specified dataset and return an EventSequence object.
     """
     if dataset == "radoslaw-email":
-        return __read_radoslaw(filename_map[dataset])
-    if dataset in [
+        events_generator = __read_radoslaw(filename_map[dataset])
+    elif dataset in [
         "CollegeMsg",
         "email-Eu-core-temporal",
         "sx-askubuntu",
@@ -46,32 +46,35 @@ def get_data(dataset: Dataset) -> EventSequence:
         "sx-superuser",
         "wiki-talk-temporal",
     ]:
-        return __read_three_whitespace_separated_columns(filename_map[dataset])
+        events_generator = __read_three_whitespace_separated_columns(
+            filename_map[dataset]
+        )
     else:
         raise Exception("{} dataset is not available".format(dataset))
+
+    return EventSequence(events_generator=events_generator)
 
 
 def get_keys() -> typing.List[Dataset]:
     return list(filename_map.keys())
 
 
-def __read_radoslaw(filename: Path) -> EventSequence:
-    events = []
+def __read_radoslaw(filename: Path) -> typing.Generator[typing.List[Event], None, None]:
     with open(filename, "r") as f:
         separator_pat = r"\W+"
         comment_pat = r"^%"
         for row in __read_rows(f, separator_pat, comment_pat):
-            events.append(Event(int(row[0]), int(row[1]), float(row[3]), int(row[2])))
-    return EventSequence(list_of_events=events)
+            yield Event(int(row[0]), int(row[1]), float(row[3]), int(row[2]))
 
 
-def __read_three_whitespace_separated_columns(filename: Path) -> EventSequence:
+def __read_three_whitespace_separated_columns(
+    filename: Path,
+) -> typing.Generator[typing.List[Event], None, None]:
     events = []
     with open(filename, "r") as f:
         separator_pat = r"\W+"
         for row in __read_rows(f, separator_pat):
-            events.append(Event(int(row[0]), int(row[1]), int(row[2])))
-    return EventSequence(list_of_events=events)
+            yield Event(int(row[0]), int(row[1]), int(row[2]))
 
 
 def __read_rows(

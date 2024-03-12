@@ -7,7 +7,7 @@ Module defining core classes for dynamic/temporal graphs
 """
 
 import networkx as nx
-from typing import List, Union
+from typing import List, Union, Generator
 
 
 class Graph:
@@ -194,18 +194,19 @@ class EventSequence:
     Base class for all event sequences
     """
 
-    def __init__(self, list_of_events: Union[List[Event], None] = None):
+    def __init__(
+        self, events_generator: Union[Generator[List[Event], None, None], None] = None
+    ):
         """
         Parameters
         list_of_events
             a sequence of events for initialization
             if None an empty sequence is created
         """
-        if list_of_events == None:
+        if events_generator == None:
             self.events = []
         else:
-            self.events = list_of_events
-            self.events.sort()
+            self.events = sorted(events_generator)
 
     def add_event(self, event: Event):
         """
