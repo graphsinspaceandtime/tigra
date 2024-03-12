@@ -55,6 +55,7 @@ do
   then
     echo "Checksum incorrect or file not found for ${NETREP_DIRS[$i]}"
     echo "Downloading ${NETREP_DIRS[$i]}"
+    rm -r "netrep/${NETREP_DIRS[$i]}"
     TEMP_FILENAME="$(mktemp)"
     curl --progress-bar --output "$TEMP_FILENAME" "${NETREP_URLS[$i]}"
     mkdir -p "netrep/${NETREP_DIRS[$i]}"
