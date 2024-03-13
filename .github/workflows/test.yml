@@ -4,11 +4,19 @@ on:
     paths:
       - "**/*.py"
       - pyrightconfig.json
+      - "environment*.py"
 
 env:
   CONDA_ENV: tigra
 
 jobs:
+  conda-env:
+    name: Conda env checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for prefix property
+        run: grep '^prefix:' environment*.yaml && exit 1 || exit 0
   lint:
     name: Lint
     runs-on: ubuntu-latest
