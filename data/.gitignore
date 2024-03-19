@@ -2,3 +2,4 @@
 !/.gitignore
 !/**/*.py
 !/get_datasets.sh
+!/get_datasets.ps1

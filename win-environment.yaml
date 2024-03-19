@@ -1,0 +1,44 @@
+name: tigra
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+ dependencies:
+  - python=3.8.10
+  - black=23.11.0
+  - ca-certificates=2023.12.12
+  - click=8.1.7
+  - icu=73.1
+  - joblib=1.2.0
+  - libffi=3.3
+  - libgcc-ng=11.2.0
+  - libgfortran-ng=11.2.0
+  - libgfortran5=11.2.0
+  - libgomp=11.2.0
+  - libopenblas=0.3.21
+  - libstdcxx-ng=11.2.0
+  - libuv=1.44.2
+  - mypy_extensions=1.0.0
+  - ncurses=6.4
+  - networkx=3.1
+  - nodeenv=1.7.0
+  - nodejs=18.16.0
+  - numpy=1.24.3
+  - numpy-base=1.24.3
+  - openssl=1.1.1w
+  - packaging=23.1
+  - pathspec=0.10.3
+  - pip=23.3.1
+  - platformdirs=3.10.0
+  - pyright=1.1.247
+  - readline=8.2
+  - setuptools=68.2.2
+  - sqlite=3.41.2
+  - tk=8.6.12
+  - tomli=2.0.1
+  - tqdm=4.65.0
+  - typing_extensions=4.9.0
+  - wheel=0.41.2
+  - xz=5.4.5
+  - zlib=1.2.13
+  
