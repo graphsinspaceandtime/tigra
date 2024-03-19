@@ -3,7 +3,7 @@
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl required. please install it!"; exit 1; }
 
 NETREP_URLS=(
-  http://nrvis.com/download/data/misc/radoslaw_email.zip
+  https://nrvis.com/download/data/misc/radoslaw_email.zip
 )
 
 NETREP_DIRS=(
