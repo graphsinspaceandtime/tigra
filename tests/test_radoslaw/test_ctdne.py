@@ -10,6 +10,8 @@ from tigra.core.dgraph import DynamicAggregateGraph
 from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 import data.bank as databank
 
+from tigra.core.greval import GraphReconstructionEval
+
 es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
@@ -17,7 +19,13 @@ print("time-span =", es.get_timespan_in_days())
 dag = DynamicAggregateGraph("radoslaw", es, directed=False)
 print("DIRECTED = ", dag.get_aggregate_graph().is_directed())
 
-ctdne = Ctdne(5, workers=workers)
+ctdne = Ctdne(10, workers=workers)
 ctdne.make_embedding(dag)
-print(ctdne.is_singleton_embedding())
-print(ctdne.embeddings[0])
+#print(ctdne.is_singleton_embedding())
+#print(ctdne.embeddings[0])
+
+print("\nGRAPH RECONSTRUCTION")
+gre = GraphReconstructionEval(dag.get_aggregate_graph(), ctdne.embeddings[0])
+print("Precision", gre.get_avg_precision())
+print("Recall", gre.get_avg_recall())
+print("F1", gre.getF1())

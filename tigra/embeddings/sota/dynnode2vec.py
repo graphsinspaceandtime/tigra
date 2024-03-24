@@ -54,17 +54,21 @@ class Dynnode2vec(Embedding):
         embs = dynnode2vec.compute_embeddings(graph_sequence)
 
         embeddings = []
-        for emb in embs:
+        for emb_num in range(len(embs)):
+            emb = embs[emb_num]
             vectors = emb[0]
             mapping = emb[1]
             num_vectors = len(vectors)
             singleton = SingletonEmbedding()
 
+            orgG = graph_sequence[emb_num]
+
             for i in range(num_vectors):
                 id = mapping[i]
-                vect = vectors[i].tolist()
-                singleton.add_embedding_vector(id, vect)
-
+                if id in orgG.nodes():
+                    vect = vectors[i].tolist()
+                    singleton.add_embedding_vector(id, vect)
+                
             embeddings.append(singleton)
 
         return embeddings
