@@ -11,6 +11,7 @@ from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 import data.bank as databank
 
 from tigra.core.greval import GraphReconstructionEval
+from tigra.embeddings.hypertuner import CTDNE_Tuner
 
 es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
@@ -29,3 +30,8 @@ gre = GraphReconstructionEval(dag.get_aggregate_graph(), ctdne.embeddings[0])
 print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
+
+print("TESTING TUNER")
+tuner = CTDNE_Tuner(dag.get_aggregate_graph(), dag, [0.5, 1.0, 2.0, 4.0], [0.5, 1.0, 2.0, 4.0], num_runs=5)
+tuner.tune()
+tuner.print_report()

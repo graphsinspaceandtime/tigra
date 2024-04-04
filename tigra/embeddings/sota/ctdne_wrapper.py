@@ -48,6 +48,7 @@ class Ctdne(Embedding):
             walk_length=self.walk_length,
             num_walks=self.num_walks,
             workers=self.workers,
+            quiet=True
         )
 
         model = CTDNE_model.fit(window=10, min_count=1, batch_words=4)

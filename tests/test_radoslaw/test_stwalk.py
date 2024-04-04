@@ -9,6 +9,7 @@ from tigra.embeddings.sota.stwalk import STWalk
 import data.bank as databank
 
 from tigra.core.greval import GraphReconstructionEval
+from tigra.embeddings.hypertuner import STWalk_Tuner
 
 es = databank.get_data("radoslaw-email")
 dg = DynamicGraph()
@@ -38,3 +39,8 @@ gre = GraphReconstructionEval(last_graph, last_embedding)
 print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
+
+print("TESTING TUNER")
+tuner = STWalk_Tuner(last_graph, dg, [1, 3, 5], num_runs=5, n_walks_per_node=40)
+tuner.tune()
+tuner.print_report()
