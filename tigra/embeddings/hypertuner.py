@@ -89,7 +89,8 @@ class Tuner(ABC):
             print(s)
 
         print("Best conf: ", self.best)
-        print("Best conf params: ", self.confs[self.best[0]])
+        if self.best != None:
+            print("Best conf params: ", self.confs[self.best[0]])
 
 
 EMBEDDING_DIMENSIONS = [10, 25, 50, 100, 200]
