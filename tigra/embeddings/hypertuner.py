@@ -7,6 +7,8 @@ Module for tuning hyperparameters of dynamic graph embedding methods
 """
 
 from abc import ABC, abstractmethod
+import typing
+
 from statistics import mean
 
 from tigra.embeddings.embedding import Embedding
@@ -42,7 +44,7 @@ class Tuner(ABC):
         pass
 
     @abstractmethod
-    def create_configurations(self):
+    def create_configurations(self) -> typing.List:
         """
         This method has to create and return a list of configurations
         """
