@@ -37,6 +37,7 @@ print("F1", gre.getF1())
 
 print("TESTING TUNER")
 tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0, 2.0, 4.0], [0.5, 1.0, 2.0, 4.0])
+#tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0], [0.5, 1.0], num_runs=5)
 tuner.tune()
 tuner.print_report()
 
