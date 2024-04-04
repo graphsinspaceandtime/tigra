@@ -32,14 +32,14 @@ class SingletonEmbedding:
             s += str(key) + " --> " + str([round(val, 2) for val in value]) + "\n"
 
         return s
-    
+
     def get_dist(self, node1, node2, save=False):
         if node1 > node2:
             node1, node2 = node2, node1
-            
+
         if node1 in self.dists and node2 in self.dists[node1]:
             return self.dists[node1][node2]
-        
+
         n1emb = np.array(self.embedding[node1])
         n2emb = np.array(self.embedding[node2])
         dist = np.linalg.norm(n1emb - n2emb)
@@ -47,13 +47,13 @@ class SingletonEmbedding:
             if not node1 in self.dists:
                 self.dists[node1] = {}
             self.dists[node1][node2] = dist
-        
-        return dist   
-    
+
+        return dist
+
     def reconstruct(self, k, name, cache_dists=False):
         """
         Reconstructs the graph from its embedding.
-        Important: graph reconstruction always produces undirected graph, 
+        Important: graph reconstruction always produces undirected graph,
             so before comparison convert directed graphs to undirected
 
         Parameters
@@ -67,7 +67,7 @@ class SingletonEmbedding:
         ----------
         - core.dgraph.Graph - reconstructed graph.
         """
-        
+
         nodes = list(self.embedding.keys())
         dists = []
         for i in range(len(nodes)):
@@ -89,8 +89,8 @@ class SingletonEmbedding:
             g.add_node(node)
         for edge in heapq.nsmallest(k, dists):
             g.add_edge(edge[1], edge[2])
-            
-        return g 
+
+        return g
 
 
 class Embedding(ABC):

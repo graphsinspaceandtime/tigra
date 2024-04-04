@@ -21,6 +21,7 @@ class Tuner(ABC):
     """
     Base class for hyper-parameter tuning and intrinsic graph embedding evaluation
     """
+
     def __init__(self, graph, data, params_desc, num_runs=1):
         """
         graph       -- referent graph used when reconstructing graph from embedding
@@ -33,14 +34,12 @@ class Tuner(ABC):
         self.params_desc = params_desc
         self.num_runs = num_runs
 
-
     @abstractmethod
     def create_instance(self, conf_index) -> Embedding:
         """
         This method has to create an embedding object for the configuration at conf_index
         """
         pass
-
 
     @abstractmethod
     def create_configurations(self):
@@ -49,12 +48,11 @@ class Tuner(ABC):
         """
         pass
 
-
     def tune(self):
         self.best = None
         self.eval_res = []
         self.confs = self.create_configurations()
-        
+
         for i in range(len(self.confs)):
             prec_values, rec_values, f1_values = [], [], []
             for _ in range(self.num_runs):
@@ -68,7 +66,7 @@ class Tuner(ABC):
                 prec_values.append(prec)
                 rec_values.append(rec)
                 f1_values.append(f1)
-            
+
             mean_prec = mean(prec_values)
             mean_rec = mean(rec_values)
             mean_f1 = mean(f1_values)
@@ -80,11 +78,10 @@ class Tuner(ABC):
             if i % 10 == 0:
                 print("Done ", i, " out of", len(self.confs))
 
-    
     def print_report(self):
         print(self.params_desc + ",F1,PREC,REC")
         for i in range(len(self.confs)):
-            s = ','.join([str(x) for x in self.confs[i]])  
+            s = ",".join([str(x) for x in self.confs[i]])
             eval = self.eval_res[i]
             s += "," + str(eval[1]) + "," + str(eval[2]) + "," + str(eval[3])
             print(s)
@@ -94,21 +91,31 @@ class Tuner(ABC):
 
 
 EMBEDDING_DIMENSIONS = [10, 25, 50, 100, 200]
-#EMBEDDING_DIMENSIONS = [10, 25]
+# EMBEDDING_DIMENSIONS = [10, 25]
 
 
 class N2VMethods_Tuner(Tuner):
     """
     Base tuner class for graph embedding methods based on random walks
     """
-    def __init__(self, graph, data, p_values, q_values, num_runs=1, walk_length=10, n_walks_per_node=10, parallel_processes=4):
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
         super().__init__(graph, data, "DIM,P,Q", num_runs=num_runs)
         self.p_values = p_values
         self.q_values = q_values
         self.walk_length = walk_length
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
-
 
     def create_configurations(self):
         confs = []
@@ -119,50 +126,109 @@ class N2VMethods_Tuner(Tuner):
 
         return confs
 
-    
 
 class Dynnode2vec_Tuner(N2VMethods_Tuner):
     """
     Tuner for Dynnode2vec
     """
-    def __init__(self, graph, data, p_values, q_values, num_runs=1, walk_length=10, n_walks_per_node=10, parallel_processes=4):
-        super().__init__(graph, data, p_values, q_values, num_runs=num_runs, walk_length=walk_length, n_walks_per_node=n_walks_per_node, parallel_processes=parallel_processes)
-        
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            num_runs=num_runs,
+            walk_length=walk_length,
+            n_walks_per_node=n_walks_per_node,
+            parallel_processes=parallel_processes,
+        )
 
     def create_instance(self, conf_index) -> Embedding:
         dim = self.confs[conf_index][0]
         p = self.confs[conf_index][1]
         q = self.confs[conf_index][2]
-        return Dynnode2vec(dim, p=p, q=q, walk_length=self.walk_length, n_walks_per_node=self.n_walks_per_node, parallel_processes=self.parallel_processes)
-
+        return Dynnode2vec(
+            dim,
+            p=p,
+            q=q,
+            walk_length=self.walk_length,
+            n_walks_per_node=self.n_walks_per_node,
+            parallel_processes=self.parallel_processes,
+        )
 
 
 class CTDNE_Tuner(N2VMethods_Tuner):
     """
     Tuner for CTDNE
     """
-    def __init__(self, graph, data, p_values, q_values, num_runs=1, walk_length=10, n_walks_per_node=10, parallel_processes=4):
-        super().__init__(graph, data, p_values, q_values, num_runs=num_runs, walk_length=walk_length, n_walks_per_node=n_walks_per_node, parallel_processes=parallel_processes)
-        
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            num_runs=num_runs,
+            walk_length=walk_length,
+            n_walks_per_node=n_walks_per_node,
+            parallel_processes=parallel_processes,
+        )
 
     def create_instance(self, conf_index) -> Embedding:
         dim = self.confs[conf_index][0]
         p = self.confs[conf_index][1]
         q = self.confs[conf_index][2]
-        return Ctdne(dim, p, q, walk_length=self.walk_length, num_walks=self.n_walks_per_node, workers=self.parallel_processes)
-    
+        return Ctdne(
+            dim,
+            p,
+            q,
+            walk_length=self.walk_length,
+            num_walks=self.n_walks_per_node,
+            workers=self.parallel_processes,
+        )
+
 
 class STWalk_Tuner(Tuner):
     """
     Tuner for STWalk
     """
-    def __init__(self, graph, data, time_window_values, num_runs=1, walk_length=10, n_walks_per_node=10, parallel_processes=4):
+
+    def __init__(
+        self,
+        graph,
+        data,
+        time_window_values,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
         super().__init__(graph, data, "DIM,TIME_WINDOW", num_runs=num_runs)
         self.time_window_values = time_window_values
         self.walk_length = walk_length
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
-
 
     def create_configurations(self):
         confs = []
@@ -172,9 +238,16 @@ class STWalk_Tuner(Tuner):
 
         return confs
 
-    
     def create_instance(self, conf_index) -> Embedding:
         dim = self.confs[conf_index][0]
         tws = self.confs[conf_index][1]
-        ts  = len(self.data.get_nx_graph_sequence()) 
-        return STWalk(number_restart=self.n_walks_per_node, walk_length=self.walk_length, dimension=dim, time_step=ts, time_window_size=tws, workers=self.parallel_processes, vocab_window_size=5)
+        ts = len(self.data.get_nx_graph_sequence())
+        return STWalk(
+            number_restart=self.n_walks_per_node,
+            walk_length=self.walk_length,
+            dimension=dim,
+            time_step=ts,
+            time_window_size=tws,
+            workers=self.parallel_processes,
+            vocab_window_size=5,
+        )

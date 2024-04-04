@@ -22,8 +22,8 @@ print("DIRECTED = ", dag.get_aggregate_graph().is_directed())
 
 ctdne = Ctdne(10, workers=workers)
 ctdne.make_embedding(dag)
-#print(ctdne.is_singleton_embedding())
-#print(ctdne.embeddings[0])
+# print(ctdne.is_singleton_embedding())
+# print(ctdne.embeddings[0])
 
 print("\nGRAPH RECONSTRUCTION")
 gre = GraphReconstructionEval(dag.get_aggregate_graph(), ctdne.embeddings[0])
@@ -32,6 +32,12 @@ print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
 
 print("TESTING TUNER")
-tuner = CTDNE_Tuner(dag.get_aggregate_graph(), dag, [0.5, 1.0, 2.0, 4.0], [0.5, 1.0, 2.0, 4.0], num_runs=5)
+tuner = CTDNE_Tuner(
+    dag.get_aggregate_graph(),
+    dag,
+    [0.5, 1.0, 2.0, 4.0],
+    [0.5, 1.0, 2.0, 4.0],
+    num_runs=5,
+)
 tuner.tune()
 tuner.print_report()
