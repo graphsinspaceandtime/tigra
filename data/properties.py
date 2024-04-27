@@ -1,26 +1,30 @@
 import sys
 import statistics
+import typing
 
 
 sys.path.append("..")
 
 import data.bank as databank
-from tigra.core.dgraph import DynamicAggregateGraph, EventSequence
+from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph, EventSequence
+from networkx import Graph
 
 
-def get_properties(name: databank.Dataset, es: EventSequence):
-    # TODO: some might not be directed
-    g = DynamicAggregateGraph(name, es, directed=False)
-    G = g.get_aggregate_graph().G
-    degs = [p[1] for p in G.degree]
+def get_nxgraph_props(
+    g: Graph,
+) -> typing.Tuple[int, int, int, int, float, float, float]:
+    degs = [p[1] for p in g.degree]
+    number_of_nodes = g.number_of_nodes()
+    number_of_edges = g.number_of_edges()
     max_deg = max(degs)
     min_deg = min(degs)
     avg_deg = statistics.mean(degs)
     median_deg = statistics.median(degs)
     std_deg = statistics.stdev(degs)
+
     return (
-        G.number_of_nodes(),
-        G.number_of_edges(),
+        number_of_nodes,
+        number_of_edges,
         max_deg,
         min_deg,
         avg_deg,
@@ -29,30 +33,58 @@ def get_properties(name: databank.Dataset, es: EventSequence):
     )
 
 
-def print_properties(key: databank.Dataset):
+def get_properties(
+    name: databank.Dataset, es: EventSequence
+) -> typing.List[typing.Tuple[int, int, int, int, float, float, float]]:
+    graph_props = []
+
+    # get static graph properties
+    # TODO: some might be directed
+    g = DynamicAggregateGraph(name, es, directed=False)
+    graph_props.append(get_nxgraph_props(g.get_aggregate_graph().G))
+
+    # get dynamic graph properties (discrete graphs split by intervals)
+    g = DynamicGraph()
+    # TODO: some might be directed
+    g.init_from_event_sequence(es, time_resolution="month", directed=False)
+
+    for G in g.get_nx_graph_sequence():
+        graph_props.append(get_nxgraph_props(G))
+
+    return graph_props
+
+
+def write_properties(key: databank.Dataset):
     es = databank.get_data(key)
-    (
-        num_of_nodes,
-        num_of_edges,
-        maximum_degree,
-        minimum_degree,
-        average_degree,
-        median_degree,
-        std_degree,
-    ) = get_properties(key, es)
-    print(
-        key,
-        num_of_nodes,
-        num_of_edges,
-        maximum_degree,
-        minimum_degree,
-        average_degree,
-        median_degree,
-        std_degree,
-    )
+    graph_props = get_properties(key, es)
+    with open("{}.csv".format(key), "w") as f:
+        f.write(
+            "code,num_of_nodes,num_of_edges,max_deg,min_deg,avg_deg,median_deg,std_deg"
+        )
+        # handle windows line endings as a special case
+        if sys.platform == "win32":
+            f.write("\r")  # handle windows line endings as a special case
+        if sys.platform == "win32":
+            f.write("\r")
+        f.write("\n")
+        f.write("\n")
+
+        for i, g in enumerate(graph_props):
+            f.write(
+                ",".join(
+                    [
+                        "static" if i == 0 else "snap_{}".format(i),
+                        *[str(gp) for gp in list(g)],
+                    ]
+                )
+            )
+            # handle windows line endings as a special case
+            if sys.platform == "win32":
+                f.write("\r")
+            f.write("\n")
 
 
 if __name__ == "__main__":
     # for key in databank.get_keys():
     #     print_properties(key)
-    print_properties("radoslaw-email")
+    write_properties("radoslaw-email")
