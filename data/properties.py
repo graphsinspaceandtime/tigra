@@ -63,10 +63,7 @@ def write_properties(key: databank.Dataset):
         )
         # handle windows line endings as a special case
         if sys.platform == "win32":
-            f.write("\r")  # handle windows line endings as a special case
-        if sys.platform == "win32":
             f.write("\r")
-        f.write("\n")
         f.write("\n")
 
         for i, g in enumerate(graph_props):
