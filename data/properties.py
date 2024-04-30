@@ -51,8 +51,13 @@ def get_properties(
 
     # get dynamic graph properties (discrete graphs split by intervals)
     g = DynamicGraph()
+    time_resolution = (
+        "month"
+        if name in ["radoslaw-email", "CollegeMsg", "email-Eu-core-temporal"]
+        else "3-months"
+    )
     # TODO: some might be directed
-    g.init_from_event_sequence(es, time_resolution="month", directed=False)
+    g.init_from_event_sequence(es, time_resolution=time_resolution, directed=False)
 
     for i, G in enumerate(g.get_nx_graph_sequence()):
         print(f"g-{i}")
