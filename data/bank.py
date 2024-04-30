@@ -15,6 +15,7 @@ Dataset = typing.Literal[
     "sx-mathoverflow",
     "sx-superuser",
     "wiki-talk-temporal",
+    "sx-stackoverflow",
 ]
 
 data_path = Path(__file__).parent
@@ -29,6 +30,7 @@ filename_map: typing.Dict[Dataset, Path] = {
     "sx-mathoverflow": snap_path / "sx-mathoverflow.txt",
     "sx-superuser": snap_path / "sx-superuser.txt",
     "wiki-talk-temporal": snap_path / "wiki-talk-temporal.txt",
+    "sx-stackoverflow": snap_path / "sx-stackoverflow.txt",
 }
 
 
@@ -45,6 +47,7 @@ def get_data(dataset: Dataset) -> EventSequence:
         "sx-mathoverflow",
         "sx-superuser",
         "wiki-talk-temporal",
+        "sx-stackoverflow",
     ]:
         return __read_three_whitespace_separated_columns(filename_map[dataset])
     else:
