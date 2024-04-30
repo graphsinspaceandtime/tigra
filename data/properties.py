@@ -89,7 +89,6 @@ def write_properties(key: databank.Dataset):
 
 
 if __name__ == "__main__":
-    # for key in databank.get_keys():
-    #     print("Calculating properties for {}...".format(key))
-    #     write_properties(key)
-    write_properties("sx-stackoverflow")
+    for key in databank.get_keys():
+        print("Calculating properties for {}...".format(key))
+        write_properties(key)
