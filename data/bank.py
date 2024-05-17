@@ -9,7 +9,16 @@ from tigra.core.dgraph import EventSequence, Event
 
 
 class Databank:
-    Dataset = typing.Literal[
+    """
+    Class for easier loading of datasets for experiment scripts. It is designed
+    for supporting both local execution of experiments using datasets stored in
+    the data directory and execution on a compute cluster where datasets are
+    sotred in a shared location.
+
+    Default dataset path is the data directory in the root of the repository.
+    """
+
+    __Dataset = typing.Literal[
         "radoslaw-email",
         "CollegeMsg",
         "email-Eu-core-temporal",
@@ -19,49 +28,68 @@ class Databank:
         "wiki-talk-temporal",
     ]
 
-    data_path = Path(__file__).parent
-    netrep_path = data_path / "netrep"
-    snap_path = data_path / "snap"
+    __data_path = Path(__file__).parent
+    __netrep_path = __data_path / "netrep"
+    __snap_path = __data_path / "snap"
 
-    filename_map: typing.Dict[Dataset, Path] = {
-        "radoslaw-email": netrep_path / "radoslaw_email" / "radoslaw_email.edges",
-        "CollegeMsg": snap_path / "CollegeMsg.txt",
-        "email-Eu-core-temporal": snap_path / "email-Eu-core-temporal.txt",
-        "sx-askubuntu": snap_path / "sx-askubuntu.txt",
-        "sx-mathoverflow": snap_path / "sx-mathoverflow.txt",
-        "sx-superuser": snap_path / "sx-superuser.txt",
-        "wiki-talk-temporal": snap_path / "wiki-talk-temporal.txt",
+    __filename_map: typing.Dict[__Dataset, Path] = {
+        "radoslaw-email": __netrep_path / "radoslaw_email" / "radoslaw_email.edges",
+        "CollegeMsg": __snap_path / "CollegeMsg.txt",
+        "email-Eu-core-temporal": __snap_path / "email-Eu-core-temporal.txt",
+        "sx-askubuntu": __snap_path / "sx-askubuntu.txt",
+        "sx-mathoverflow": __snap_path / "sx-mathoverflow.txt",
+        "sx-superuser": __snap_path / "sx-superuser.txt",
+        "wiki-talk-temporal": __snap_path / "wiki-talk-temporal.txt",
     }
 
     def __init__(self, path: typing.Union[str, Path, None]) -> None:
+        """
+        Create an instance of Databank loader.
+
+        Example use:
+        ```python
+        from data.bank import Databank
+
+        databank = Databank()
+
+        # or in case if you want to specify a custom path
+
+        databank = Databank("/path/to/datasets")
+        ```
+        """
         if isinstance(path, str):
-            self.data_path = Path(path)
+            self.__data_path = Path(path)
         elif isinstance(path, Path):
-            self.data_path = path
+            self.__data_path = path
         else:
-            self.data_path = Path(__file__).parent
+            self.__data_path = Path(__file__).parent
 
-        self.netrep_path = self.data_path / "netrep"
-        self.snap_path = self.data_path / "snap"
+        self.__netrep_path = self.__data_path / "netrep"
+        self.__snap_path = self.__data_path / "snap"
 
-        self.filename_map: typing.Dict[self.Dataset, Path] = {
-            "radoslaw-email": self.netrep_path
+        self.__filename_map: typing.Dict[self.__Dataset, Path] = {
+            "radoslaw-email": self.__netrep_path
             / "radoslaw_email"
             / "radoslaw_email.edges",
-            "CollegeMsg": self.snap_path / "CollegeMsg.txt",
-            "email-Eu-core-temporal": self.snap_path / "email-Eu-core-temporal.txt",
-            "sx-askubuntu": self.snap_path / "sx-askubuntu.txt",
-            "sx-mathoverflow": self.snap_path / "sx-mathoverflow.txt",
-            "sx-superuser": self.snap_path / "sx-superuser.txt",
-            "wiki-talk-temporal": self.snap_path / "wiki-talk-temporal.txt",
+            "CollegeMsg": self.__snap_path / "CollegeMsg.txt",
+            "email-Eu-core-temporal": self.__snap_path / "email-Eu-core-temporal.txt",
+            "sx-askubuntu": self.__snap_path / "sx-askubuntu.txt",
+            "sx-mathoverflow": self.__snap_path / "sx-mathoverflow.txt",
+            "sx-superuser": self.__snap_path / "sx-superuser.txt",
+            "wiki-talk-temporal": self.__snap_path / "wiki-talk-temporal.txt",
         }
 
-    def get_data(self, dataset: Dataset) -> EventSequence:
+    def get_data(self, dataset: __Dataset) -> EventSequence:
         """
         Read a specified dataset and return an EventSequence object.
+
+        Example use:
+        ```python
+        es = databank.get_data("radoslaw-email")
+        ```
         """
         if dataset == "radoslaw-email":
-            return self.__read_radoslaw(self.filename_map[dataset])
+            return self.__read_radoslaw(self.__filename_map[dataset])
         if dataset in [
             "CollegeMsg",
             "email-Eu-core-temporal",
@@ -71,13 +99,23 @@ class Databank:
             "wiki-talk-temporal",
         ]:
             return self.__read_three_whitespace_separated_columns(
-                self.filename_map[dataset]
+                self.__filename_map[dataset]
             )
         else:
             raise Exception("{} dataset is not available".format(dataset))
 
-    def get_keys(self) -> typing.List[Dataset]:
-        return list(self.filename_map.keys())
+    def get_keys(self) -> typing.List[__Dataset]:
+        """
+        Get a list of dataset keys. The paths are stored in a dictionary and
+        by specifying the dictionary key, you pick which dataset is used.
+
+        Example use:
+        ```python
+        for key in databank.get_keys():
+            es = databank.get_data(key)
+        ```
+        """
+        return list(self.__filename_map.keys())
 
     def __read_radoslaw(self, filename: Path) -> EventSequence:
         events = []
