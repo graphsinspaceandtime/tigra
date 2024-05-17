@@ -5,6 +5,7 @@ on:
     paths:
       - "data/**/*.py"
       - "tigra/**/*.py"
+  workflow_dispatch:
 
 env:
   CONDA_ENV: tigra
