@@ -32,6 +32,15 @@ filename_map: typing.Dict[Dataset, Path] = {
 }
 
 
+def set_data_path(path: typing.Union[str, Path]):
+    if isinstance(path, str):
+        data_path = Path(path)
+    elif isinstance(path, Path):
+        data_path = path
+    else:
+        raise Exception("path is of unsupported type")
+
+
 def get_data(dataset: Dataset) -> EventSequence:
     """
     Read a specified dataset and return an EventSequence object.
