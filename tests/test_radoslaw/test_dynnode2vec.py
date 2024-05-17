@@ -6,11 +6,12 @@ sys.dont_write_bytecode = True
 
 from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
-import data.bank as databank
+from data.bank import Databank
 
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner
 
+databank = Databank()
 es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())

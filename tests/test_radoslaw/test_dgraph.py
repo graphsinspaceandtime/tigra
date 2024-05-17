@@ -5,8 +5,9 @@ sys.path.append(os.path.join("..", ".."))
 sys.dont_write_bytecode = True
 
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
-import data.bank as databank
+from data.bank import Databank
 
+databank = Databank()
 es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
 print("time-span =", es.get_timespan_in_days())
