@@ -88,7 +88,7 @@ class Tuner(ABC):
             s += "," + str(eval[1]) + "," + str(eval[2]) + "," + str(eval[3])
             print(s)
 
-        print("Best conf: ", self.best)
+        print("Best conf: ", self.best, " [f1, prec, rec]")
         if self.best != None:
             print("Best conf params: ", self.confs[self.best[0]])
 
