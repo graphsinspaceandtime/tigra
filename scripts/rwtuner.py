@@ -115,6 +115,7 @@ if __name__ == "__main__":
     dataset_name = datasets[dataset_index]
     es = load_dataset(dataset_name)
     time_resolution = get_resolution(dataset_name)
+    print("TIME-RESOLUTION", time_resolution)
 
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, time_resolution=time_resolution, directed=False)
