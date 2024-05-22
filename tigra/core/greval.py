@@ -11,30 +11,31 @@ from tigra.core.dgraph import Graph
 
 
 class GraphReconstructionEval:
-
-    def __init__(self, graph: Graph, embedding: SingletonEmbedding):
+    def __init__(self, graph: Graph, embedding: SingletonEmbedding, report_warnings=True):
         self.graph = graph.G.to_undirected()
         self.embedding = embedding
-
+        self.report_warnings = report_warnings
         self.avg_precision = 0.0
         self.avg_recall = 0.0
         self.precision_per_node = dict()
         self.recall_per_node = dict()
         self.__calculate_prec_rec()
 
+
     def __calculate_prec_rec(self):
         k = self.graph.number_of_edges()
         reconstructed_graph = self.embedding.reconstruct(k, "REC").G
 
-        if self.graph.number_of_nodes() != reconstructed_graph.number_of_nodes():
-            print(
-                "[WARNING, greval] original and reconstructed graph have different number of nodes"
-            )
+        if self.report_warnings:
+            if self.graph.number_of_nodes() != reconstructed_graph.number_of_nodes():
+                print(
+                    "[WARNING, greval] original and reconstructed graph have different number of nodes"
+                )
 
-        if self.graph.number_of_edges() != reconstructed_graph.number_of_edges():
-            print(
-                "[WARNING, greval] original and reconstructed graph have different number of links"
-            )
+            if self.graph.number_of_edges() != reconstructed_graph.number_of_edges():
+                print(
+                    "[WARNING, greval] original and reconstructed graph have different number of links"
+                )
 
         s_rec = 0
         s_prec = 0
@@ -43,7 +44,8 @@ class GraphReconstructionEval:
 
         for node in self.graph.nodes:
             if not node in reconstructed_graph.nodes():
-                print("[WARNING, greval] Node", node, "skipped")
+                if self.report_warnings:
+                    print("[WARNING, greval] Node", node, "skipped")
                 continue
 
             predicted_edges = reconstructed_graph.edges(node)

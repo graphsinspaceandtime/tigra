@@ -16,16 +16,16 @@ sys.dont_write_bytecode = True
 import data.bank as databank
 datasets = databank.get_keys()
 
-P = [0.5, 1.0, 2.0, 4.0]
-#P = [1.0]
+#P = [0.5, 1.0, 2.0, 4.0]
+P = [1.0]
 
-Q = [0.5, 1.0, 2.0, 4.0]
-#Q = [1.0]
+#Q = [0.5, 1.0, 2.0, 4.0]
+Q = [1.0]
 
 TIMEWINDOW = [1, 3, 5]
 
-NUM_RUNS = 10
-#NUM_RUNS = 1
+#NUM_RUNS = 10
+NUM_RUNS = 1
 
 WORKERS = 16
 WALKLEN = 32
