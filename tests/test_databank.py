@@ -2,7 +2,9 @@ import sys
 
 sys.path.append("..")
 
-import data.bank as databank
+from data.bank import Databank
+
+databank = Databank("/home/dusan/Work/Research/TIGRA/Codes/tigra/data")
 
 for dataset in databank.get_keys():
     print("dataset:", dataset)

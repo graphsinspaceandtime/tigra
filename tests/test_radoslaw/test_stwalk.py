@@ -6,11 +6,12 @@ sys.dont_write_bytecode = True
 
 from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.sota.stwalk import STWalk
-import data.bank as databank
+from data.bank import Databank
 
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import STWalk_Tuner
 
+databank = Databank()
 es = databank.get_data("radoslaw-email")
 dg = DynamicGraph()
 dg.init_from_event_sequence(es, time_resolution="month", directed=False)

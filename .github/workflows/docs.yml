@@ -1,0 +1,48 @@
+name: Build docs page
+
+on:
+  push:
+    paths:
+      - "data/**/*.py"
+      - "tigra/**/*.py"
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+
+env:
+  CONDA_ENV: tigra
+  LOGO_URL: https://tigraphs.pmf.uns.ac.rs/wp-content/uploads/2023/12/cropped-tigar-logo-final-3.png
+
+jobs:
+  build:
+    name: Build docs page
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        name: Setup mamba
+        with:
+          miniforge-variant: Mambaforge
+          activate-environment: ${{ env.CONDA_ENV }}
+          use-mamba: true
+      - uses: actions/cache@v4
+        name: Cache / mamba
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/miniconda3/envs/${{ env.CONDA_ENV }}
+          key: ${{ runner.os }}-mamba-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yaml') }}
+        id: cache-mamba
+      - name: Update environment
+        run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yaml
+        if: steps.cache-mamba.outputs.cache-hit != 'true'
+      - name: Build docs
+        working-directory: data
+        run: pdoc --logo "${{ env.LOGO_URL }}" --output-directory bank bank.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-bank
+          path: docs/bank/
