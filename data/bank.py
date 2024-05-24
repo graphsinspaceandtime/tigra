@@ -7,6 +7,19 @@ sys.path.append("..")
 
 from tigra.core.dgraph import EventSequence, Event
 
+Dataset = typing.TypeVar(
+    "Dataset",
+    bound=typing.Literal[
+        "radoslaw-email",
+        "CollegeMsg",
+        "email-Eu-core-temporal",
+        "sx-askubuntu",
+        "sx-mathoverflow",
+        "sx-superuser",
+        "wiki-talk-temporal",
+    ],
+)
+
 
 class Databank:
     """
@@ -18,31 +31,7 @@ class Databank:
     Default dataset path is the data directory in the root of the repository.
     """
 
-    __Dataset = typing.Literal[
-        "radoslaw-email",
-        "CollegeMsg",
-        "email-Eu-core-temporal",
-        "sx-askubuntu",
-        "sx-mathoverflow",
-        "sx-superuser",
-        "wiki-talk-temporal",
-    ]
-
-    __data_path = Path(__file__).parent
-    __netrep_path = __data_path / "netrep"
-    __snap_path = __data_path / "snap"
-
-    __filename_map: typing.Dict[__Dataset, Path] = {
-        "radoslaw-email": __netrep_path / "radoslaw_email" / "radoslaw_email.edges",
-        "CollegeMsg": __snap_path / "CollegeMsg.txt",
-        "email-Eu-core-temporal": __snap_path / "email-Eu-core-temporal.txt",
-        "sx-askubuntu": __snap_path / "sx-askubuntu.txt",
-        "sx-mathoverflow": __snap_path / "sx-mathoverflow.txt",
-        "sx-superuser": __snap_path / "sx-superuser.txt",
-        "wiki-talk-temporal": __snap_path / "wiki-talk-temporal.txt",
-    }
-
-    def __init__(self, path: typing.Union[str, Path, None]) -> None:
+    def __init__(self, path: typing.Union[str, Path, None] = None) -> None:
         """
         Create an instance of Databank loader.
 
@@ -67,7 +56,7 @@ class Databank:
         self.__netrep_path = self.__data_path / "netrep"
         self.__snap_path = self.__data_path / "snap"
 
-        self.__filename_map: typing.Dict[self.__Dataset, Path] = {
+        self.__filename_map: typing.Dict[str, Path] = {
             "radoslaw-email": self.__netrep_path
             / "radoslaw_email"
             / "radoslaw_email.edges",
@@ -79,7 +68,7 @@ class Databank:
             "wiki-talk-temporal": self.__snap_path / "wiki-talk-temporal.txt",
         }
 
-    def get_data(self, dataset: __Dataset) -> EventSequence:
+    def get_data(self, dataset: Dataset) -> EventSequence:
         """
         Read a specified dataset and return an EventSequence object.
 
@@ -104,7 +93,7 @@ class Databank:
         else:
             raise Exception("{} dataset is not available".format(dataset))
 
-    def get_keys(self) -> typing.List[__Dataset]:
+    def get_keys(self) -> typing.List[Dataset]:
         """
         Get a list of dataset keys. The paths are stored in a dictionary and
         by specifying the dictionary key, you pick which dataset is used.
@@ -115,7 +104,7 @@ class Databank:
             es = databank.get_data(key)
         ```
         """
-        return list(self.__filename_map.keys())
+        return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
 
     def __read_radoslaw(self, filename: Path) -> EventSequence:
         events = []
