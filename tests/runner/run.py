@@ -148,6 +148,10 @@ if __name__ == "__main__":
                 combos.append((dataset, method))
         runners = map(lambda t: Runner(t[0], t[1], __databank, __methods), combos)
         for runner in runners:
-            runner.make_embedding()
-            print(runner.reconstruction_eval())
-            runner.run_tuner()
+            print(f"Running for dataset: {runner.dataset} and method: {runner.method}")
+            try:
+                runner.make_embedding()
+                print(runner.reconstruction_eval())
+                runner.run_tuner()
+            except:
+                print("Something went wrong")
