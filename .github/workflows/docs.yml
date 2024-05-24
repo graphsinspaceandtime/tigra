@@ -38,7 +38,8 @@ jobs:
         run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yaml
         if: steps.cache-mamba.outputs.cache-hit != 'true'
       - name: Build docs
-        run: pdoc --logo "${{ env.LOGO_URL }}" --output-directory docs/bank data/bank.py
+        working-directory: data
+        run: pdoc --logo "${{ env.LOGO_URL }}" --output-directory bank bank.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
