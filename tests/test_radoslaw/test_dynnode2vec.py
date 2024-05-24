@@ -39,7 +39,16 @@ print("F1", gre.getF1())
 
 print("TESTING TUNER")
 start_time = time.time()
-tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0, 2.0, 4.0], [0.5, 1.0, 2.0, 4.0], num_runs=10, parallel_processes=16, walk_length=64, n_walks_per_node=10)
+tuner = Dynnode2vec_Tuner(
+    last_graph,
+    dg,
+    [0.5, 1.0, 2.0, 4.0],
+    [0.5, 1.0, 2.0, 4.0],
+    num_runs=10,
+    parallel_processes=16,
+    walk_length=64,
+    n_walks_per_node=10,
+)
 # tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0], [0.5, 1.0], num_runs=5)
 tuner.tune()
 tuner.print_report()

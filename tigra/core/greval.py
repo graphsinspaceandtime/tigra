@@ -11,7 +11,9 @@ from tigra.core.dgraph import Graph
 
 
 class GraphReconstructionEval:
-    def __init__(self, graph: Graph, embedding: SingletonEmbedding, report_warnings=True):
+    def __init__(
+        self, graph: Graph, embedding: SingletonEmbedding, report_warnings=True
+    ):
         self.graph = graph.G.to_undirected()
         self.embedding = embedding
         self.report_warnings = report_warnings
@@ -20,7 +22,6 @@ class GraphReconstructionEval:
         self.precision_per_node = dict()
         self.recall_per_node = dict()
         self.__calculate_prec_rec()
-
 
     def __calculate_prec_rec(self):
         k = self.graph.number_of_edges()

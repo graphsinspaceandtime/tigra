@@ -61,7 +61,9 @@ class Tuner(ABC):
                 current_instance = self.create_instance(i)
                 current_instance.make_embedding(self.data)
                 last_embedding = current_instance.embeddings[-1]
-                gre = GraphReconstructionEval(self.graph, last_embedding, report_warnings=False)
+                gre = GraphReconstructionEval(
+                    self.graph, last_embedding, report_warnings=False
+                )
                 prec = gre.get_avg_precision()
                 rec = gre.get_avg_recall()
                 f1 = gre.getF1()
