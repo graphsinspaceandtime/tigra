@@ -14,7 +14,7 @@ from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import CTDNE_Tuner, STWalk_Tuner, Dynnode2vec_Tuner
 
 
-__databank = Databank(Path.root / "home" / "shared" / "tigra" / "data")
+__databank = Databank("/home/shared/tigra/data")
 
 __methods = ["ctdne", "stwalk", "dynnode2vec"]
 
