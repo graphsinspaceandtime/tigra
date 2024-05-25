@@ -31,6 +31,8 @@
 . /usr/share/modules/init/bash
 
 ### Load environment
+module purge
+module load python/miniconda3
 
 ### user commands
 eval "$(conda shell.bash hook)" # required for conda
