@@ -418,10 +418,11 @@ class DynamicAggregateGraph:
         for event in self.event_sequence:
             src, dst = event.src, event.dst
             if not self.agg_graph.has_edge(src, dst):
-                weight = event.weight
+                #weight = event.weight
                 event_data = event.event_data
                 edge_data = (event.timestamp, event_data)
-                self.agg_graph.add_edge(src, dst, weight=weight, edge_data=edge_data)
+                #self.agg_graph.add_edge(src, dst, weight=weight, edge_data=edge_data)
+                self.agg_graph.add_edge(src, dst, edge_data=edge_data)
 
     def get_aggregate_graph(self):
         return self.agg_graph

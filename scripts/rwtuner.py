@@ -13,19 +13,20 @@ import time
 sys.path.append(os.path.join(".."))
 sys.dont_write_bytecode = True
 
-import data.bank as databank
+from data.bank import Databank
+databank = Databank()
 datasets = databank.get_keys()
 
-#P = [0.5, 1.0, 2.0, 4.0]
-P = [1.0]
+P = [0.5, 1.0, 2.0, 4.0]
+#P = [1.0]
 
-#Q = [0.5, 1.0, 2.0, 4.0]
-Q = [1.0]
+Q = [0.5, 1.0, 2.0, 4.0]
+#Q = [1.0]
 
 TIMEWINDOW = [1, 3, 5]
 
-#NUM_RUNS = 10
-NUM_RUNS = 1
+NUM_RUNS = 10
+#NUM_RUNS = 1
 
 WORKERS = 16
 WALKLEN = 32
@@ -101,8 +102,6 @@ if __name__ == "__main__":
         print("USAGE: rwtuner dataset-index")
         sys.exit()
 
-    start_time = time.time()
-
     print("RWTUNER")
     print("P", P)
     print("Q", Q)
@@ -126,12 +125,22 @@ if __name__ == "__main__":
 
     dag = DynamicAggregateGraph(dataset_name, es, directed=False)
 
+    start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
-    tune_ctdne(dag)
-    tune_stwalk(last_graph, dg)
-
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print("TIME [sec]", elapsed_time)
+    print("DYNNODE2VEC TIME [sec]", elapsed_time)
+
+    start_time = time.time()
+    tune_ctdne(dag)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("CTDNE TIME [sec]", elapsed_time)
+    
+    start_time = time.time()
+    tune_stwalk(last_graph, dg)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("STWALK TIME [sec]", elapsed_time)
 
     

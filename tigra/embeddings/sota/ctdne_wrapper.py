@@ -44,6 +44,8 @@ class Ctdne(Embedding):
         nx.set_edge_attributes(graph, edge2time, "time")
         CTDNE_model = CTDNE(
             graph,
+            p = self.p,
+            q = self.q,
             dimensions=self.dim,
             walk_length=self.walk_length,
             num_walks=self.num_walks,
