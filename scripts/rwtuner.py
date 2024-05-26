@@ -58,10 +58,11 @@ def tune_dynnode2vec(last_graph, dg):
     tuner.tune()
     tuner.print_report()
 
-def tune_ctdne(dag):
+def tune_ctdne(last_graph, dag):
     print("\nTUNING CTDNE")
     tuner = CTDNE_Tuner(
-        dag.get_aggregate_graph(),
+        #dag.get_aggregate_graph(),
+        last_graph,
         dag,
         P,
         Q,
@@ -130,9 +131,9 @@ if __name__ == "__main__":
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
-
+    
     start_time = time.time()
-    tune_ctdne(dag)
+    tune_ctdne(last_graph, dag)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
@@ -141,6 +142,4 @@ if __name__ == "__main__":
     tune_stwalk(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print("STWALK TIME [sec]", elapsed_time)
-
-    
+    print("STWALK TIME [sec]", elapsed_time) 
