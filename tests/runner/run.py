@@ -2,11 +2,12 @@ import sys
 import argparse
 import typing
 from pathlib import Path
+from abc import ABC, abstractmethod
 
 sys.path.append("../..")
 
 from data.bank import Databank, Dataset
-from tigra.core.dgraph import DynamicAggregateGraph, DynamicGraph
+from tigra.core.dgraph import DynamicAggregateGraph, DynamicGraph, EventSequence
 from tigra.embeddings.sota import ctdne_wrapper
 from tigra.embeddings.sota.stwalk import STWalk
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
@@ -17,6 +18,101 @@ from tigra.embeddings.hypertuner import CTDNE_Tuner, STWalk_Tuner, Dynnode2vec_T
 __databank = Databank("/home/shared/tigra/data")
 
 __methods = ["ctdne", "stwalk", "dynnode2vec"]
+
+
+class MethodRunner(ABC):
+    @abstractmethod
+    def reconstruction_eval(self) -> GraphReconstructionEval:
+        pass
+
+    @abstractmethod
+    def tuner_eval(self) -> None:
+        pass
+
+
+class CTDNERunner(MethodRunner):
+    def __init__(self, graph: typing.Any) -> None:
+        self.graph = typing.cast(DynamicAggregateGraph, graph)
+
+    def reconstruction_eval(self) -> GraphReconstructionEval:
+        __graph = typing.cast(DynamicAggregateGraph, self.graph)
+        __embeddings = ctdne_wrapper.Ctdne(10, workers=4)
+        __embeddings.make_embedding(__graph)
+        gre = GraphReconstructionEval(
+            __graph.get_aggregate_graph(), __embeddings.embeddings[0]
+        )
+        return gre
+
+    def tuner_eval(self) -> None:
+        tuner = CTDNE_Tuner(
+            self.graph.get_aggregate_graph(),
+            self.graph,
+            [0.5, 1.0, 2.0, 4.0],
+            [0.5, 1.0, 2.0, 4.0],
+            num_runs=5,
+        )
+        tuner.tune()
+        tuner.print_report()
+
+
+class STWalkRunner(MethodRunner):
+    def __init__(self, graph: typing.Any) -> None:
+        self.graph = typing.cast(DynamicGraph, graph)
+
+    def reconstruction_eval(self) -> GraphReconstructionEval:
+        __time_step = len(self.graph.get_nx_graph_sequence())
+        __embeddings = STWalk(
+            number_restart=40,
+            walk_length=10,
+            dimension=5,
+            time_step=__time_step,
+            time_window_size=1,
+            workers=4,
+            vocab_window_size=5,
+        )
+        __embeddings.make_embedding(self.graph)
+        self.__last_graph = self.graph.get_graph_sequence()[-1]
+        __last_embedding = __embeddings.embeddings[-1]
+        gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
+        return gre
+
+    def tuner_eval(self) -> None:
+        tuner = STWalk_Tuner(
+            self.__last_graph,
+            self.graph,
+            [1, 3, 5],
+            num_runs=5,
+            n_walks_per_node=40,
+        )
+        tuner.tune()
+        tuner.print_report()
+
+
+class DynNode2VecRunner(MethodRunner):
+    def __init__(self, graph: typing.Any) -> None:
+        self.graph = typing.cast(DynamicGraph, graph)
+
+    def reconstruction_eval(self) -> GraphReconstructionEval:
+        __embeddings = Dynnode2vec(10)
+        __embeddings.make_embedding(self.graph)
+        self.__last_graph = self.graph.get_graph_sequence()[-1]
+        __last_embedding = __embeddings.embeddings[-1]
+        gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
+        return gre
+
+    def tuner_eval(self) -> None:
+        tuner = Dynnode2vec_Tuner(
+            self.__last_graph,
+            self.graph,
+            [0.5, 1.0, 2.0, 4.0],
+            [0.5, 1.0, 2.0, 4.0],
+            num_runs=10,
+            parallel_processes=16,
+            walk_length=64,
+            n_walks_per_node=10,
+        )
+        tuner.tune()
+        tuner.print_report()
 
 
 class Runner:
@@ -34,101 +130,36 @@ class Runner:
         self.__databank = __databank
         self.dataset = typing.cast(Dataset, dataset)
         self.method = method
-        self.__load_dataset()
-        self.__create_graph()
+        es = self.__databank.get_data(self.dataset)
+        graph = self.__create_graph(es)
+        self.method_runner = self.__create_method_runner(graph, method)
 
-    def __load_dataset(self) -> None:
-        self.event_sequence = self.__databank.get_data(self.dataset)
-
-    def __create_graph(self) -> None:
+    def __create_graph(self, es: EventSequence) -> typing.Any:
         if self.method in ["ctdne"]:
-            self.graph = DynamicAggregateGraph(
-                f"({self.method}-{self.dataset})", self.event_sequence, directed=False
+            graph = DynamicAggregateGraph(
+                f"({self.method}-{self.dataset})", es, directed=False
             )
         else:
-            self.graph = DynamicGraph()
-            self.graph.init_from_event_sequence(
-                self.event_sequence, time_resolution="month", directed=False
-            )
+            graph = DynamicGraph()
+            graph.init_from_event_sequence(es, time_resolution="month", directed=False)
+        return graph
 
-    def make_embedding(self) -> None:
-        if self.method == "ctdne":
-            __graph = typing.cast(DynamicAggregateGraph, self.graph)
-            self.embeddings = ctdne_wrapper.Ctdne(10, workers=4)
-            self.embeddings.make_embedding(__graph)
-        elif self.method == "stwalk":
-            __graph = typing.cast(DynamicGraph, self.graph)
-            __time_step = len(__graph.get_nx_graph_sequence())
-            self.embeddings = STWalk(
-                number_restart=40,
-                walk_length=10,
-                dimension=5,
-                time_step=__time_step,
-                time_window_size=1,
-                workers=4,
-                vocab_window_size=5,
-            )
-            self.embeddings.make_embedding(self.graph)
-        elif self.method == "dynnode2vec":
-            __graph = typing.cast(DynamicGraph, self.graph)
-            self.embeddings = Dynnode2vec(10)
-            self.embeddings.make_embedding(__graph)
+    def __create_method_runner(self, graph: typing.Any, method: str) -> MethodRunner:
+        if method == "ctdne":
+            return CTDNERunner(graph)
+        elif method == "stwalk":
+            return STWalkRunner(graph)
+        elif method == "dynnode2vec":
+            return DynNode2VecRunner(graph)
         else:
-            raise Exception(f"unknown method {self.method}")
+            raise Exception(f"unknown method {method}")
 
     def reconstruction_eval(self) -> typing.Tuple[float, float, float]:
-        if self.method == "ctdne":
-            __graph = typing.cast(DynamicAggregateGraph, self.graph)
-            gre = GraphReconstructionEval(
-                __graph.get_aggregate_graph(), self.embeddings.embeddings[0]
-            )
-        elif self.method == "stwalk":
-            __graph = typing.cast(DynamicGraph, self.graph)
-            self.__last_graph = __graph.get_graph_sequence()[-1]
-            __last_embedding = self.embeddings.embeddings[-1]
-            gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
-        elif self.method == "dynnode2vec":
-            __graph = typing.cast(DynamicGraph, self.graph)
-            self.__last_graph = __graph.get_graph_sequence()[-1]
-            __last_embedding = self.embeddings.embeddings[-1]
-            gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
-        else:
-            raise Exception(f"unknown method {self.method}")
+        gre = self.method_runner.reconstruction_eval()
         return (gre.get_avg_precision(), gre.get_avg_recall(), gre.getF1())
 
-    def run_tuner(self) -> None:
-        if self.method == "ctdne":
-            __graph = typing.cast(DynamicAggregateGraph, self.graph)
-            tuner = CTDNE_Tuner(
-                __graph.get_aggregate_graph(),
-                __graph,
-                [0.5, 1.0, 2.0, 4.0],
-                [0.5, 1.0, 2.0, 4.0],
-                num_runs=5,
-            )
-        elif self.method == "stwalk":
-            tuner = STWalk_Tuner(
-                self.__last_graph,
-                self.graph,
-                [1, 3, 5],
-                num_runs=5,
-                n_walks_per_node=40,
-            )
-        elif self.method == "dynnode2vec":
-            tuner = Dynnode2vec_Tuner(
-                self.__last_graph,
-                self.graph,
-                [0.5, 1.0, 2.0, 4.0],
-                [0.5, 1.0, 2.0, 4.0],
-                num_runs=10,
-                parallel_processes=16,
-                walk_length=64,
-                n_walks_per_node=10,
-            )
-        else:
-            raise Exception(f"unknown method {self.method}")
-        tuner.tune()
-        tuner.print_report()
+    def tuner_eval(self) -> None:
+        self.method_runner.tuner_eval()
 
 
 if __name__ == "__main__":
@@ -158,8 +189,7 @@ if __name__ == "__main__":
         for runner in runners:
             print(f"Running for dataset: {runner.dataset} and method: {runner.method}")
             try:
-                runner.make_embedding()
                 print(runner.reconstruction_eval())
-                runner.run_tuner()
+                runner.tuner_eval()
             except:
                 print("Something went wrong")
