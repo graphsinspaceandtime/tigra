@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append("../..")
 
-from data.bank import Databank
+from data.bank import Databank, Dataset
 from tigra.core.dgraph import DynamicAggregateGraph, DynamicGraph
 from tigra.embeddings.sota import ctdne_wrapper
 from tigra.embeddings.sota.stwalk import STWalk
@@ -32,7 +32,7 @@ class Runner:
         if method not in __methods:
             raise Exception(f"method {method} is not available")
         self.__databank = __databank
-        self.dataset = dataset
+        self.dataset = typing.cast(Dataset, dataset)
         self.method = method
         self.__load_dataset()
         self.__create_graph()
@@ -53,10 +53,12 @@ class Runner:
 
     def make_embedding(self) -> None:
         if self.method == "ctdne":
+            __graph = typing.cast(DynamicAggregateGraph, self.graph)
             self.embeddings = ctdne_wrapper.Ctdne(10, workers=4)
-            self.embeddings.make_embedding(self.graph)
+            self.embeddings.make_embedding(__graph)
         elif self.method == "stwalk":
-            __time_step = len(self.graph.get_nx_graph_sequence())
+            __graph = typing.cast(DynamicGraph, self.graph)
+            __time_step = len(__graph.get_nx_graph_sequence())
             self.embeddings = STWalk(
                 number_restart=40,
                 walk_length=10,
@@ -68,22 +70,26 @@ class Runner:
             )
             self.embeddings.make_embedding(self.graph)
         elif self.method == "dynnode2vec":
+            __graph = typing.cast(DynamicGraph, self.graph)
             self.embeddings = Dynnode2vec(10)
-            self.embeddings.make_embedding(self.graph)
+            self.embeddings.make_embedding(__graph)
         else:
             raise Exception(f"unknown method {self.method}")
 
     def reconstruction_eval(self) -> typing.Tuple[float, float, float]:
         if self.method == "ctdne":
+            __graph = typing.cast(DynamicAggregateGraph, self.graph)
             gre = GraphReconstructionEval(
-                self.graph.get_aggregate_graph(), self.embeddings.embeddings[0]
+                __graph.get_aggregate_graph(), self.embeddings.embeddings[0]
             )
         elif self.method == "stwalk":
-            self.__last_graph = self.graph.get_graph_sequence()[-1]
+            __graph = typing.cast(DynamicGraph, self.graph)
+            self.__last_graph = __graph.get_graph_sequence()[-1]
             __last_embedding = self.embeddings.embeddings[-1]
             gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
         elif self.method == "dynnode2vec":
-            self.__last_graph = self.graph.get_graph_sequence()[-1]
+            __graph = typing.cast(DynamicGraph, self.graph)
+            self.__last_graph = __graph.get_graph_sequence()[-1]
             __last_embedding = self.embeddings.embeddings[-1]
             gre = GraphReconstructionEval(self.__last_graph, __last_embedding)
         else:
@@ -92,9 +98,10 @@ class Runner:
 
     def run_tuner(self) -> None:
         if self.method == "ctdne":
+            __graph = typing.cast(DynamicAggregateGraph, self.graph)
             tuner = CTDNE_Tuner(
-                self.graph.get_aggregate_graph(),
-                self.graph,
+                __graph.get_aggregate_graph(),
+                __graph,
                 [0.5, 1.0, 2.0, 4.0],
                 [0.5, 1.0, 2.0, 4.0],
                 num_runs=5,
