@@ -31,6 +31,7 @@ NUM_RUNS = 10
 WORKERS = 16
 WALKLEN = 32
 NUMWALKS = 10
+#NUMWALKS = 1
 
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner, CTDNE_Tuner, STWalk_Tuner
@@ -61,8 +62,7 @@ def tune_dynnode2vec(last_graph, dg):
 def tune_ctdne(last_graph, dag):
     print("\nTUNING CTDNE")
     tuner = CTDNE_Tuner(
-        #dag.get_aggregate_graph(),
-        last_graph,
+        dag.get_aggregate_graph(),
         dag,
         P,
         Q,
@@ -110,6 +110,7 @@ if __name__ == "__main__":
     print("WORKERS", WORKERS)
     print("WALKLEN", WALKLEN)
     print("NUMWALKS", NUMWALKS)
+    print("TIMEWINDOW", TIMEWINDOW)
 
     dataset_index = int(sys.argv[1])
     dataset_name = datasets[dataset_index]
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
-    
+
     start_time = time.time()
     tune_ctdne(last_graph, dag)
     end_time = time.time()
@@ -142,4 +143,4 @@ if __name__ == "__main__":
     tune_stwalk(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print("STWALK TIME [sec]", elapsed_time) 
+    print("STWALK TIME [sec]", elapsed_time)
