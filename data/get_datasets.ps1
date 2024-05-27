@@ -1,17 +1,45 @@
 $NETREP_URLS = @(
-    "http://nrvis.com/download/data/misc/radoslaw_email.zip"
+    "https://nrvis.com/download/data/misc/radoslaw_email.zip"
+    "https://nrvis.com/download/data/dynamic/fb-forum.zip"
+    "https://nrvis.com/download/data/dynamic/fb-messages.zip"
+    "https://nrvis.com/download/data/dynamic/ia-contacts_hypertext2009.zip"
+    "https://nrvis.com/download/data/dynamic/ia-enron-employees.zip"
+    "https://nrvis.com/download/data/dynamic/ia-hospital-ward-proximity-attr.zip"
+    "https://nrvis.com/download/data/dynamic/ia-primary-school-proximity-attr.zip"
+    "https://nrvis.com/download/data/dynamic/ia-reality-call.zip"
 )
 
 $NETREP_DIRS = @(
     "radoslaw_email"
+    "fb-forum"
+    "fb-messages"
+    "ia-contacts_hypertext2009"
+    "ia-enron-employees"
+    "ia-hospital-ward-proximity-attr"
+    "ia-primary-school-proximity-attr"
+    "ia-reality-call"
 )
 
 $NETREP_CHECK_FILES = @(
     "radoslaw_email.edges"
+    "fb-forum.edges"
+    "fb-messages.edges"
+    "ia-contacts_hypertext2009.edges"
+    "ia-enron-employees.edges"
+    "ia-hospital-ward-proximity-attr.edges"
+    "ia-primary-school-proximity-attr.edges"
+    "ia-reality-call.edges"
 )
 
 $NETREP_CHECKSUMS = @(
     "cbdc821eb8949cfa36fb71b14aa3cf745e977de1fd2de0ece099c113df364969"
+    "4aa6ba14f2440e582e1cec3357ef9a4ac8020fe72ec6b31a7ff746e291356088"
+    "e198696b077ac26659b7e9ae59a4cbe1414c7fde77e63a40bd2271c66c377f54"
+    "3e3c602752bce28a2caca848ad1e357b2ba9b687f3d1d83a2de5c83f2a7e3485"
+    "550a509fdbbfa31dba52a7de85bc42ade8937bb1134c83bf5a3d8391061aeb34"
+    "b0c4ddefe2e262e274eaca9f8d6cf1fd7324cfe89866178e5d377d710e9f803a"
+    "fffc027277827ffd145960af197edec86a2bd66ce25105622f6bb06a3dddffc5"
+    "9b4ed613c1bbed93ecef012d1a2036945597b8fc35256dbcc150a108fbf8feef"
 )
 
 $SNAP_URLS = @(

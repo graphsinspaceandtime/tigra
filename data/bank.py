@@ -11,6 +11,13 @@ Dataset = typing.TypeVar(
     "Dataset",
     bound=typing.Literal[
         "radoslaw-email",
+        "fb-forum",
+        "fb-messages",
+        "ia-contacts_hypertext2009",
+        "ia-enron-employees",
+        "ia-hospital-ward-proximity-attr",
+        "ia-primary-school-proximity-attr",
+        "ia-reality-call",
         "CollegeMsg",
         "email-Eu-core-temporal",
         "sx-askubuntu",
@@ -60,6 +67,23 @@ class Databank:
             "radoslaw-email": self.__netrep_path
             / "radoslaw_email"
             / "radoslaw_email.edges",
+            "fb-forum": self.__netrep_path / "fb-forum" / "fb-forum.edges",
+            "fb-messages": self.__netrep_path / "fb-messages" / "fb-messages.edges",
+            "ia-contacts_hypertext2009": self.__netrep_path
+            / "ia-contacts_hypertext2009"
+            / "ia-contacts_hypertext2009.edges",
+            "ia-enron-employees": self.__netrep_path
+            / "ia-enron-employees"
+            / "ia-enron-employees.edges",
+            "ia-hospital-ward-proximity-attr": self.__netrep_path
+            / "ia-hospital-ward-proximity-attr"
+            / "ia-hospital-ward-proximity-attr.edges",
+            "ia-primary-school-proximity-attr": self.__netrep_path
+            / "ia-primary-school-proximity-attr"
+            / "ia-primary-school-proximity-attr.edges",
+            "ia-reality-call": self.__netrep_path
+            / "ia-reality-call"
+            / "ia-reality-call.edges",
             "CollegeMsg": self.__snap_path / "CollegeMsg.txt",
             "email-Eu-core-temporal": self.__snap_path / "email-Eu-core-temporal.txt",
             "sx-askubuntu": self.__snap_path / "sx-askubuntu.txt",
@@ -77,8 +101,19 @@ class Databank:
         es = databank.get_data("radoslaw-email")
         ```
         """
-        if dataset == "radoslaw-email":
-            return self.__read_radoslaw(self.__filename_map[dataset])
+        if dataset in ["radoslaw-email", "ia-enron-employees"]:
+            return self.__read_wsp_vert_weig_time(self.__filename_map[dataset])
+        if dataset in ["fb-forum", "ia-contacts_hypertext2009"]:
+            return self.__read_csv_vert_time(self.__filename_map[dataset])
+        if dataset == "fb-messages":
+            return self.__read_csv_vert_float_time(self.__filename_map[dataset])
+        if dataset == "ia-hospital-ward-proximity-attr":
+            return self.__read_csv_vert_time_attr(self.__filename_map[dataset])
+        if dataset == "ia-primary-school-proximity-attr":
+            # TODO: Za ovaj mozda uraditi diskretizaciju atributa?
+            return self.__read_csv_vert_time_str_attr(self.__filename_map[dataset])
+        if dataset == "ia-reality-call":
+            return self.__read_csv_vert_time_weig(self.__filename_map[dataset])
         if dataset in [
             "CollegeMsg",
             "email-Eu-core-temporal",
@@ -106,7 +141,7 @@ class Databank:
         """
         return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
 
-    def __read_radoslaw(self, filename: Path) -> EventSequence:
+    def __read_wsp_vert_weig_time(self, filename: Path) -> EventSequence:
         events = []
         with open(filename, "r") as f:
             separator_pat = r"\W+"
@@ -125,6 +160,64 @@ class Databank:
             separator_pat = r"\W+"
             for row in self.__read_rows(f, separator_pat):
                 events.append(Event(int(row[0]), int(row[1]), int(row[2])))
+        return EventSequence(list_of_events=events)
+
+    def __read_csv_vert_time(self, filename: Path) -> EventSequence:
+        events = []
+        with open(filename, "r") as f:
+            separator_pat = r","
+            for row in self.__read_rows(f, separator_pat):
+                events.append(Event(int(row[0]), int(row[1]), int(row[2])))
+        return EventSequence(list_of_events=events)
+
+    def __read_csv_vert_float_time(self, filename: Path) -> EventSequence:
+        events = []
+        with open(filename, "r") as f:
+            separator_pat = r","
+            for row in self.__read_rows(f, separator_pat):
+                events.append(Event(int(row[0]), int(row[1]), int(row[2][:-2])))
+        return EventSequence(list_of_events=events)
+
+    def __read_csv_vert_time_attr(self, filename: Path) -> EventSequence:
+        events = []
+        with open(filename, "r") as f:
+            separator_pat = r","
+            comment_pat = r"^%"
+            for row in self.__read_rows(f, separator_pat, comment_pat):
+                events.append(
+                    Event(
+                        int(row[0]),
+                        int(row[1]),
+                        int(row[2]),
+                        event_data={"src_class": int(row[3]), "dst_class": int(row[4])},
+                    )
+                )
+        return EventSequence(list_of_events=events)
+
+    def __read_csv_vert_time_str_attr(self, filename: Path) -> EventSequence:
+        events = []
+        with open(filename, "r") as f:
+            separator_pat = r","
+            comment_pat = r"^%"
+            for row in self.__read_rows(f, separator_pat, comment_pat):
+                events.append(
+                    Event(
+                        int(row[0]),
+                        int(row[1]),
+                        int(row[2]),
+                        event_data={"src_class": row[3], "dst_class": row[4]},
+                    )
+                )
+        return EventSequence(list_of_events=events)
+
+    def __read_csv_vert_time_weig(self, filename: Path) -> EventSequence:
+        events = []
+        with open(filename, "r") as f:
+            separator_pat = r"\W+"
+            for row in self.__read_rows(f, separator_pat):
+                events.append(
+                    Event(int(row[0]), int(row[1]), int(row[2]), float(row[3]))
+                )
         return EventSequence(list_of_events=events)
 
     def __read_rows(
