@@ -214,7 +214,6 @@ class CTDNE_Tuner(N2VMethods_Tuner):
         )
 
 
-
 class STWalk_Tuner(Tuner):
     """
     Tuner for STWalk
