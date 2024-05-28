@@ -23,8 +23,8 @@ class LIDEstimator(ABC):
     def __init__(self, estimator_name, graph):
         self.estimator_name = estimator_name
         self.graph = graph
-        self.nx_graph = graph.G
-        self.nodes = graph.G.nodes()
+        self.nx_graph = graph
+        self.nodes = list(graph)
         self.lid_values = dict()
 
     @abstractmethod
@@ -72,10 +72,10 @@ class LIDMLEEstimator(LIDEstimator):
     def estimate_lids(self):
         numn = len(self.nodes)
         for i in range(numn):
-            src = self.nodes[i][0]
+            src = self.nodes[i]
             src_dists = []
             for j in range(len(self.nodes)):
-                dst = self.nodes[j][0]
+                dst = self.nodes[j]
                 if src != dst:
                     d = self.compute_distance(src, dst)
                     src_dists.append(d)
@@ -104,13 +104,13 @@ class EmbLIDMLEEstimator(LIDMLEEstimator):
 
     def __init__(self, graph, embedding, k):
         self.node_vectors = {}  # [embedding[n[0]] for n in graph.nodes()]
-        for n in graph.G.nodes():
-            self.node_vectors[n[0]] = embedding[n[0]]
+        for n in graph.nodes():
+            self.node_vectors[n] = embedding.embedding[n]
 
         super().__init__("EMB-LID", graph, k)
 
     def compute_distance(self, src, dst):
-        return np.linalg.norm(self.node_vectors[src] - self.node_vectors[dst])
+        return np.linalg.norm(np.array(self.node_vectors[src]) - np.array(self.node_vectors[dst]))
 
 
 class EmbLIDMLEEstimatorTorch(LIDMLEEstimator):
@@ -122,8 +122,8 @@ class EmbLIDMLEEstimatorTorch(LIDMLEEstimator):
 
     def __init__(self, graph, embedding, k):
         self.node_vectors = {}  # [embedding[n[0]] for n in graph.nodes()]
-        for n in graph.G.nodes():
-            self.node_vectors[n[0]] = torch.tensor(embedding[n[0]])
+        for n in graph.nodes():
+            self.node_vectors[n] = torch.tensor(embedding.embedding[n])
 
         super().__init__("EMB-LID", graph, k)
 
@@ -291,7 +291,7 @@ class NCLIDEstimator(LIDEstimator):
 
     def __init__(self, graph, alpha=1.0):
         super().__init__("NCLID", graph)
-        self.community_detector = LFMnx(graph.to_networkx(), alpha=alpha)
+        self.community_detector = LFMnx(graph, alpha=alpha)
         self.nc_size = dict()
         self.max_nc_size = 0
         self.natural_community = dict()
@@ -334,7 +334,7 @@ class NCLIDEstimator(LIDEstimator):
     def estimate_lids(self):
         numn = len(self.nodes)
         for i in range(numn):
-            src = self.nodes[i][0]
+            src = self.nodes[i]
             src_community = self.community_detector.identify_natural_community(src)
             self.natural_community[src] = src_community
             len_src_community = len(src_community)

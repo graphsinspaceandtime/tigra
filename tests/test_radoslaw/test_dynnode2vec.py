@@ -12,6 +12,8 @@ from data.bank import Databank
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner
 
+#from tigra.evaluation import lid_eval
+
 databank = Databank()
 es = databank.get_data("radoslaw-email")
 print("num-events=", es.num_events())
@@ -23,6 +25,25 @@ dg.info()
 
 dn2v = Dynnode2vec(10)
 dn2v.make_embedding(dg)
+
+"""
+#LID_EVAL TEST
+
+le_torch = lid_eval.EmbLIDMLEEstimatorTorch(dg.get_nx_graph_sequence()[-1], dn2v.embeddings[-1], k=10)
+le_torch.estimate_lids()
+print("lid values torch\n", le_torch.get_lid_values())
+print("\n\n\n")
+
+le_not = lid_eval.EmbLIDMLEEstimator(dg.get_nx_graph_sequence()[-1], dn2v.embeddings[-1], k=10)
+le_not.estimate_lids()
+print("lid values ml no torch\n", le_not.get_lid_values())
+print("\n\n\n")
+
+le_comm = lid_eval.NCLIDEstimator(dg.get_nx_graph_sequence()[-1])
+le_comm.estimate_lids()
+print("lid values nc\n", le_comm.get_lid_values())
+print("\n\n\n")
+"""
 
 org_graphs = dg.get_graph_sequence()
 
