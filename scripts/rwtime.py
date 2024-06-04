@@ -173,7 +173,7 @@ def measure_stwalk(dg, last_graph, dag):
 
 
 if __name__ == "__main__":
-    for i in range(0, len(datasets) - 4):
+    for i in range(0, len(datasets)):
         es, resol = load_dataset(datasets[i])
         dg, last_graph, dag = form_temporal_graphs(datasets[i], es, resol)
         mem = get_mem_usage_MB()
