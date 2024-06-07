@@ -36,10 +36,12 @@ NUMWALKS = 10
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner, CTDNE_Tuner, STWalk_Tuner
 
-
+# TODO refactoring, see load_dataset from rwtime.py
 def get_resolution(dataset_name):
-    if dataset_name in (datasets[0], datasets[1], datasets[2]):
+    if dataset_name in (datasets[0], datasets[1], datasets[2], datasets[7], datasets[8], datasets[9]):
         return "month"
+    elif dataset_name in (datasets[3], datasets[5], datasets[6]):
+        return "day"
     else:
         return "3-months"
 
