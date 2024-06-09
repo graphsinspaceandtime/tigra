@@ -256,7 +256,10 @@ class LFMnx:
             self.g = g
         self.alpha = alpha
 
-    def identify_natural_community(self, seed):
+    # LUCY, new param force_stay, if true then the seed is forced
+    # to stay in its own local community, otherwise it may leave
+    # 9.6.2024
+    def identify_natural_community(self, seed, force_stay=True):
         c = Community(self.g, self.alpha)
         c.add_node(seed)
 
@@ -276,8 +279,17 @@ class LFMnx:
 
             to_be_remove = c.recalculate()
             while to_be_remove is not None:
-                c.remove_vertex(to_be_remove)
-                to_be_remove = c.recalculate()
+                if force_stay:
+                    # never remove the seed node from the local community
+                    if to_be_remove != seed:
+                        c.remove_vertex(to_be_remove)
+                        to_be_remove = c.recalculate()
+                    else:
+                        to_be_remove = None
+                else:
+                    c.remove_vertex(to_be_remove)
+                    to_be_remove = c.recalculate()
+                    
 
             to_be_examined = c.get_neighbors()
 
