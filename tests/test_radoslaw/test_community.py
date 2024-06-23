@@ -1,3 +1,8 @@
+"""
+THIS FILE WILL BE DELETED
+TODO: copy code where needed
+"""
+
 import sys
 import os
 import time
@@ -8,6 +13,7 @@ sys.dont_write_bytecode = True
 from tigra.core.dgraph import DynamicGraph
 from data.bank import Databank
 from tigra.evaluation.lid_eval import LFMnx
+from tigra.evaluation.lid_eval import NCLIDEstimator
 
 from numpy import std
 from scipy.stats import skew
@@ -40,6 +46,26 @@ dg.init_from_event_sequence(es, time_resolution="month", directed=False)
 dg.info()
 
 seq = dg.get_graph_sequence()
+
+
+nc_lids = dict()
+snap = 0
+
+for g in seq:
+    estimator = NCLIDEstimator(g.G)
+    nc_lids[snap] = dict()
+    estimator.estimate_lids()
+    lid_vals = estimator.get_lid_values()
+    
+    for node in g.G.nodes:
+        nc_lids[snap][node] = lid_vals.get(node)
+        
+    snap +=1
+    
+print(nc_lids)
+
+
+"""
 g = seq[0]
 
 full_local = 0
@@ -57,6 +83,7 @@ for node in g.G.nodes:
         print(len(c1), len(c2), stay)
 
 print("Full local", full_local)
+"""
 
 """
 lfm = LFMnx(g.G, alpha=1.0)
