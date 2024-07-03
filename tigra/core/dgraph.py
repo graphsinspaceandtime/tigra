@@ -9,6 +9,7 @@ Module defining core classes for dynamic/temporal graphs
 import networkx as nx
 from typing import List, Union
 
+from .time import determine_time_resolution
 
 class Graph:
     """
@@ -270,6 +271,13 @@ class EventSequence:
         """
         return self.events[index]
 
+    
+    def shrink_to(self, index):
+        """
+        shrinks event sequence to the given index
+        """
+        self.events = self.events[:index]
+
 
 class DynamicGraph:
     """
@@ -311,19 +319,7 @@ class DynamicGraph:
         if cumulative is set to True then snapshosts are cumulative (the next snapshots starts with the previous graph)
         """
         # time resoultion for one day
-        tr = 24 * 60 * 60
-        if time_resolution == "day":
-            pass
-        elif time_resolution == "week":
-            tr *= 7
-        elif time_resolution == "month":
-            tr *= 31
-        elif time_resolution == "3-months":
-            tr *= 31 * 3
-        elif time_resolution == "6-months":
-            tr *= 31 * 6
-        else:
-            tr *= 31 * 12
+        tr = determine_time_resolution(time_resolution)
 
         if event_sequence.is_empty():
             return

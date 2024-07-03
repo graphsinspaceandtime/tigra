@@ -9,6 +9,59 @@ Module defining functions and classes for loading datasets
 import re
 
 from .dgraph import EventSequence, Event
+from .time import determine_time_resolution
+
+from data.bank import Databank
+
+
+datasets = {
+    "radoslaw-email"                   : ("month", 0),
+    "fb-forum"                         : ("month", -1),
+    "fb-messages"                      : ("month", 0),
+    "ia-contacts_hypertext2009"        : ("day", 0),
+    "ia-enron-employees"               : ("3-months", -2),
+    "ia-hospital-ward-proximity-attr"  : ("day", -1),
+    "ia-primary-school-proximity-attr" : ("day", 0),
+    "ia-reality-call"                  : ("week", -1),
+    "CollegeMsg"                       : ("month", -1),
+    "sx-askubuntu"                     : ("3-months", 0),
+    "sx-mathoverflow"                  : ("3-months", 0)
+}
+
+
+def load_event_sequence(dataset_name: str):
+    if dataset_name not in datasets:
+        print(f"[loaders] {dataset_name} not supported")
+        return
+
+    databank = Databank()
+    es = databank.get_data(dataset_name)
+    
+    resol, shrink = datasets[dataset_name]
+
+    if shrink == 0:
+        return es, resol
+
+    tr = determine_time_resolution(resol)
+    timespan = es.get_timespan()
+    snaps = timespan / tr
+    if int(snaps) != snaps:
+        snaps += 1
+    snaps = int(snaps)
+    
+    snaps_to_keep = snaps + shrink
+    time_to_keep = es.events[0].timestamp + snaps_to_keep * tr
+    
+    i = len(es.events) - 1
+    while i >= 0 and es.events[i].timestamp > time_to_keep:
+        i -= 1
+ 
+    i += 1
+    es.shrink_to(i)
+
+    return es, resol
+    
+
 
 
 def load_netrep_dataset(path, has_weight=True) -> EventSequence:
