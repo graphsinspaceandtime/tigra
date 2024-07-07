@@ -1,30 +1,30 @@
 """
 TIGRA software library
 
-TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning#
+in Complex Dynamical Systems
 
 Script for lid_eval tests
 """
 
 import sys
-import os
 
 sys.path.append("..")
 sys.dont_write_bytecode = True
 
 from tigra.core.dgraph import DynamicGraph
-from tigra.evaluation.lid_eval import LFMnx
 from tigra.evaluation.lid_eval import NCLIDEstimator
-
-from numpy import std
-from scipy.stats import skew
+from tigra.core.loaders import load_event_sequence
 
 from data.bank import Databank
+
+
 databank = Databank()
 datasets = databank.get_keys()
 
-
 def compute_expansion(node, community, graph):
+    """Function for computing expansion"""
+    
     no_good_links = 0
     no_bad_links = 0
     set_comm = set(community)
@@ -40,18 +40,19 @@ def compute_expansion(node, community, graph):
     
     return float(no_bad_links)/float(no_good_links + no_bad_links)
 
-def __all_nodes(seq):
+def __all_nodes(graph_seq):
     nodes = set()
-    for g in seq:
+    for g in graph_seq:
         for node in g.G.nodes:
             nodes.add(node)
     return nodes
 
-def compute_and_write_lids(seq, file_name):
+def compute_and_write_lids(graph_seq, file_name):
+    """Computing NC_LID values in graph sequence"""
     nc_lids = dict()
     snap = 0
 
-    for g in seq:
+    for g in graph_seq:
         estimator = NCLIDEstimator(g.G)
         nc_lids[snap] = dict()
         estimator.estimate_lids()
@@ -62,8 +63,8 @@ def compute_and_write_lids(seq, file_name):
         
         snap +=1
     
-    f = open(file_name, "a")
-    nodes = __all_nodes(seq)
+    f = open(file_name, mode = "a",  encoding="utf-8")
+    nodes = __all_nodes(graph_seq)
     f.write("snapshot/node,")
     for node in nodes:
         f.write(str(node)+",")
@@ -83,17 +84,17 @@ def compute_and_write_lids(seq, file_name):
 
 
 if __name__ == "__main__":
+    print(databank.get_keys())
     if (len(sys.argv) < 1):
         sys.exit()
     
     dataset_index = int(sys.argv[1])
     dataset_name = datasets[dataset_index]
-    es = databank.get_data(dataset_name)
-    
+       
+    es, time_res = load_event_sequence(dataset_name)
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, time_resolution="month", directed=False)
-    
     seq = dg.get_graph_sequence()
-    
+        
     compute_and_write_lids(seq, "nc_lid_" + dataset_name + ".csv")
     
