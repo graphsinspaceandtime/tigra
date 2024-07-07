@@ -90,10 +90,10 @@ if __name__ == "__main__":
     
     dataset_index = int(sys.argv[1])
     dataset_name = datasets[dataset_index]
-       
+   
     es, time_res = load_event_sequence(dataset_name)
     dg = DynamicGraph()
-    dg.init_from_event_sequence(es, time_resolution="month", directed=False)
+    dg.init_from_event_sequence(es, time_resolution=time_res, directed=False)
     seq = dg.get_graph_sequence()
         
     compute_and_write_lids(seq, "nc_lid_" + dataset_name + ".csv")
