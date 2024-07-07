@@ -24,8 +24,10 @@ datasets = {
     "ia-primary-school-proximity-attr" : ("day", 0),
     "ia-reality-call"                  : ("week", -1),
     "CollegeMsg"                       : ("month", -1),
+    "email-Eu-core-temporal"           : ("month", -1),
     "sx-askubuntu"                     : ("3-months", 0),
-    "sx-mathoverflow"                  : ("3-months", 0)
+    "sx-mathoverflow"                  : ("3-months", 0),
+    "sx-superuser"                     : ("3-months", 0)
 }
 
 

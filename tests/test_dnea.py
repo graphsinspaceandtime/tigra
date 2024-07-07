@@ -6,7 +6,7 @@ from data.bank import Databank
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics
 
-DATASET_NAME    = "sx-mathoverflow"
+DATASET_NAME    = "sx-superuser"
 TIME_RESOLUTION = "3-months"
 
 databank = Databank()
