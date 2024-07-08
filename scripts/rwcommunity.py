@@ -4,7 +4,7 @@ TIGRA software library
 TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning#
 in Complex Dynamical Systems
 
-Script for lid_eval tests
+Script for NC_LID tests
 """
 
 import sys
