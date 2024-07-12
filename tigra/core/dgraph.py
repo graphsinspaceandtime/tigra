@@ -141,6 +141,13 @@ class Graph:
         Checks whether the graph contains edge src --> dst
         """
         return self.G.has_edge(src, dst)
+    
+    def increase_weight(self, src, dst):
+        """
+        increases weight of the link connecting src and dst by one
+        """
+        self.G.edges[src, dst]['weight'] = self.G.edges[src, dst]['weight'] + 1
+
 
 
 class Event:
@@ -405,9 +412,10 @@ class DynamicAggregateGraph:
     Aggregate representation of temporal/dynamic graphs
     """
 
-    def __init__(self, name, event_sequence: EventSequence, directed=True):
+    def __init__(self, name, event_sequence: EventSequence, directed=True, weighted=False):
         self.event_sequence = event_sequence
         self.agg_graph = Graph(name + "-agg", directed=directed)
+        self.weighted = weighted
         self.form()
 
     def form(self):
@@ -418,7 +426,15 @@ class DynamicAggregateGraph:
                 event_data = event.event_data
                 edge_data = (event.timestamp, event_data)
                 # self.agg_graph.add_edge(src, dst, weight=weight, edge_data=edge_data)
-                self.agg_graph.add_edge(src, dst, edge_data=edge_data)
+
+                if self.weighted:
+                    self.agg_graph.add_edge(src, dst, edge_data=edge_data, weight=1)
+                else:
+                    self.agg_graph.add_edge(src, dst, edge_data=edge_data)
+            else:
+                if self.weighted:
+                    self.agg_graph.increase_weight(src, dst)
+
 
     def get_aggregate_graph(self):
         return self.agg_graph

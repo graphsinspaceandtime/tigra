@@ -25,7 +25,7 @@ Q = [0.5, 1.0, 2.0, 4.0]
 
 TIMEWINDOW = [1, 3, 5]
 
-NUM_RUNS = 10
+NUM_RUNS = 5
 #NUM_RUNS = 1
 
 WORKERS = 16
@@ -33,9 +33,11 @@ WALKLEN = 32
 NUMWALKS = 10
 #NUMWALKS = 1
 
+from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner, CTDNE_Tuner, STWalk_Tuner
 
+"""
 # TODO refactoring, see load_dataset from rwtime.py
 def get_resolution(dataset_name):
     if dataset_name in (datasets[0], datasets[1], datasets[2], datasets[7], datasets[8], datasets[9]):
@@ -44,7 +46,7 @@ def get_resolution(dataset_name):
         return "day"
     else:
         return "3-months"
-
+"""
 
 def tune_dynnode2vec(last_graph, dg):
     print("\nTUNING dynnode2vec")
@@ -52,14 +54,15 @@ def tune_dynnode2vec(last_graph, dg):
         last_graph, 
         dg, 
         P, 
-        Q, 
+        Q,
+        [8, 16, 32],                  # walk length
+        [10],                         # num walks
         num_runs=NUM_RUNS, 
-        parallel_processes=WORKERS, 
-        walk_length=WALKLEN, 
-        n_walks_per_node=NUMWALKS
+        parallel_processes=WORKERS
     )
     tuner.tune()
     tuner.print_report()
+
 
 def tune_ctdne(last_graph, dag):
     print("\nTUNING CTDNE")
@@ -68,10 +71,10 @@ def tune_ctdne(last_graph, dag):
         dag,
         P,
         Q,
+        [2, 3],                              # walk length
+        [10, 50],                            # num walks
         num_runs=NUM_RUNS,
-        parallel_processes=WORKERS, 
-        walk_length=WALKLEN, 
-        n_walks_per_node=NUMWALKS
+        parallel_processes=WORKERS
     )
     tuner.tune()
     tuner.print_report()
@@ -92,13 +95,14 @@ def tune_stwalk(last_graph, dg):
     tuner.print_report()
 
 
+"""
 def load_dataset(dataset_name):
     print("DATASET:", dataset_name)
     es = databank.get_data(dataset_name)
     print("num-events=", es.num_events())
     print("time-span =", es.get_timespan_in_days())
     return es
-
+"""
 
 if __name__ == "__main__":
     if (len(sys.argv) != 2):
@@ -116,9 +120,13 @@ if __name__ == "__main__":
 
     dataset_index = int(sys.argv[1])
     dataset_name = datasets[dataset_index]
-    es = load_dataset(dataset_name)
-    time_resolution = get_resolution(dataset_name)
-    print("TIME-RESOLUTION", time_resolution)
+    print("\nTunning", dataset_name)
+
+    #es = load_dataset(dataset_name)
+    #time_resolution = get_resolution(dataset_name)
+    #print("TIME-RESOLUTION", time_resolution)
+
+    es, time_resolution = load_event_sequence(dataset_name)
 
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, time_resolution=time_resolution, directed=False)
@@ -129,11 +137,13 @@ if __name__ == "__main__":
 
     dag = DynamicAggregateGraph(dataset_name, es, directed=False)
 
+    """
     start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
+    """
 
     start_time = time.time()
     tune_ctdne(last_graph, dag)
@@ -141,8 +151,10 @@ if __name__ == "__main__":
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
     
+    """
     start_time = time.time()
     tune_stwalk(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("STWALK TIME [sec]", elapsed_time)
+    """

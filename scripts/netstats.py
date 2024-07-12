@@ -7,7 +7,6 @@ Script for computing dynamic network statistics
 """
 
 import sys
-import os
 
 sys.path.append("..")
 

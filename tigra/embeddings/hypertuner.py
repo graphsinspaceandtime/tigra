@@ -110,16 +110,16 @@ class N2VMethods_Tuner(Tuner):
         data,
         p_values,
         q_values,
+        walk_length_values,
+        num_walks_values,
         num_runs=1,
-        walk_length=10,
-        n_walks_per_node=10,
         parallel_processes=4,
     ):
         super().__init__(graph, data, "DIM,P,Q", num_runs=num_runs)
         self.p_values = p_values
         self.q_values = q_values
-        self.walk_length = walk_length
-        self.n_walks_per_node = n_walks_per_node
+        self.walk_length_values = walk_length_values
+        self.num_walks_values = num_walks_values
         self.parallel_processes = parallel_processes
 
     def create_configurations(self):
@@ -127,7 +127,9 @@ class N2VMethods_Tuner(Tuner):
         for d in EMBEDDING_DIMENSIONS:
             for p in self.p_values:
                 for q in self.q_values:
-                    confs.append((d, p, q))
+                    for wl in self.walk_length_values:
+                        for nw in self.num_walks_values:
+                            confs.append((d, p, q, wl, nw))
 
         return confs
 
@@ -143,19 +145,19 @@ class Dynnode2vec_Tuner(N2VMethods_Tuner):
         data,
         p_values,
         q_values,
+        walk_length_values,
+        num_walk_values,
         num_runs=1,
-        walk_length=10,
-        n_walks_per_node=10,
-        parallel_processes=4,
+        parallel_processes=4
     ):
         super().__init__(
             graph,
             data,
             p_values,
             q_values,
+            walk_length_values,
+            num_walk_values,
             num_runs=num_runs,
-            walk_length=walk_length,
-            n_walks_per_node=n_walks_per_node,
             parallel_processes=parallel_processes,
         )
 
@@ -163,12 +165,14 @@ class Dynnode2vec_Tuner(N2VMethods_Tuner):
         dim = self.confs[conf_index][0]
         p = self.confs[conf_index][1]
         q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
         return Dynnode2vec(
             dim,
             p=p,
             q=q,
-            walk_length=self.walk_length,
-            n_walks_per_node=self.n_walks_per_node,
+            walk_length=wl,
+            n_walks_per_node=nw,
             parallel_processes=self.parallel_processes,
         )
 
@@ -184,32 +188,34 @@ class CTDNE_Tuner(N2VMethods_Tuner):
         data,
         p_values,
         q_values,
+        walk_length_values,
+        num_walks_values,
         num_runs=1,
-        walk_length=10,
-        n_walks_per_node=10,
-        parallel_processes=4,
+        parallel_processes=4
     ):
         super().__init__(
             graph,
             data,
             p_values,
             q_values,
+            walk_length_values,
+            num_walks_values,
             num_runs=num_runs,
-            walk_length=walk_length,
-            n_walks_per_node=n_walks_per_node,
-            parallel_processes=parallel_processes,
+            parallel_processes=parallel_processes
         )
 
     def create_instance(self, conf_index) -> Embedding:
         dim = self.confs[conf_index][0]
         p = self.confs[conf_index][1]
         q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
         return Ctdne(
             dim,
             p,
             q,
-            walk_length=self.walk_length,
-            num_walks=self.n_walks_per_node,
+            walk_length=wl,
+            num_walks=nw,
             workers=self.parallel_processes,
         )
 

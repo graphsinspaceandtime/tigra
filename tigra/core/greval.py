@@ -26,7 +26,7 @@ class GraphReconstructionEval:
     def __calculate_prec_rec(self):
         k = self.graph.number_of_edges()
         reconstructed_graph = self.embedding.reconstruct(k, "REC").G
-
+        
         if self.report_warnings:
             if self.graph.number_of_nodes() != reconstructed_graph.number_of_nodes():
                 print(
