@@ -72,7 +72,7 @@ def tune_ctdne(last_graph, dag):
         P,
         Q,
         [2, 3],                              # walk length
-        [10, 50],                            # num walks
+        [10, 50],                           # num walks
         num_runs=NUM_RUNS,
         parallel_processes=WORKERS
     )

@@ -111,39 +111,9 @@ def examine_batch_words(dag, dim, p, q, walk_length, num_walks, workers, window,
         run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, bw)
 
 
-def analyze_dag(G):
-    print("Analyzing DAG")
-    
-    num_nodes = len(G.nodes())
-    print("#nodes", num_nodes)
-
-    num_links = len(G.edges())
-    print("#links", num_links)
-
-    is_weighted = nx.is_weighted(G, edge=None, weight='weight')
-    print("Weighted?", is_weighted)
-    if is_weighted:
-        weights = nx.get_edge_attributes(G, 'weight')
-        wlist = []
-        for l in weights:
-            wlist.append(weights[l])
-
-        print("Average weight", mean(wlist))
-        print("Max weight", max(wlist))
-
-    comps = list(nx.connected_components(G))
-    print("Connected components", len(comps))
-    c_size = [len(c) for c in comps]
-    c_size.sort(reverse=True)
-    l_frac = c_size[0] / num_nodes
-    print("Largest CC", l_frac)
-
-
-
-
 if __name__ == "__main__":
     import pandas as pd
-    conf = pd.read_csv("run_ctdne.conf")
+    conf = pd.read_csv("run_ctdne.conf-radoslaw")
     print(conf)
 
     dataset = str(conf[conf["PROPERTY"]=="DATASET"]["VALUE"].item())
@@ -168,13 +138,15 @@ if __name__ == "__main__":
     print("BASELINE")
     dag = DynamicAggregateGraph(dataset, es, directed=False)
     run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words) 
+    examine_walk_length(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
 
+    """
     print("\nWEIGHTED")
     dag2 = DynamicAggregateGraph(dataset, es, directed=False, weighted=True)
     emb = run_ctdne(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
     G = dag2.get_aggregate_graph().G
-    analyze_dag(G)
     eval_weighted(emb, dag2)
+    """
 
     #examine_num_walks(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
     #examine_walk_length(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)

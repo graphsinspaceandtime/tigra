@@ -11,11 +11,14 @@ from typing import List, Union
 
 from .time import determine_time_resolution
 
+from random import sample
+from statistics import mean, stdev
+
+
 class Graph:
     """
     Model class for TIGRA static graphs based on networkx
     """
-
     def __init__(self, name, directed=True, nx_graph=None):
         """
         Parameters
@@ -197,6 +200,7 @@ class Event:
         return s
 
 
+
 class EventSequence:
     """
     Base class for all event sequences
@@ -286,6 +290,7 @@ class EventSequence:
         self.events = self.events[:index]
 
 
+
 class DynamicGraph:
     """
     Base class for all dynamic graphs
@@ -310,6 +315,7 @@ class DynamicGraph:
                 if g.is_directed():
                     self.directed = True
                     break
+
 
     def init_from_event_sequence(
         self,
@@ -371,6 +377,7 @@ class DynamicGraph:
 
         self.timespan_in_days = event_sequence.get_timespan_in_days()
 
+
     def info(self):
         """
         Print basic statistics of the dynamic graph
@@ -407,6 +414,7 @@ class DynamicGraph:
         return [g.G.to_undirected() for g in self.graphs]
 
 
+
 class DynamicAggregateGraph:
     """
     Aggregate representation of temporal/dynamic graphs
@@ -417,6 +425,7 @@ class DynamicAggregateGraph:
         self.agg_graph = Graph(name + "-agg", directed=directed)
         self.weighted = weighted
         self.form()
+
 
     def form(self):
         for event in self.event_sequence:
@@ -438,6 +447,47 @@ class DynamicAggregateGraph:
 
     def get_aggregate_graph(self):
         return self.agg_graph
+    
+
+    def estimate_avg_temp_path_length(self, num_samples=100000):
+        G = self.agg_graph.G
+        N = list(G.nodes())
+        wl = []
+
+        for _ in range(num_samples):
+            current = sample(N, 1)[0]
+            current_time = 0
+            
+            visited = set()
+            visited.add(current)
+
+            walk_length = 0
+            while True:
+                neis = G.neighbors(current)
+                cands = []
+                for nei in neis:
+                    time = G.edges[current, nei]["edge_data"][0]
+                    if time > current_time and nei not in visited:
+                        cands.append((nei, time))
+
+                if len(cands) == 0:
+                    break
+
+                next_node = sample(cands, 1)[0]
+                current = next_node[0]
+                current_time = next_node[1]
+                visited.add(current)
+
+                walk_length += 1
+
+            wl.append(walk_length)
+
+
+        avg_wl = mean(wl)
+        max_wl = max(wl)
+        std_wl = stdev(wl)
+
+        return avg_wl, max_wl, std_wl
 
 
 """
