@@ -12,7 +12,7 @@ from data.bank import Databank
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner
 
-#from tigra.evaluation import lid_eval
+# from tigra.evaluation import lid_eval
 
 databank = Databank()
 es = databank.get_data("radoslaw-email")
@@ -51,28 +51,29 @@ last_embedding = dn2v.embeddings[-1]
 last_graph = org_graphs[-1]
 print("Original graph", last_graph.num_nodes(), last_graph.num_edges())
 print("#emb-vectors", len(last_embedding.embedding.keys()))
+print([emb.embedding for emb in dn2v.embeddings])
 
-gre = GraphReconstructionEval(last_graph, last_embedding)
-print("Precision", gre.get_avg_precision())
-print("Recall", gre.get_avg_recall())
-print("F1", gre.getF1())
+# gre = GraphReconstructionEval(last_graph, last_embedding)
+# print("Precision", gre.get_avg_precision())
+# print("Recall", gre.get_avg_recall())
+# print("F1", gre.getF1())
 
 
-print("TESTING TUNER")
-start_time = time.time()
-tuner = Dynnode2vec_Tuner(
-    last_graph,
-    dg,
-    [0.5, 1.0, 2.0, 4.0],
-    [0.5, 1.0, 2.0, 4.0],
-    num_runs=10,
-    parallel_processes=16,
-    walk_length=64,
-    n_walks_per_node=10,
-)
-# tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0], [0.5, 1.0], num_runs=5)
-tuner.tune()
-tuner.print_report()
-end_time = time.time()
-elapsed_time = end_time - start_time
-print("TIME [sec]", elapsed_time)
+# print("TESTING TUNER")
+# start_time = time.time()
+# tuner = Dynnode2vec_Tuner(
+#     last_graph,
+#     dg,
+#     [0.5, 1.0, 2.0, 4.0],
+#     [0.5, 1.0, 2.0, 4.0],
+#     num_runs=10,
+#     parallel_processes=16,
+#     walk_length=64,
+#     n_walks_per_node=10,
+# )
+# # tuner = Dynnode2vec_Tuner(last_graph, dg, [0.5, 1.0], [0.5, 1.0], num_runs=5)
+# tuner.tune()
+# tuner.print_report()
+# end_time = time.time()
+# elapsed_time = end_time - start_time
+# print("TIME [sec]", elapsed_time)
