@@ -25,7 +25,7 @@ jobs:
       - uses: psf/black@stable
         name: Black formatter
         with:
-          options: --check --verbose --exclude tigra/embeddings/sota/DynamicGEM/**/*
+          options: --check --verbose --exclude tigra/embeddings/sota/DynamicGEM/
           src: tigra tests
   types:
     name: Type check
