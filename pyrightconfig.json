@@ -5,6 +5,7 @@
     "data",
   ],
   "exclude": [
+    "tigra/embeddings/sota/DynamicGEM/",
     "tigra/embeddings/sota/ctdnesrc/",
   ],
 }
