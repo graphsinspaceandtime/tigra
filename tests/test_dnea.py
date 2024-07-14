@@ -1,12 +1,12 @@
-
 import sys
+
 sys.path.append("..")
 
 from data.bank import Databank
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics
 
-DATASET_NAME    = "sx-superuser"
+DATASET_NAME = "sx-superuser"
 TIME_RESOLUTION = "3-months"
 
 databank = Databank()
@@ -22,6 +22,7 @@ ed.info()
 print("\n--- LOADER WITH POST-PROCESSING")
 
 from tigra.core.loaders import load_event_sequence
+
 es_2, resol = load_event_sequence(DATASET_NAME)
 
 dg = DynamicGraph()

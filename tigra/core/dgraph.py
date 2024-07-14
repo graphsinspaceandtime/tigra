@@ -19,6 +19,7 @@ class Graph:
     """
     Model class for TIGRA static graphs based on networkx
     """
+
     def __init__(self, name, directed=True, nx_graph=None):
         """
         Parameters
@@ -144,13 +145,12 @@ class Graph:
         Checks whether the graph contains edge src --> dst
         """
         return self.G.has_edge(src, dst)
-    
+
     def increase_weight(self, src, dst):
         """
         increases weight of the link connecting src and dst by one
         """
-        self.G.edges[src, dst]['weight'] = self.G.edges[src, dst]['weight'] + 1
-
+        self.G.edges[src, dst]["weight"] = self.G.edges[src, dst]["weight"] + 1
 
 
 class Event:
@@ -198,7 +198,6 @@ class Event:
             s += ", data = " + str(self.event_data)
 
         return s
-
 
 
 class EventSequence:
@@ -282,13 +281,11 @@ class EventSequence:
         """
         return self.events[index]
 
-    
     def shrink_to(self, index):
         """
         shrinks event sequence to the given index
         """
         self.events = self.events[:index]
-
 
 
 class DynamicGraph:
@@ -315,7 +312,6 @@ class DynamicGraph:
                 if g.is_directed():
                     self.directed = True
                     break
-
 
     def init_from_event_sequence(
         self,
@@ -377,7 +373,6 @@ class DynamicGraph:
 
         self.timespan_in_days = event_sequence.get_timespan_in_days()
 
-
     def info(self):
         """
         Print basic statistics of the dynamic graph
@@ -414,18 +409,18 @@ class DynamicGraph:
         return [g.G.to_undirected() for g in self.graphs]
 
 
-
 class DynamicAggregateGraph:
     """
     Aggregate representation of temporal/dynamic graphs
     """
 
-    def __init__(self, name, event_sequence: EventSequence, directed=True, weighted=False):
+    def __init__(
+        self, name, event_sequence: EventSequence, directed=True, weighted=False
+    ):
         self.event_sequence = event_sequence
         self.agg_graph = Graph(name + "-agg", directed=directed)
         self.weighted = weighted
         self.form()
-
 
     def form(self):
         for event in self.event_sequence:
@@ -444,10 +439,8 @@ class DynamicAggregateGraph:
                 if self.weighted:
                     self.agg_graph.increase_weight(src, dst)
 
-
     def get_aggregate_graph(self):
         return self.agg_graph
-    
 
     def estimate_avg_temp_path_length(self, num_samples=100000):
         G = self.agg_graph.G
@@ -457,7 +450,7 @@ class DynamicAggregateGraph:
         for _ in range(num_samples):
             current = sample(N, 1)[0]
             current_time = 0
-            
+
             visited = set()
             visited.add(current)
 
@@ -481,7 +474,6 @@ class DynamicAggregateGraph:
                 walk_length += 1
 
             wl.append(walk_length)
-
 
         avg_wl = mean(wl)
         max_wl = max(wl)

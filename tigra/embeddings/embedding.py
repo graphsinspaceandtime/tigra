@@ -18,14 +18,13 @@ class SingletonEmbedding:
     """
     Embedding of one snapshot or an aggregate dynamic graph representation
     """
+
     def __init__(self):
         self.embedding = dict()
         self.dists = dict()
 
-
     def add_embedding_vector(self, id, vector: List[float]):
         self.embedding[id] = vector
-
 
     def __str__(self):
         s = ""
@@ -33,7 +32,6 @@ class SingletonEmbedding:
             s += str(key) + " --> " + str([round(val, 2) for val in value]) + "\n"
 
         return s
-
 
     def get_dist(self, node1, node2, save=False):
         if node1 > node2:
@@ -51,7 +49,6 @@ class SingletonEmbedding:
             self.dists[node1][node2] = dist
 
         return dist
-
 
     def reconstruct(self, k, name, cache_dists=False):
         """
@@ -94,14 +91,12 @@ class SingletonEmbedding:
             g.add_edge(edge[1], edge[2])
 
         return g
-    
-    
+
     def __getitem__(self, node):
         """
         Returns the embedding at given index
         """
         return self.embedding[node]
-
 
 
 class Embedding(ABC):

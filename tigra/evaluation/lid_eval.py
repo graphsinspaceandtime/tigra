@@ -110,7 +110,9 @@ class EmbLIDMLEEstimator(LIDMLEEstimator):
         super().__init__("EMB-LID", graph, k)
 
     def compute_distance(self, src, dst):
-        return np.linalg.norm(np.array(self.node_vectors[src]) - np.array(self.node_vectors[dst]))
+        return np.linalg.norm(
+            np.array(self.node_vectors[src]) - np.array(self.node_vectors[dst])
+        )
 
 
 class EmbLIDMLEEstimatorTorch(LIDMLEEstimator):
@@ -289,7 +291,6 @@ class LFMnx:
                 else:
                     c.remove_vertex(to_be_remove)
                     to_be_remove = c.recalculate()
-                    
 
             to_be_examined = c.get_neighbors()
 

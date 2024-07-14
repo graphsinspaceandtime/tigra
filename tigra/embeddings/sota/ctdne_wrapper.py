@@ -15,15 +15,17 @@ from tigra.embeddings.sota.ctdnesrc.ctdne import CTDNE
 
 
 class Ctdne(Embedding):
-    def __init__(self, dim, 
-        p=1.0, 
-        q=1.0, 
-        walk_length=10, 
-        num_walks=10, 
-        workers=4, 
-        window=10, 
-        min_count=1, 
-        batch_words=4
+    def __init__(
+        self,
+        dim,
+        p=1.0,
+        q=1.0,
+        walk_length=10,
+        num_walks=10,
+        workers=4,
+        window=10,
+        min_count=1,
+        batch_words=4,
     ):
         super().__init__(dim)
         self.p = p
@@ -36,7 +38,6 @@ class Ctdne(Embedding):
         self.window = window
         self.min_count = min_count
         self.batch_words = batch_words
-
 
     def construct(self, data) -> List[SingletonEmbedding]:
         if not isinstance(data, DynamicAggregateGraph):
@@ -69,9 +70,7 @@ class Ctdne(Embedding):
         )
 
         model = CTDNE_model.fit(
-            window=self.window, 
-            min_count=self.min_count, 
-            batch_words=self.batch_words
+            window=self.window, min_count=self.min_count, batch_words=self.batch_words
         )
 
         singleton = SingletonEmbedding()
