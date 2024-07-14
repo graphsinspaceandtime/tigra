@@ -7,26 +7,6 @@ sys.path.append("..")
 
 from tigra.core.dgraph import EventSequence, Event
 
-Dataset = typing.TypeVar(
-    "Dataset",
-    bound=typing.Literal[
-        "radoslaw-email",
-        "fb-forum",
-        "fb-messages",
-        "ia-contacts_hypertext2009",
-        "ia-enron-employees",
-        "ia-hospital-ward-proximity-attr",
-        "ia-primary-school-proximity-attr",
-        "ia-reality-call",
-        "CollegeMsg",
-        "email-Eu-core-temporal",
-        "sx-askubuntu",
-        "sx-mathoverflow",
-        "sx-superuser",
-        "wiki-talk-temporal",
-    ],
-)
-
 
 class Databank:
     """
@@ -92,7 +72,7 @@ class Databank:
             "wiki-talk-temporal": self.__snap_path / "wiki-talk-temporal.txt",
         }
 
-    def get_data(self, dataset: Dataset) -> EventSequence:
+    def get_data(self, dataset: str) -> EventSequence:
         """
         Read a specified dataset and return an EventSequence object.
 
@@ -128,7 +108,7 @@ class Databank:
         else:
             raise Exception("{} dataset is not available".format(dataset))
 
-    def get_keys(self) -> typing.List[Dataset]:
+    def get_keys(self) -> typing.List[str]:
         """
         Get a list of dataset keys. The paths are stored in a dictionary and
         by specifying the dictionary key, you pick which dataset is used.
@@ -139,7 +119,7 @@ class Databank:
             es = databank.get_data(key)
         ```
         """
-        return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
+        return typing.cast(typing.List[str], list(self.__filename_map.keys()))
 
     def __read_wsp_vert_weig_time(self, filename: Path) -> EventSequence:
         events = []
