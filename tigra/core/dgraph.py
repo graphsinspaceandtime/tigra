@@ -7,6 +7,8 @@ Module defining core classes for dynamic/temporal graphs
 """
 
 import networkx as nx
+import numpy as np
+from scipy.sparse import lil_matrix
 from typing import List, Union
 
 from tigra.core.time import determine_time_resolution
@@ -251,6 +253,18 @@ class EventSequence:
         """
         return len(self.events)
 
+    def num_nodes(self):
+        """
+        Returns number of nodes in the whole event sequence
+        """
+        nodes = set()
+        for event in self.events:
+            nodes.add(event.src)
+            nodes.add(event.dst)
+
+        print(f"min: {min(nodes)}; max: {max(nodes)}")
+        return len(nodes)
+
     def get_events(self):
         """
         Returns the list of events
@@ -480,6 +494,64 @@ class DynamicAggregateGraph:
         std_wl = stdev(wl)
 
         return avg_wl, max_wl, std_wl
+
+
+class DynamicSparseMatrixGraph:
+    """
+    Sparse matrix representation of temporal/dynamic graphs. It doesn't use the regular Graph
+    implementation for storing graphs, instead it similar to the DynamicGraph class with a
+    distinction that it uses sparse matrices instead of graphs.
+    """
+
+    def __init__(
+        self, name, event_sequence: EventSequence, time_resolution: str, directed=True
+    ):
+        print("============== DynamicSparseMatrixGraph ==============")
+        number_of_nodes = event_sequence.num_nodes()
+        print(number_of_nodes)
+
+        def make_matrix():
+            return lil_matrix((number_of_nodes, number_of_nodes), dtype=np.bool)
+
+        tr = 24 * 60 * 60
+        if time_resolution == "day":
+            pass
+        elif time_resolution == "week":
+            tr *= 7
+        elif time_resolution == "month":
+            tr *= 31
+        elif time_resolution == "3-months":
+            tr *= 31 * 3
+        elif time_resolution == "6-months":
+            tr *= 31 * 6
+        else:
+            tr *= 31 * 12
+
+        if event_sequence.is_empty():
+            return
+
+        self.directed = directed
+
+        self.name = f"{name}-sm"
+
+        self.matrices = []
+        i = 0
+        start_time = event_sequence[0].timestamp
+        M = make_matrix()
+        while i < event_sequence.num_events():
+            curr_time = event_sequence[i].timestamp
+            if curr_time - start_time > tr:
+                self.matrices.append(M.tocsr())
+                M = make_matrix()
+                start_time = curr_time
+
+            M[event_sequence[i].src - 1, event_sequence[i].dst - 1] = True
+            if not directed:
+                M[event_sequence[i].dst - 1, event_sequence[i].src - 1] = True
+            i += 1
+
+    def get_scipy_sparse_matrices(self):
+        return self.matrices
 
 
 """
