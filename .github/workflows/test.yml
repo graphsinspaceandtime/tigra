@@ -4,7 +4,8 @@ on:
     paths:
       - "**/*.py"
       - pyrightconfig.json
-      - "environment*.py"
+      - "environment*.yml"
+      - .github/workflows/test.yml
 
 env:
   CONDA_ENV: tigra
