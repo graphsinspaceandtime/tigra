@@ -32,13 +32,13 @@ class SBMGenerator(Generator):
         self.initial_timestamp = 0
 
     def generate(self) -> EventSequence:
-        events = []
+        es = EventSequence()
 
         for i in range(len(self.c)) if self.directed else range(len(self.c) - 1):
             for j in range(len(self.c)) if self.directed else range(i, len(self.c)):
                 if i == j:
                     continue
                 if random.random() <= self.P[self.c[i], self.c[j]]:
-                    events.append(Event(src=i, dst=j, timestamp=self.initial_timestamp))
+                    es.add_event(Event(src=i, dst=j, timestamp=self.initial_timestamp))
 
-        return EventSequence(events)
+        return es
