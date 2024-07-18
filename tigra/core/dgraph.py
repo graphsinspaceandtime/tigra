@@ -449,7 +449,7 @@ class DynamicAggregateGraph:
         return self.agg_graph
     
 
-    def estimate_avg_temp_path_length(self, num_samples=100000):
+    def estimate_avg_temp_path_length(self, num_samples=100000, self_avoiding=False):
         G = self.agg_graph.G
         N = list(G.nodes())
         wl = []
@@ -458,8 +458,9 @@ class DynamicAggregateGraph:
             current = sample(N, 1)[0]
             current_time = 0
             
-            visited = set()
-            visited.add(current)
+            if self_avoiding:
+                visited = set()
+                visited.add(current)
 
             walk_length = 0
             while True:
@@ -467,8 +468,14 @@ class DynamicAggregateGraph:
                 cands = []
                 for nei in neis:
                     time = G.edges[current, nei]["edge_data"][0]
-                    if time > current_time and nei not in visited:
-                        cands.append((nei, time))
+                    if time > current_time:
+                        to_add = True
+                        if self_avoiding:
+                            if nei in visited:
+                                to_add = False
+                        
+                        if to_add:
+                            cands.append((nei, time))
 
                 if len(cands) == 0:
                     break
@@ -476,7 +483,9 @@ class DynamicAggregateGraph:
                 next_node = sample(cands, 1)[0]
                 current = next_node[0]
                 current_time = next_node[1]
-                visited.add(current)
+                
+                if self_avoiding:
+                    visited.add(current)
 
                 walk_length += 1
 
