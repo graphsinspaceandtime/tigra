@@ -148,7 +148,7 @@ class Dynnode2vec_Tuner(N2VMethods_Tuner):
         walk_length_values,
         num_walk_values,
         num_runs=1,
-        parallel_processes=4
+        parallel_processes=4,
     ):
         super().__init__(
             graph,
@@ -191,7 +191,7 @@ class CTDNE_Tuner(N2VMethods_Tuner):
         walk_length_values,
         num_walks_values,
         num_runs=1,
-        parallel_processes=4
+        parallel_processes=4,
     ):
         super().__init__(
             graph,
@@ -201,7 +201,7 @@ class CTDNE_Tuner(N2VMethods_Tuner):
             walk_length_values,
             num_walks_values,
             num_runs=num_runs,
-            parallel_processes=parallel_processes
+            parallel_processes=parallel_processes,
         )
 
     def create_instance(self, conf_index) -> Embedding:

@@ -12,7 +12,7 @@ from data.bank import Databank
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.hypertuner import Dynnode2vec_Tuner
 
-#from tigra.evaluation import lid_eval
+# from tigra.evaluation import lid_eval
 
 databank = Databank()
 es = databank.get_data("radoslaw-email")

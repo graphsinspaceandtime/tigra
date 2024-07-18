@@ -6,6 +6,7 @@ TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Comp
 Module dealing with time routines
 """
 
+
 def determine_time_resolution(time_resolution: str):
     # time resoultion for one day
     tr = 24 * 60 * 60

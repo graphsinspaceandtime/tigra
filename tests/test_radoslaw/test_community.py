@@ -19,7 +19,6 @@ from numpy import std
 from scipy.stats import skew
 
 
-
 def compute_expansion(node, community, graph):
     no_good_links = 0
     no_bad_links = 0
@@ -31,10 +30,10 @@ def compute_expansion(node, community, graph):
                 no_good_links += 1
             else:
                 no_bad_links += 1
-                
+
     no_good_links /= 2.0
-    
-    return float(no_bad_links)/float(no_good_links + no_bad_links)
+
+    return float(no_bad_links) / float(no_good_links + no_bad_links)
 
 
 databank = Databank()
@@ -56,12 +55,12 @@ for g in seq:
     nc_lids[snap] = dict()
     estimator.estimate_lids()
     lid_vals = estimator.get_lid_values()
-    
+
     for node in g.G.nodes:
         nc_lids[snap][node] = lid_vals.get(node)
-        
-    snap +=1
-    
+
+    snap += 1
+
 print(nc_lids)
 
 

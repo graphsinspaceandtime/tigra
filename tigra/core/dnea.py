@@ -7,7 +7,7 @@ DNEA: Dynamic Network Evolution Analyser
 """
 
 from tigra.core.dgraph import Graph, DynamicGraph
-from statistics import mean 
+from statistics import mean
 
 import numpy as np
 
@@ -25,24 +25,23 @@ class GraphComparator:
         g2 -- new graph
         """
         self.g1 = g1
-        self.g2 = g2   
+        self.g2 = g2
 
         self.compare()
 
-
     def compare(self):
-        # compare nodes 
+        # compare nodes
         g1_nodes = set(self.g1.G.nodes())
         g2_nodes = set(self.g2.G.nodes())
         uns = g1_nodes | g2_nodes
-        ins = g1_nodes & g2_nodes 
+        ins = g1_nodes & g2_nodes
         self.jc_nodes = 0.0
         if len(uns) != 0:
             self.jc_nodes = len(ins) / len(uns)
 
-        self.new_nodes = len(g2_nodes - g1_nodes) 
-        self.del_nodes = len(g1_nodes - g2_nodes) 
-        
+        self.new_nodes = len(g2_nodes - g1_nodes)
+        self.del_nodes = len(g1_nodes - g2_nodes)
+
         # compare links
         g1_links = set(self.g1.G.edges())
         g2_links = set(self.g2.G.edges())
@@ -55,14 +54,11 @@ class GraphComparator:
         self.new_links = len(g2_links - g1_links)
         self.del_links = len(g1_links - g2_links)
 
-
     def get_jc_nodes(self):
         return self.jc_nodes
 
-    
     def get_jc_links(self):
         return self.jc_links
-
 
     def info(self):
         s = ""
@@ -76,11 +72,11 @@ class GraphComparator:
         return s
 
 
-
 class EvolDynamics:
     """
     Class providing functionalities to examine evolutionary dynamics of temporal networks
     """
+
     def __init__(self, dgraph: DynamicGraph):
         self.dgraph = dgraph
         self.seq = self.dgraph.get_graph_sequence()
@@ -89,7 +85,6 @@ class EvolDynamics:
         self.determine_nodes_activity()
         self.determine_links_activity()
 
-    
     def compute_jaccards(self):
         self.msgs = []
         self.jc_nodes, self.jc_links = [], []
@@ -107,7 +102,6 @@ class EvolDynamics:
         self.avg_jc_links = mean(self.jc_links)
         self.min_jc_links = min(self.jc_links)
 
-
     def compute_activity_distribution(self, total_snapshots, activity_map):
         distr = np.zeros(total_snapshots + 1)
         for entry in activity_map:
@@ -121,7 +115,6 @@ class EvolDynamics:
 
         return distr.tolist()
 
-
     def determine_nodes_activity(self):
         node_activity = dict()
 
@@ -133,8 +126,9 @@ class EvolDynamics:
                 else:
                     node_activity[n] = [i]
 
-        self.node_activ_distr = self.compute_activity_distribution(len(self.seq), node_activity)
-        
+        self.node_activ_distr = self.compute_activity_distribution(
+            len(self.seq), node_activity
+        )
 
     def determine_links_activity(self):
         link_activity = dict()
@@ -146,16 +140,27 @@ class EvolDynamics:
                 else:
                     link_activity[l] = [i]
 
-        self.link_activ_distr = self.compute_activity_distribution(len(self.seq), link_activity)
+        self.link_activ_distr = self.compute_activity_distribution(
+            len(self.seq), link_activity
+        )
 
-        
     def info(self):
         print("NEW-NODES,DEL-NODES,JC-NODES,NEW-LINKS,DEL-LINKS,JC-LINKS")
         for m in self.msgs:
             print(m)
 
-        print("Average JC-NODES", round(self.avg_jc_nodes, 4), "min JC-NODES", round(self.min_jc_nodes, 4))
-        print("Average JC-LINKS", round(self.avg_jc_links, 4), "min JC-LINKS", round(self.min_jc_links, 4))
+        print(
+            "Average JC-NODES",
+            round(self.avg_jc_nodes, 4),
+            "min JC-NODES",
+            round(self.min_jc_nodes, 4),
+        )
+        print(
+            "Average JC-LINKS",
+            round(self.avg_jc_links, 4),
+            "min JC-LINKS",
+            round(self.min_jc_links, 4),
+        )
 
         print("Node activity distribution")
         avg_node_activity = 0
@@ -171,10 +176,8 @@ class EvolDynamics:
             avg_link_activity += self.link_activ_distr[i] * i
         print("Average link activity", avg_link_activity)
 
-
     def get_jc_nodes(self):
         return self.jc_nodes, self.avg_jc_nodes, self.min_jc_nodes
-
 
     def get_jc_links(self):
         return self.jc_links, self.avg_jc_links, self.min_jc_links
