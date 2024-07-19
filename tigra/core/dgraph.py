@@ -450,16 +450,14 @@ class DynamicAggregateGraph:
         for _ in range(num_samples):
             current = sample(N, 1)[0]
             current_time = 0
-<<<<<<< HEAD
             
             if self_avoiding:
                 visited = set()
                 visited.add(current)
-=======
 
             visited = set()
             visited.add(current)
->>>>>>> ce7c3850456b4fc908b15cd2381ce5df13cf1c47
+
 
             walk_length = 0
             while True:

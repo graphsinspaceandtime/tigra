@@ -135,23 +135,22 @@ if __name__ == "__main__":
     org_graphs = dg.get_graph_sequence()
     last_graph = org_graphs[-1]
 
-    dag = DynamicAggregateGraph(dataset_name, es, directed=False)
+    #dag = DynamicAggregateGraph(dataset_name, es, directed=False)
 
-    """
     start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
+    
     """
-
     start_time = time.time()
     tune_ctdne(last_graph, dag)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
     
-    """
+    
     start_time = time.time()
     tune_stwalk(last_graph, dg)
     end_time = time.time()
