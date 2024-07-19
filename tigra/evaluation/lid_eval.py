@@ -376,7 +376,7 @@ class NCLIDEstimator(LIDEstimator):
         distr = [0] * (self.max_nc_size + 1)
         numn = len(self.nodes)
         for i in range(numn):
-            src = self.nodes[i][0]
+            src = self.nodes[i]
             distr[self.nc_size[src]] += 1
 
         dstr = "NC_SIZE,#NODES\n"
@@ -390,3 +390,17 @@ class NCLIDEstimator(LIDEstimator):
 
     def nc_len(self, node):
         return self.nc_size[node]
+    
+    def nc_size_stats(self):
+        numn = len(self.nodes)
+        l = []
+        
+        for i in range(numn):
+            src = self.nodes[i]
+            l.append(self.nc_size[src])
+
+        max_nc = max(l) / numn
+        sum_nc = sum(l) / numn
+        avg_nc = sum_nc / numn
+
+        return max_nc, avg_nc

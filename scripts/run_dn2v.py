@@ -16,8 +16,8 @@ DIM           = 50
 P             = 0.5
 Q             = 4.0
 WORKERS       = 16
-WALKLEN       = 64
-NUMWALKS      = 50
+WALKLEN       = 32
+NUMWALKS      = 10
 
 from data.bank import Databank
 databank = Databank()

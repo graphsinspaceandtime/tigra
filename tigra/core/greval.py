@@ -41,7 +41,6 @@ class GraphReconstructionEval:
         s_rec = 0
         s_prec = 0
         nodes_cnt = 0
-        #cnt = 0
 
         for node in self.graph.nodes:
             if not node in reconstructed_graph.nodes():
