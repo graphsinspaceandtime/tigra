@@ -55,8 +55,8 @@ def tune_dynnode2vec(last_graph, dg):
         dg, 
         P, 
         Q,
-        [WORKERS],                  # walk length
-        [WALKLEN],                  # num walks
+        [WALKLEN],                  # walk length
+        [NUMWALKS],                  # num walks
         num_runs=NUM_RUNS, 
         parallel_processes=WORKERS
     )
