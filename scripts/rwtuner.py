@@ -29,8 +29,8 @@ NUM_RUNS = 5
 #NUM_RUNS = 1
 
 WORKERS = 16
-WALKLEN = 32
-NUMWALKS = 10
+WALKLEN = 64
+NUMWALKS = 50
 #NUMWALKS = 1
 
 from tigra.core.loaders import load_event_sequence
@@ -55,8 +55,8 @@ def tune_dynnode2vec(last_graph, dg):
         dg, 
         P, 
         Q,
-        [8, 16, 32],                  # walk length
-        [10],                         # num walks
+        [WORKERS],                  # walk length
+        [WALKLEN],                  # num walks
         num_runs=NUM_RUNS, 
         parallel_processes=WORKERS
     )

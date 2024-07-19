@@ -41,7 +41,7 @@ class GraphReconstructionEval:
         s_rec = 0
         s_prec = 0
         nodes_cnt = 0
-        cnt = 0
+        #cnt = 0
 
         for node in self.graph.nodes:
             if not node in reconstructed_graph.nodes():
@@ -62,10 +62,10 @@ class GraphReconstructionEval:
                     for p_edge in predicted_edges:
                         if p_edge in real_edges:
                             node_s += 1
-                            cnt += 1
+                            
 
                     recall = node_s / num_real_edges
-                    precision = cnt / len(self.graph.edges)
+                    precision = node_s / len(predicted_edges)
 
             nodes_cnt += 1
             self.recall_per_node[node] = recall
