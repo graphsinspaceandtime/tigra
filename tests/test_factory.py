@@ -7,25 +7,34 @@ from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.core.greval import GraphReconstructionEval
 
 dn2v_fact = get_dn2v_factory("../dn2v.conf")
-dn2v, dg = dn2v_fact.get_embedding("radoslaw-email")
 
-org_graphs = dg.get_graph_sequence()
-num_graphs = len(org_graphs)
+from data.bank import Databank
+databank = Databank()
+datasets = databank.get_keys()
 
-for i in range(num_graphs):
-    og = org_graphs[i]
-    emb = dn2v.embeddings[i]
+for dataset in datasets:
+    print("DATASET", dataset)
+    dn2v, dg = dn2v_fact.get_embedding(dataset)
 
-    print("#nodes", og.num_nodes(), "#links", og.num_edges())
-    num_links = og.num_edges()
+    org_graphs = dg.get_graph_sequence()
+    num_graphs = len(org_graphs)
 
-    rg = emb.reconstruct(num_links, "REC")
-    print("#nodes", rg.num_nodes(), "#links", rg.num_edges())
+    for i in range(num_graphs):
+        og = org_graphs[i]
+        emb = dn2v.embeddings[i]
+
+        print("#nodes", og.num_nodes(), "#links", og.num_edges())
+        num_links = og.num_edges()
+
+        rg = emb.reconstruct(num_links, "REC")
+        print("#nodes", rg.num_nodes(), "#links", rg.num_edges())
 
 
-    gre = GraphReconstructionEval(og, emb, report_warnings=False)
-    print("Snapshot", i)
-    print("Precision", gre.get_avg_precision())
-    print("Recall", gre.get_avg_recall())
-    print("F1", gre.getF1())
-    print()
+        gre = GraphReconstructionEval(og, emb, report_warnings=False)
+        print("Snapshot", i)
+        print("Precision", gre.get_avg_precision())
+        print("Recall", gre.get_avg_recall())
+        print("F1", gre.getF1())
+        print()
+
+    print("----------------------------------------------------------")
