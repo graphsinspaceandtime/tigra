@@ -14,6 +14,12 @@ import networkx as nx
 import numpy as np
 import torch
 
+from scipy.stats import spearmanr
+from scipy.stats import mannwhitneyu
+
+
+from tigra.core.greval import GraphReconstructionEval
+
 
 class LIDEstimator(ABC):
     """
@@ -404,3 +410,150 @@ class NCLIDEstimator(LIDEstimator):
         avg_nc = sum_nc / numn
 
         return max_nc, avg_nc
+    
+
+def correlation(dict1, dict2):
+    x, y = [], []
+
+    for n in dict1:
+        if n in dict2:
+            _x = dict1[n]
+            _y = dict2[n]
+
+            x.append(_x)
+            y.append(_y)
+
+    return spearmanr(x, y)[0]
+
+
+class CumulativeStatistics:
+    def __init__(self):
+        self.x = []
+        self.y = []
+
+
+    def add_data(self, dict1, dict2):
+        for n in dict1:
+            if n in dict2:
+                _x = dict1[n]
+                _y = dict2[n]
+
+                self.x.append(_x)
+                self.y.append(_y)
+
+
+    def add_high_low_groups(self, xdict, ydict):
+        avg = sum(xdict.values()) / len(xdict.values())
+        
+        for node in xdict:
+            l = xdict[node]
+            if node in ydict:
+                mval = ydict[node]
+                if l > avg:
+                    self.x.append(mval)
+                elif l < avg:
+                    self.y.append(mval)
+
+
+
+class CumulativeCorrelation(CumulativeStatistics):
+    def __init__(self):
+        super().__init__()
+
+    def get_correlation(self):
+        return spearmanr(self.x, self.y)[0]
+
+
+def prob_sup(X, Y):
+    h = 0
+    for x in X:
+        for y in Y:
+            if x > y:
+                h += 1
+
+    total = len(X) * len(Y)
+    return h / total
+
+
+class CumulativeMWU(CumulativeStatistics):
+    def __init__(self):
+        super().__init__()
+
+    def mwu(self):
+        avg_x = round(mean(self.x), 4)
+        avg_y = round(mean(self.y), 4)
+
+        U, pU = mannwhitneyu(self.x, self.y)
+        ps1 = round(prob_sup(self.x, self.y), 4)
+        ps2 = round(prob_sup(self.y, self.x), 4)
+        total = len(self.x) + len(self.y)
+        x_frac = round(len(self.x) / total, 4)
+        y_frac = round(len(self.y) / total, 4)
+        acc = "yes" if pU >= 0.05 else "no"
+
+        return str(avg_x) + "," + str(avg_y) + "," + str(x_frac) + "," + str(y_frac) + "," +\
+            str(U) + "," + str(pU) + "," + acc + "," + str(ps1) + "," + str(ps2)
+
+        
+
+
+class LIDEval:
+    def __init__(self, embedding, dg):
+        self.embedding = embedding
+        self.graph_sequence = dg.get_graph_sequence()
+        self.f1_nclid_cumul = CumulativeCorrelation()
+        self.prec_nclid_cumul = CumulativeCorrelation()
+        self.rec_nclid_cumul = CumulativeCorrelation()
+        self.f1_nclid_mwu = CumulativeMWU()
+
+    def eval_snapshot(self, index, emb, graph):        
+        bc = dict(nx.betweenness_centrality(graph.G))
+        cc = dict(nx.closeness_centrality(graph.G))
+        ec = dict(nx. eigenvector_centrality(graph.G, max_iter=1000))
+
+        lightcopyg = graph.G
+        lightcopyg.remove_edges_from(nx.selfloop_edges(lightcopyg))
+        si = dict(nx.core_number(lightcopyg))
+        deg = dict(nx.degree(graph.G))
+
+        lidestimator = NCLIDEstimator(graph.G)
+        lidestimator.estimate_lids()
+        lid_vals = lidestimator.get_lid_values()
+
+        gre = GraphReconstructionEval(graph, emb, report_warnings=False)
+        f1_vals = gre.get_F1_per_node()
+        prec_vals = gre.get_precision_per_node()
+        rec_vals = gre.get_recall_per_node()
+
+        self.f1_nclid_cumul.add_data(f1_vals, lid_vals)
+        self.prec_nclid_cumul.add_data(prec_vals, lid_vals)
+        self.rec_nclid_cumul.add_data(rec_vals, lid_vals)
+
+        self.f1_nclid_mwu.add_high_low_groups(lid_vals, f1_vals)
+
+        s = str(index + 1) + ","
+        s += str(round(gre.getF1(), 4)) + ","
+        s += str(round(gre.get_avg_precision(), 4)) + ","
+        s += str(round(gre.get_avg_recall(), 4)) + ","
+        s += str(round(correlation(f1_vals, bc), 4)) + ","
+        s += str(round(correlation(f1_vals, cc), 4)) + ","
+        s += str(round(correlation(f1_vals, ec), 4)) + ","
+        s += str(round(correlation(f1_vals, si), 4)) + ","
+        s += str(round(correlation(f1_vals, deg), 4)) + ","
+        s += str(round(correlation(lid_vals, f1_vals), 4)) + ","
+        s += str(round(correlation(lid_vals, prec_vals), 4)) + ","
+        s += str(round(correlation(lid_vals, rec_vals), 4))
+
+        return s
+
+
+    def eval(self):
+        N = len(self.graph_sequence)
+        for i in range(N):
+            s = self.eval_snapshot(i, self.embedding[i], self.graph_sequence[i])
+            print(s)
+        print("-------------------\n")
+        print("F1\n", self.f1_nclid_cumul.get_correlation())
+        print("\nPREC\n", self.prec_nclid_cumul.get_correlation())
+        print("\nREC\n", self.rec_nclid_cumul.get_correlation())
+        print("MWU\n", self.f1_nclid_mwu.mwu())

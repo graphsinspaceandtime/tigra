@@ -75,17 +75,22 @@ class GraphReconstructionEval:
         self.avg_precision = s_prec / nodes_cnt
         self.avg_recall = s_rec / nodes_cnt
 
+
     def get_precision_per_node(self):
         return self.precision_per_node
+
 
     def get_recall_per_node(self):
         return self.recall_per_node
 
+
     def get_avg_precision(self):
         return self.avg_precision
 
+
     def get_avg_recall(self):
         return self.avg_recall
+
 
     def getF1(self):
         p = self.get_avg_precision()
@@ -93,3 +98,16 @@ class GraphReconstructionEval:
         if p + r == 0.0:
             return 0.0
         return 2 * p * r / (p + r)
+    
+
+    def get_F1_per_node(self):
+        f1dict = dict()
+        for n in self.precision_per_node:
+            prec = self.precision_per_node[n]
+            rec = self.recall_per_node[n]
+            f1 = 0.0
+            if prec + rec != 0.0:
+                f1 = 2 * prec * rec / (prec + rec)
+            f1dict[n] = f1
+
+        return f1dict
