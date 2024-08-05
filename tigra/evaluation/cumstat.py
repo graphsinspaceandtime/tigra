@@ -10,6 +10,7 @@ author: svc@dmi.uns.ac.rs, lucy@dmi.uns.ac.rs
 
 from scipy.stats import spearmanr
 from scipy.stats import mannwhitneyu
+from statistics import mean
 
 def correlation(dict1, dict2):
     x, y = [], []
