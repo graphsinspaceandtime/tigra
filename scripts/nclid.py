@@ -15,7 +15,7 @@ from data.bank import Databank
 databank = Databank()
 datasets = databank.get_keys()
 
-from tigra.evaluation.lid_eval import NCLIDEstimator
+from tigra.evaluation.lideval import NCLIDEstimator
 from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph
 
@@ -135,7 +135,7 @@ def examine_NCLID(dg):
 
         bc = dict(nx.betweenness_centrality(graphs[i].G))
         cc = dict(nx.closeness_centrality(graphs[i].G))
-        ec = dict(nx. eigenvector_centrality(graphs[i].G, max_iter=1000))
+        ec = dict(nx.eigenvector_centrality(graphs[i].G, max_iter=1000))
 
         pomg = graphs[i].G
         pomg.remove_edges_from(nx.selfloop_edges(pomg))
@@ -206,10 +206,16 @@ def examine_NCLID(dg):
         prev_lid_vals = lid_vals
         
 
+def examine_NCLID_2(dg):
+    graphs = dg.get_graph_sequence()
+    for i in range(len(graphs)):
+        estimator = NCLIDEstimator(graphs[i].G)
+        estimator.estimate_lids()
+        lid_vals = estimator.get_lid_values()
 
 
 if __name__ == "__main__":
-    dataset = datasets[9]
+    dataset = datasets[0]
     print(dataset)
     es, time_res = load_event_sequence(dataset)
     dg = DynamicGraph()
