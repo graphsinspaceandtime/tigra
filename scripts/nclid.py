@@ -19,6 +19,10 @@ from tigra.evaluation.lideval import NCLIDEstimator
 from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph
 
+from tigra.evaluation.cumstat import CumulativeCorrelation
+
+from tigra.core.loaders import load_event_sequence
+
 import networkx as nx
 from scipy.stats import spearmanr
 from numpy import std
@@ -206,20 +210,77 @@ def examine_NCLID(dg):
         prev_lid_vals = lid_vals
         
 
-def examine_NCLID_2(dg):
+def examine_NCLID_2(dataset, dg):
+    sum_lid_vals, num_nodes = 0, 0
+    num_zero_lid, max_lid = 0, 0
+
+    c_bc = CumulativeCorrelation()
+    c_cc = CumulativeCorrelation()
+    c_ec = CumulativeCorrelation()
+    c_si = CumulativeCorrelation()
+    c_dg = CumulativeCorrelation()
+
     graphs = dg.get_graph_sequence()
     for i in range(len(graphs)):
         estimator = NCLIDEstimator(graphs[i].G)
         estimator.estimate_lids()
         lid_vals = estimator.get_lid_values()
 
+        sum_lid_vals += sum(lid_vals.values())
+        num_zero_lid += count_nc_lid_zero(lid_vals)
+        m_lid = max(lid_vals.values())
+        if m_lid > max_lid:
+            max_lid = m_lid
+
+        num_nodes += len(lid_vals)
+
+        bc = dict(nx.betweenness_centrality(graphs[i].G))
+        cc = dict(nx.closeness_centrality(graphs[i].G))
+        ec = dict(nx.eigenvector_centrality(graphs[i].G, max_iter=1000))
+
+        pomg = graphs[i].G
+        pomg.remove_edges_from(nx.selfloop_edges(pomg))
+        si = dict(nx.core_number(pomg))
+        deg = dict(nx.degree(graphs[i].G))
+
+        c_bc.add_data(lid_vals, bc)
+        c_cc.add_data(lid_vals, cc)
+        c_ec.add_data(lid_vals, ec)
+        c_si.add_data(lid_vals, si)
+        c_dg.add_data(lid_vals, deg)
+
+    avg_lid = sum_lid_vals / num_nodes
+    zero_lid_prob = num_zero_lid / num_nodes
+
+    _c_bc = c_bc.get_correlation()
+    _c_cc = c_cc.get_correlation()
+    _c_ec = c_ec.get_correlation()
+    _c_si = c_si.get_correlation()
+    _c_dg = c_dg.get_correlation()
+
+    s = dataset + "," +\
+        str(round(avg_lid, 4)) + "," +\
+        str(round(max_lid, 4)) + "," +\
+        str(round(zero_lid_prob, 6)) + "," +\
+        str(round(_c_dg, 4)) + "," +\
+        str(round(_c_si, 4)) + "," +\
+        str(round(_c_bc, 4)) + "," +\
+        str(round(_c_cc, 4)) + "," +\
+        str(round(_c_ec, 4))
+
+    print(s)
+
 
 if __name__ == "__main__":
-    dataset = datasets[0]
-    print(dataset)
-    es, time_res = load_event_sequence(dataset)
-    dg = DynamicGraph()
-    dg.init_from_event_sequence(es, time_resolution=time_res, directed=False)
-    dg.info()
+    print("DATASET,AVG-NC-LID,MAX-NC-LID,ZERO-LID,DEG_C,SI_C,BC_C,CC_C,EC_C")
+    for dataset in datasets:
+        res = load_event_sequence(dataset)
+        if res == None:
+            continue
 
-    examine_NCLID(dg)
+        es, time_res = res
+        dg = DynamicGraph()
+        dg.init_from_event_sequence(es, time_resolution=time_res, directed=False)
+        #dg.info()
+
+        examine_NCLID_2(dataset, dg)
