@@ -13,12 +13,14 @@ the $ j $-th node.
 
 Each row $ i $ in $ C $ represents class memberships at time $ i $ in the dynamic graph.
 """
+#              one of 3 classes         50 nodes            create 5 snapshots
 C = np.array([[random.choice([0, 1, 2]) for _ in range(50)] for _ in range(5)])
 
 """
 $ P $ is a 3d array and $ P^i $ is a 2d array representing the matrix of probabilities for inter and
 intra links between each class in graph at time $ i $.
 """
+#               probabilities                                     create 5 snapshots
 P = np.array([[[0.7, 0.2, 0.1], [0.2, 0.7, 0.1], [0.1, 0.2, 0.7]] for _ in range(5)])
 
 gen = DSBMGenerator(C, P)
