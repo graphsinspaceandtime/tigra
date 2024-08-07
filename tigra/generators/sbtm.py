@@ -36,7 +36,9 @@ class SBTMGenerator(Generator):
         if C.ndim != 2:
             raise Exception("class matrix has incorrect size")
 
-        T, num_class = C.shape
+        T, _ = C.shape
+        num_class = len(set(C[0, :]))
+
         if (
             P.ndim != 3
             or P.shape[0] != T
@@ -60,7 +62,7 @@ class SBTMGenerator(Generator):
 
     def generate(self) -> EventSequence:
         events: typing.List[Event] = []
-        num_nodes = len(set(self.C[0]))
+        _, num_nodes = self.C.shape
         M = lil_matrix((num_nodes, num_nodes), dtype=bool)
 
         sbm = SBMGenerator(self.C[0], self.P[0], self.directed)

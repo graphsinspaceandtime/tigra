@@ -9,7 +9,7 @@ from tigra.generators.generator import Generator
 from tigra.generators.sbm import SBMGenerator
 
 
-class DynamicSBMGenerator(Generator):
+class DSBMGenerator(Generator):
     def __init__(
         self,
         C: np.ndarray,
@@ -21,7 +21,8 @@ class DynamicSBMGenerator(Generator):
         if C.ndim != 2:
             raise Exception("class matrix has incorrect size")
 
-        T, num_class = C.shape
+        T, _ = C.shape
+        num_class = len(set(C[0, :]))
 
         if (
             P.ndim != 3
