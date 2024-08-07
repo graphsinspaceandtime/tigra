@@ -1,8 +1,6 @@
 import sys
 import typing
-import random
 import numpy as np
-import networkx as nx
 
 sys.path.append("../..")
 
@@ -15,10 +13,14 @@ class SBMGenerator(Generator):
     Wrapper class for the NetworkX SBM graph generator.
     """
 
-    def __init__(self, c: typing.List[int], P: np.ndarray, directed=False):
-        super().__init__()
-
-        random.seed(42)
+    def __init__(
+        self,
+        c: typing.List[int],
+        P: np.ndarray,
+        directed=False,
+        seed: typing.Union[typing.Any, None] = None,
+    ):
+        super().__init__(seed)
 
         num_class = len(set(c))
 
@@ -38,7 +40,7 @@ class SBMGenerator(Generator):
             for j in range(len(self.c)) if self.directed else range(i, len(self.c)):
                 if i == j:
                     continue
-                if random.random() <= self.P[self.c[i], self.c[j]]:
+                if self.rng.random() <= self.P[self.c[i], self.c[j]]:
                     events.append(Event(i, j, timestamp=self.initial_timestamp))
 
         return EventSequence(events)

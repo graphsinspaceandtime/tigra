@@ -1,6 +1,5 @@
 import sys
 import typing
-import random
 import numpy as np
 from scipy.sparse import lil_matrix
 
@@ -26,9 +25,14 @@ class SBTMGenerator(Generator):
     """
 
     def __init__(
-        self, C: np.ndarray, P: np.ndarray, P_exist: np.ndarray, directed=False
+        self,
+        C: np.ndarray,
+        P: np.ndarray,
+        P_exist: np.ndarray,
+        directed=False,
+        seed: typing.Union[typing.Any, None] = None,
     ):
-        super().__init__()
+        super().__init__(seed)
         if C.ndim != 2:
             raise Exception("class matrix has incorrect size")
 
@@ -70,7 +74,7 @@ class SBTMGenerator(Generator):
                     if i == j:
                         continue  # no self loops
 
-                    r = random.random()
+                    r = self.rng.random()
 
                     if M[i, j]:
                         if r > self.P_exist[t, self.C[t, i], self.C[t, j]]:
