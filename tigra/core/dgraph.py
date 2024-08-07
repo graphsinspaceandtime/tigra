@@ -380,7 +380,10 @@ class DynamicGraph:
         print("#snapshots =", len(self.graphs))
         if self.timespan_in_days != None:
             print("#timespan[days] =", self.timespan_in_days)
+        
         s = ""
+        node_set, link_set = set(), set()
+
         for g in self.graphs:
             g_type = "D" if g.is_directed() else "U"
             s += (
@@ -394,7 +397,14 @@ class DynamicGraph:
                 + g_type
                 + "]"
             )
+
+            node_set.update(list(g.G.nodes()))
+            link_set.update(list(g.G.edges()))
+
+        
         print(s)
+        print("#nodes", len(node_set))
+        print("#links", len(link_set))
 
     def get_graph_sequence(self):
         return self.graphs
