@@ -30,11 +30,11 @@ class DynamicSBMGenerator(Generator):
         self.directed = directed
 
     def generate(self) -> EventSequence:
-        es = EventSequence()
+        events = []
 
         for t in range(self.T):
             sbm = SBMGenerator(self.C[t], self.P[t], self.directed)
             for event in sbm.generate().get_events():
-                es.add_event(event)
+                events.append(event)
 
-        return es
+        return EventSequence(events)
