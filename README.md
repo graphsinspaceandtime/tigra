@@ -98,6 +98,14 @@ only once you're in the conda environment.
 pip install -r requirements.txt
 ```
 
+Also needed for developent (for using tigra as a global package inside the
+module itself) you will need to install the module as an editable with pip. To
+do this, run the following command in the root of the repository.
+
+```sh
+pip install -e .
+```
+
 When you're done working with the software, you can exit the environment by
 deactivating it.
 

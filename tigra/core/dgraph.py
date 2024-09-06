@@ -9,7 +9,7 @@ Module defining core classes for dynamic/temporal graphs
 import networkx as nx
 from typing import List, Union
 
-from .time import determine_time_resolution
+from tigra.core.time import determine_time_resolution
 
 from random import sample
 from statistics import mean, stdev
