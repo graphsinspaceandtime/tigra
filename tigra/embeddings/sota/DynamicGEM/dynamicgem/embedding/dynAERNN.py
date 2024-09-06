@@ -11,8 +11,9 @@ import sys
 import os
 
 sys.path.append("./")
+sys.path.append("../..")
 from .dynamic_graph_embedding import DynamicGraphEmbedding
-from dynamicgem.utils import plot_util, graph_util, dataprep_util
+from ..utils import plot_util, graph_util, dataprep_util
 from dynamicgem.visualization import plot_dynamic_sbm_embedding
 from dynamicgem.graph_generation import dynamic_SBM_graph
 from dynamicgem.evaluation import evaluate_link_prediction
@@ -21,7 +22,7 @@ from keras.models import Model, model_from_json
 from keras.optimizers import SGD, Adam
 from keras.callbacks import TensorBoard, EarlyStopping
 from keras import backend as KBack
-from .dnn_utils import *
+from dnn_utils import *
 import tensorflow as tf
 import operator
 from argparse import ArgumentParser
@@ -157,8 +158,7 @@ class DynAERNN(DynamicGraphEmbedding):
                 graphs, self._beta, self._n_batch, self._n_prev_graphs, True
             ),
             nb_epoch=self._num_iter,
-            samples_per_epoch=(self._node_num * self._n_prev_graphs)
-            // self._n_batch,
+            samples_per_epoch=(self._node_num * self._n_prev_graphs) // self._n_batch,
             verbose=1,
             # callbacks=[tensorboard]
         )
