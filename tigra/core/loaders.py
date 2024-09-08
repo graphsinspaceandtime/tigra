@@ -8,8 +8,8 @@ Module defining functions and classes for loading datasets
 
 import re
 
-from .dgraph import EventSequence, Event
-from .time import determine_time_resolution
+from tigra.core.dgraph import EventSequence, Event
+from tigra.core.time import determine_time_resolution
 
 from data.bank import Databank
 

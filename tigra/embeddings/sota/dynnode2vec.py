@@ -7,8 +7,8 @@ Wrapper for dynnode2vec
 """
 
 from typing import List
-from ..embedding import Embedding, SingletonEmbedding
-from ...core.dgraph import DynamicGraph
+from tigra.embeddings.embedding import Embedding, SingletonEmbedding
+from tigra.core.dgraph import DynamicGraph
 
 from dynnode2vec.dynnode2vec import DynNode2Vec
 

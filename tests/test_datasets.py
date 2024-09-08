@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("..")
-
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
 
 from data.bank import Databank

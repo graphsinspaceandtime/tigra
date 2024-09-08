@@ -19,8 +19,7 @@ from gensim.models import Word2Vec
 import networkx as nx
 import time
 
-from ..embedding import Embedding
-from ..embedding import SingletonEmbedding
+from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 
 
 class STWalk(Embedding):

@@ -9,8 +9,8 @@ Wrapper for CTDNE
 import networkx as nx
 from typing import List
 
-from ..embedding import Embedding, SingletonEmbedding
-from ...core.dgraph import DynamicAggregateGraph
+from tigra.embeddings.embedding import Embedding, SingletonEmbedding
+from tigra.core.dgraph import DynamicAggregateGraph
 from tigra.embeddings.sota.ctdnesrc.ctdne import CTDNE
 
 

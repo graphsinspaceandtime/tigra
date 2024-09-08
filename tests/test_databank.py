@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("..")
-
 from data.bank import Databank
 
 databank = Databank()

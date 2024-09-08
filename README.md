@@ -103,7 +103,7 @@ module itself) you will need to install the module as an editable with pip. To
 do this, run the following command in the root of the repository.
 
 ```sh
-pip install -e .
+python setup.py develop
 ```
 
 When you're done working with the software, you can exit the environment by
