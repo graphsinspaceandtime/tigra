@@ -1,10 +1,28 @@
 from typing import List
+
+from tensorflow.python.keras.utils.losses_utils import ReductionV2
 from tigra.embeddings.sota.dynae.ae_embedding_model import (
     DynamicAutoEncoderEmbeddingModel,
 )
 import tensorflow as tf
 from tensorflow.keras import layers, regularizers, models, optimizers, losses
 import numpy as np
+
+
+class WeightedMSEX(losses.Loss):
+    def __init__(self, num_nodes, reduction=ReductionV2.AUTO, name=None):
+        super().__init__(reduction, name)
+        self._num_nodes = num_nodes
+
+    def call(self, y_true, y_pred):
+        """Hack: This fn doesn't accept additional arguments.
+                We use y_true to pass them.
+        y_pred: Contains x_hat - x_pred
+        y_true: Contains b
+        """
+        return tf.reduce_sum(
+            tf.square(y_pred * y_true[:, 0 : self._num_nodes]), axis=-1
+        )
 
 
 class DynAE(DynamicAutoEncoderEmbeddingModel):
@@ -59,14 +77,13 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
         [x_hat, y] = autoencoder(x_in)
         x_diff = layers.Subtract()([x_hat, x_in])
 
-        # TODO: Implement correctly so it works with TF2
-        def weighted_mse_x(y_true, y_pred):
-            """Hack: This fn doesn't accept additional arguments.
-                  We use y_true to pass them.
-            y_pred: Contains x_hat - x_pred
-            y_true: Contains b
-            """
-            tf.reduce_sum(tf.square(y_pred * y_true[:, 0:num_nodes]), axis=-1)
+        # def weighted_mse_x(y_true, y_pred):
+        #     """Hack: This fn doesn't accept additional arguments.
+        #           We use y_true to pass them.
+        #     y_pred: Contains x_hat - x_pred
+        #     y_true: Contains b
+        #     """
+        #     return tf.reduce_sum(tf.square(y_pred * y_true[:, 0:num_nodes]), axis=-1)
 
         model = models.Model(inputs=[x_in, x_pred], outputs=x_diff)
         # TODO: Weight decay no longer exists
@@ -79,9 +96,9 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
         adam = optimizers.Adam(
             learning_rate=self._xeta, beta_1=0.9, beta_2=0.999, epsilon=1e-08
         )
-        # model.compile(optimizer=sgd, loss=weighted_mse_x)
-        # TODO: Workaround until weighted_mse_x works
-        model.compile(optimizer=sgd, loss=losses.MSE)
+        # Using WeightedMSEX since it's a modern way to implement a loss function
+        # weighted_mse_x could also be used from the original implementation
+        model.compile(optimizer=sgd, loss=WeightedMSEX(num_nodes))
 
         history = model.fit(
             batch_generator_dynae(

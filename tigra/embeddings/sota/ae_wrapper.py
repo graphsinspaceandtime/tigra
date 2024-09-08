@@ -19,6 +19,7 @@ class DynamicAutoEncoder(Embedding):
 
         graphs = data.get_scipy_sparse_matrices()
 
+        # TODO: Use hyperparameters instead of hardcoding
         dynae = DynAE(
             d=self._d,
             beta=5,
