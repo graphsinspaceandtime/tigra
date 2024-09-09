@@ -1,28 +1,11 @@
 from typing import List
 
-from tensorflow.python.keras.utils.losses_utils import ReductionV2
 from tigra.embeddings.sota.dynae.ae_embedding_model import (
     DynamicAutoEncoderEmbeddingModel,
 )
-import tensorflow as tf
-from tensorflow.keras import layers, regularizers, models, optimizers, losses
+from tigra.embeddings.sota.dynae.dnn_utils import WeightedMSEX
+from keras import layers, regularizers, models, optimizers, Sequential
 import numpy as np
-
-
-class WeightedMSEX(losses.Loss):
-    def __init__(self, num_nodes, reduction=ReductionV2.AUTO, name=None):
-        super().__init__(reduction, name)
-        self._num_nodes = num_nodes
-
-    def call(self, y_true, y_pred):
-        """Hack: This fn doesn't accept additional arguments.
-                We use y_true to pass them.
-        y_pred: Contains x_hat - x_pred
-        y_true: Contains b
-        """
-        return tf.reduce_sum(
-            tf.square(y_pred * y_true[:, 0 : self._num_nodes]), axis=-1
-        )
 
 
 class DynAE(DynamicAutoEncoderEmbeddingModel):
@@ -46,31 +29,35 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
             weightfile: Files containing previous encoder and decoder weights
             savefilesuffix: suffix for saving the files
         """
-
-        self._d = d
-        hyper_params = {
-            "method_name": "DynAE",
-            "actfn": "relu",
-        }
-        hyper_params.update(kwargs)
-        for key, value in hyper_params.items():
-            self.__setattr__(f"_{key}", value)
-
-    def get_method_name(self) -> str:
-        return self._method_name
+        super().__init__(d, method_name="DynAE", **kwargs)
 
     def learn_embedding(self, graphs: list):
         num_nodes = graphs[0].shape[0]
         # TODO: Time?
         # TODO: Config?
         num_iter = self._n_iter
-        encoder = get_encoder(
+        # encoder = self.__get_encoder(
+        #     num_nodes, self._d, self._n_units, self._nu1, self._nu2, self._actfn
+        # )
+        # decoder = self.__get_decoder(
+        #     num_nodes, self._d, self._n_units, self._nu1, self._nu2, self._actfn
+        # )
+        # autoencoder = self.__get_autoencoder(encoder, decoder, (num_nodes, 1))
+        input_layer, encoder_output = self.__get_our_encoder(
             num_nodes, self._d, self._n_units, self._nu1, self._nu2, self._actfn
         )
-        decoder = get_decoder(
-            num_nodes, self._d, self._n_units, self._nu1, self._nu2, self._actfn
+        decoder_output = self.__get_our_decoder(
+            num_nodes,
+            self._d,
+            self._n_units,
+            self._nu1,
+            self._nu2,
+            self._actfn,
+            encoder_output,
         )
-        autoencoder = get_autoencoder(encoder, decoder)
+        autoencoder = self.__get_our_autoencoder(
+            input_layer, encoder_output, decoder_output
+        )
 
         x_in = layers.Input(shape=(num_nodes,), name="x_in")
         x_pred = layers.Input(shape=(num_nodes,), name="x_pred")
@@ -99,9 +86,10 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
         # Using WeightedMSEX since it's a modern way to implement a loss function
         # weighted_mse_x could also be used from the original implementation
         model.compile(optimizer=sgd, loss=WeightedMSEX(num_nodes))
+        model.summary()
 
         history = model.fit(
-            batch_generator_dynae(
+            self.__batch_generator_dynae(
                 graphs, self._beta, self._n_batch, self._n_prev_graphs, True
             ),
             epochs=self._n_iter,
@@ -116,7 +104,7 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
             print("Model diverged. Assigning random embeddings")
             self._Y = np.random.randn(self._node_num, self._d)
         else:
-            self._Y, self._next_adj = model_batch_predictor_dynae(
+            self._Y, self._next_adj = self.__model_batch_predictor_dynae(
                 autoencoder,
                 graphs[len(graphs) - self._n_prev_graphs :],
                 num_nodes,
@@ -126,165 +114,217 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
     def get_embedding(self) -> List:
         return self._Y
 
+    def __get_encoder(self, num_nodes, d, n_units, nu1, nu2, activation_function):
+        K = len(n_units) + 1
 
-def get_encoder(num_nodes, d, n_units, nu1, nu2, activation_function):
-    K = len(n_units) + 1
+        # input
+        x = layers.Input(shape=(num_nodes, 1))
 
-    # input
-    x = layers.Input(shape=(num_nodes,))
-
-    # encoder layers
-    y = [None] * (K + 1)
-    y[0] = x
-    for i in range(K - 1):
-        y[i + 1] = layers.Dense(
-            n_units[i],
+        # encoder layers
+        y = [None] * (K + 1)
+        y[0] = x
+        for i in range(K - 1):
+            y[i + 1] = layers.Dense(
+                n_units[i],
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )(y[i])
+        y[K] = layers.Dense(
+            d,
             activation=activation_function,
             bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
             kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
             activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        )(y[i])
-    y[K] = layers.Dense(
-        d,
-        activation=activation_function,
-        bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-    )(y[K - 1])
-    # TODO: Is the next line right?
-    encoder = models.Model(inputs=x, outputs=y[K])
-    return encoder
+        )(y[K - 1])
+        # TODO: Is the next line right?
+        # encoder = models.Model(inputs=x, outputs=y[K])
+        encoder = models.Model(inputs=x, outputs=(d,))
+        return encoder
 
+    def __get_our_encoder(self, num_nodes, d, n_units, nu1, nu2, activation_function):
+        input_layer = layers.Input(shape=(num_nodes,))
+        encoded = input_layer
+        for unit in n_units:
+            encoded = layers.Dense(
+                unit,
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )(encoded)
 
-def get_decoder(num_nodes, d, n_units, nu1, nu2, activation_function):
-    K = len(n_units) + 1
-    # Input
-    y = layers.Input(shape=(d,))
-    # Decoder layers
-    y_hat = [None] * (K + 1)
-    y_hat[K] = y
-    for i in range(K - 1, 0, -1):
-        y_hat[i] = layers.Dense(
-            n_units[i - 1],
+        encoder_output = layers.Dense(
+            d,
             activation=activation_function,
             bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
             kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
             activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        )(y_hat[i + 1])
-    y_hat[0] = layers.Dense(
-        num_nodes,
-        activation=activation_function,
-        bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-        activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
-    )(y_hat[1])
-    # Output
-    x_hat = y_hat[0]  # decoder's output is also the actual output
-    # Decoder Model
-    decoder = models.Model(inputs=y, outputs=x_hat)
-    return decoder
+        )(encoded)
 
+        # encoder = models.Model(inputs=input_layer, outputs=encoder_output)
+        return (input_layer, encoder_output)
 
-def get_autoencoder(encoder, decoder):
-    # Input
-    x = layers.Input(shape=(encoder.layers[0].input_shape[0][1],))
-    # Generate embedding
-    y = encoder(x)
-    # Generate reconstruction
-    x_hat = decoder(y)
-    # Autoencoder Model
-    autoencoder = models.Model(inputs=x, outputs=[x_hat, y])
-    return autoencoder
+    def __get_decoder(self, num_nodes, d, n_units, nu1, nu2, activation_function):
+        K = len(n_units) + 1
+        # Input
+        y = layers.Input(shape=(d, 1))
+        # Decoder layers
+        y_hat = [None] * (K + 1)
+        y_hat[K] = y
+        for i in range(K - 1, 0, -1):
+            y_hat[i] = layers.Dense(
+                n_units[i - 1],
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )(y_hat[i + 1])
+        y_hat[0] = layers.Dense(
+            num_nodes,
+            activation=activation_function,
+            bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+        )(y_hat[1])
+        # Output
+        x_hat = y_hat[0]  # decoder's output is also the actual output
+        # Decoder Model
+        decoder = models.Model(inputs=y, outputs=x_hat)
+        return decoder
 
+    def __get_our_decoder(
+        self, num_nodes, d, n_units: list, nu1, nu2, activation_function, encoder_output
+    ):
+        decoded = encoder_output
 
-def batch_generator_dynae(graphs, beta, batch_size, look_back, shuffle):
-    T = len(graphs)
-    d = graphs[0].shape[0]
-    train_size = T - look_back
+        for unit in reversed(n_units):
+            decoded = layers.Dense(
+                unit,
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )(decoded)
 
-    if not train_size:
-        print("======== RETURNING ==========")
-        return
-    number_of_batches = (d * train_size) // batch_size
+        decoder_output = layers.Dense(
+            num_nodes,
+            activation=activation_function,
+            bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+        )(decoded)
 
-    # if number_of_batches < 0:
-    # pdb.set_trace()
-    # print("# of batches: %d" % number_of_batches)
-    counter = 0
-    sample_index = np.arange(d * train_size)
-    if shuffle:
-        np.random.shuffle(sample_index)
+        return decoder_output
 
-    while True:
-        batch_index = sample_index[batch_size * counter : batch_size * (counter + 1)]
-        X_batch = np.zeros((batch_size, d))
-        X_batch2 = np.zeros((batch_size, d))
-        for idx, record_id in enumerate(batch_index):
-            graph_idx = record_id // d
-            node_idx = record_id % d
-            X_batch[idx, :] = graphs[graph_idx][node_idx, :].toarray()
-            X_batch2[idx] = graphs[graph_idx + 1][node_idx, :].toarray()
-        y_batch = np.ones(X_batch2.shape)
-        y_batch[X_batch2 != 0] = beta
-        y_batch[X_batch2 == 0] = -1
-        counter += 1
-        yield [X_batch, X_batch2], y_batch
-        if counter == number_of_batches:
-            if shuffle:
-                np.random.shuffle(sample_index)
-            counter = 0
+    def __get_autoencoder(self, encoder, decoder, input_shape):
+        # Input
+        x = layers.Input(shape=input_shape)
+        # Generate embedding
+        y = encoder(x)
+        # Generate reconstruction
+        x_hat = decoder(y)
+        # Autoencoder Model
+        autoencoder = models.Model(inputs=x, outputs=[x_hat, y])
+        return autoencoder
 
+    def __get_our_autoencoder(self, input_layer, encoder_output, decoder_output):
+        autoencoder = models.Model(
+            inputs=input_layer, outputs=[encoder_output, decoder_output]
+        )
+        return autoencoder
 
-def model_batch_predictor_dynae(model, graphs, num_nodes, batch_size):
-    look_back = len(graphs)
-    d = num_nodes
-    # graphs_sp = []
-    # for graph in graphs:
-    #     graphs_sp.append(nx.to_scipy_sparse_matrix(graph))
-    counter = 0
-    pred = None
-    pred2 = None
-    while counter < d // batch_size:
-        indices = range(batch_size * counter, batch_size * (counter + 1))
-        X = np.zeros((batch_size, d))
-        X2 = np.zeros((batch_size, d))
-        for idx, record_id in enumerate(indices):
-            node_idx = record_id
-            try:
-                X[idx, :] = graphs[0][node_idx, :].toarray()
-            except Exception as e:
-                print(e.message)
-                # pdb.set_trace()
+    def __batch_generator_dynae(self, graphs, beta, batch_size, look_back, shuffle):
+        T = len(graphs)
+        d = graphs[0].shape[0]
+        train_size = T - look_back
 
-        next_pred, curr_pred = model.predict(X)
-        if counter:
-            pred = np.vstack((pred, curr_pred))
-            pred2 = np.vstack((pred2, next_pred))
-        else:
-            pred = curr_pred
-            pred2 = next_pred
-        counter += 1
-    if d % batch_size != 0:
+        if not train_size:
+            print("======== RETURNING ==========")
+            return
+        number_of_batches = (d * train_size) // batch_size
 
-        indices = range(batch_size * counter, d)
-        X = np.zeros((len(indices), d))
-        X2 = np.zeros((len(indices), d))
-        for idx, record_id in enumerate(indices):
-            node_idx = record_id
-            try:
-                X[idx, :] = graphs[0][node_idx, :].toarray()
-            except Exception as e:
-                print(e.message)
-                # pdb.set_trace()
-        next_pred, curr_pred = model.predict(X)
-        if counter:
-            pred = np.vstack((pred, curr_pred))
-            pred2 = np.vstack((pred2, next_pred))
-        else:
-            pred = curr_pred
-            pred2 = next_pred
-    try:
-        return pred, pred2
-    except:
+        # if number_of_batches < 0:
         # pdb.set_trace()
-        pass
+        # print("# of batches: %d" % number_of_batches)
+        counter = 0
+        sample_index = np.arange(d * train_size)
+        if shuffle:
+            np.random.shuffle(sample_index)
+
+        while True:
+            batch_index = sample_index[
+                batch_size * counter : batch_size * (counter + 1)
+            ]
+            X_batch = np.zeros((batch_size, d))
+            X_batch2 = np.zeros((batch_size, d))
+            for idx, record_id in enumerate(batch_index):
+                graph_idx = record_id // d
+                node_idx = record_id % d
+                X_batch[idx, :] = graphs[graph_idx][node_idx, :].toarray()
+                X_batch2[idx] = graphs[graph_idx + 1][node_idx, :].toarray()
+            y_batch = np.ones(X_batch2.shape)
+            y_batch[X_batch2 != 0] = beta
+            y_batch[X_batch2 == 0] = -1
+            counter += 1
+            # yield [X_batch, X_batch2], y_batch
+            yield (X_batch, X_batch2), y_batch
+            if counter == number_of_batches:
+                if shuffle:
+                    np.random.shuffle(sample_index)
+                counter = 0
+
+    def __model_batch_predictor_dynae(self, model, graphs, num_nodes, batch_size):
+        look_back = len(graphs)
+        d = num_nodes
+        # graphs_sp = []
+        # for graph in graphs:
+        #     graphs_sp.append(nx.to_scipy_sparse_matrix(graph))
+        counter = 0
+        pred = None
+        pred2 = None
+        while counter < d // batch_size:
+            indices = range(batch_size * counter, batch_size * (counter + 1))
+            X = np.zeros((batch_size, d))
+            X2 = np.zeros((batch_size, d))
+            for idx, record_id in enumerate(indices):
+                node_idx = record_id
+                try:
+                    X[idx, :] = graphs[0][node_idx, :].toarray()
+                except Exception as e:
+                    print(e.message)
+                    # pdb.set_trace()
+
+            next_pred, curr_pred = model.predict(X)
+            if counter:
+                pred = np.vstack((pred, curr_pred))
+                pred2 = np.vstack((pred2, next_pred))
+            else:
+                pred = curr_pred
+                pred2 = next_pred
+            counter += 1
+        if d % batch_size != 0:
+
+            indices = range(batch_size * counter, d)
+            X = np.zeros((len(indices), d))
+            X2 = np.zeros((len(indices), d))
+            for idx, record_id in enumerate(indices):
+                node_idx = record_id
+                try:
+                    X[idx, :] = graphs[0][node_idx, :].toarray()
+                except Exception as e:
+                    print(e.message)
+                    # pdb.set_trace()
+            next_pred, curr_pred = model.predict(X)
+            if counter:
+                pred = np.vstack((pred, curr_pred))
+                pred2 = np.vstack((pred2, next_pred))
+            else:
+                pred = curr_pred
+                pred2 = next_pred
+        try:
+            return pred, pred2
+        except:
+            # pdb.set_trace()
+            pass

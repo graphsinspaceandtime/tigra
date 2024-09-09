@@ -511,7 +511,7 @@ class DynamicSparseMatrixGraph:
         print(number_of_nodes)
 
         def make_matrix():
-            return lil_matrix((number_of_nodes, number_of_nodes), dtype=np.bool)
+            return lil_matrix((number_of_nodes, number_of_nodes), dtype=bool)
 
         tr = 24 * 60 * 60
         if time_resolution == "day":
