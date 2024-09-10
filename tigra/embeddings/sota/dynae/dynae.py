@@ -2,10 +2,16 @@ from typing import List
 
 from tigra.embeddings.sota.dynae.ae_embedding_model import (
     DynamicAutoEncoderEmbeddingModel,
+    EmbedderModel,
 )
 from tigra.embeddings.sota.dynae.dnn_utils import WeightedMSEX
 from keras import layers, regularizers, models, optimizers, Sequential
 import numpy as np
+
+
+import torch
+from torch import nn, autograd as ag
+from torch.nn import functional as F
 
 
 class DynAE(DynamicAutoEncoderEmbeddingModel):
@@ -328,3 +334,128 @@ class DynAE(DynamicAutoEncoderEmbeddingModel):
         except:
             # pdb.set_trace()
             pass
+
+
+class OurDynAE(layers.Model, EmbedderModel):
+    def __init__(self, num_nodes, d, n_units: list, nu1, nu2, activation_function):
+        super(OurDynAE, self).__init__()
+        self.latent_dim = d
+        self.shape = num_nodes
+
+        encoder_layers = []
+        encoder_layers.append(
+            layers.Dense(
+                self.shape,
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )
+        )
+        for unit in n_units:
+            encoder_layers.append(
+                layers.Dense(
+                    unit,
+                    activation=activation_function,
+                    bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                    kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                    activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                )
+            )
+        encoder_layers.append(
+            layers.Dense(
+                self.latent_dim,
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )
+        )
+        self.encoder = Sequential(encoder_layers)
+
+        decoder_layers = []
+        for unit in reversed(n_units):
+            decoder_layers.append(
+                layers.Dense(
+                    unit,
+                    activation=activation_function,
+                    bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                    kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                    activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                )
+            )
+        decoder_layers.append(
+            layers.Dense(
+                self.shape,
+                activation=activation_function,
+                bias_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                kernel_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+                activity_regularizer=regularizers.L1L2(l1=nu1, l2=nu2),
+            )
+        )
+        self.decoder = Sequential(decoder_layers)
+
+    def call(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
+
+    def get_embedding(self, x):
+        return self.encoder(x)
+
+
+class MLP(nn.Module):
+    input_dim: int
+    output_dim: int
+    bias: bool
+    layer_list: nn.ModuleList
+    layer_num: int
+
+    def __init__(self, input_dim, output_dim, n_units, bias=True, **kwargs) -> None:
+        super(MLP, self).__init__(**kwargs)
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.bias = bias
+
+        self.layer_list = nn.ModuleList()
+        self.layer_num = len(n_units) + 1
+
+        self.layer_list.append(nn.Linear(input_dim, n_units[0], bias))
+        for i in range(1, self.layer_num):
+            self.layer_list.append(nn.Linear(n_units[i - 1], n_units[i], bias))
+        self.layer_list.append(nn.Linear(n_units[-1], output_dim, bias))
+
+    def forward(self, x):
+        for layer in self.layer_list:
+            x = F.relu(layer(x))
+        return x
+
+
+class OurPyTDynAE(nn.Module):
+    shape: int
+    latent_dim: int
+    look_back: int
+    encoder: nn.Module
+    decoder: nn.Module
+
+    def __init__(
+        self,
+        shape: int,
+        latent_dim: int,
+        look_back: int,
+        n_units: list,
+        bias=True,
+        **kwargs,
+    ) -> None:
+        super(OurPyTDynAE, self).__init__(**kwargs)
+        self.shape = shape
+        self.latent_dim = latent_dim
+        self.look_back = look_back
+
+        self.encoder = MLP(shape * look_back, latent_dim, n_units, bias)
+        self.decoder = MLP(latent_dim, shape, reversed(n_units), bias)
+
+    def forward(self, x):
+        hx = self.encoder(x)
+        x_pred = self.decoder(hx)
+        return hx, x_pred

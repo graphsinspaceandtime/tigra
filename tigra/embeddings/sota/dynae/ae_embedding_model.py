@@ -19,3 +19,8 @@ class DynamicAutoEncoderEmbeddingModel:
 
     def get_embedding(self) -> typing.List[any]:
         raise Exception("Method not implemented.")
+
+
+class EmbedderModel:
+    def get_embedding(self, x):
+        raise Exception("Method not implemented.")
