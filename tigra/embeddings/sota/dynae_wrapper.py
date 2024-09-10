@@ -19,6 +19,7 @@ class DynAE(Embedding):
     batch_size: int
     epochs: int
     learning_rate: float
+    weight_decay: float
     bias: bool
     shuffle: bool
     has_cuda: bool
@@ -34,6 +35,7 @@ class DynAE(Embedding):
         batch_size,
         epochs,
         learning_rate,
+        weight_decay,
         bias=True,
         shuffle=True,
         has_cuda=False,
@@ -47,6 +49,7 @@ class DynAE(Embedding):
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
@@ -95,7 +98,11 @@ class DynAE(Embedding):
             embedding_folder="",
         )
         embedding = trainer.learn_embedding(
-            graphs, epoch=self.epochs, lr=self.learning_rate, export=False
+            graphs,
+            epoch=self.epochs,
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            export=False,
         )
 
         singleton = SingletonEmbedding()

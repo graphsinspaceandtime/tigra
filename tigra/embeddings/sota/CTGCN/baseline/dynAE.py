@@ -8,7 +8,6 @@ import gc
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from tigra.embeddings.sota.CTGCN.embedding import BaseEmbedding
 from tigra.embeddings.sota.CTGCN.helper import DataLoader
 
@@ -99,9 +98,9 @@ class RegularizationLoss(nn.Module):
 
     def forward(self, model):
         loss = (
-            Variable(torch.FloatTensor([0.0]), requires_grad=True).cuda()
+            torch.zeros(1, requires_grad=True).cuda()
             if torch.cuda.is_available()
-            else Variable(torch.FloatTensor([0.0]), requires_grad=True)
+            else torch.zeros(1, requires_grad=True)
         )
         # No L1 regularization and no L2 regularization
         if self.nu1 == 0.0 and self.nu2 == 0.0:
