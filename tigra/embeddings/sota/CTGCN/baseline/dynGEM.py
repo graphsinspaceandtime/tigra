@@ -89,7 +89,7 @@ class DynGEMBatchGenerator:
 
     def generate(self, graph: sp.lil_matrix):
         if isinstance(graph, list):
-            assert len(graph) == 1
+            # assert len(graph) == 1
             graph = graph[0]
         rows, cols, values = sp.find(graph)
         element_num = rows.shape[0]
@@ -160,7 +160,7 @@ class DynGEMBatchPredictor:
         self, graph, model, batch_indices, counter, embedding_mat, x_pred
     ):
         if isinstance(graph, list):
-            assert len(graph) == 1
+            # assert len(graph) == 1
             graph = graph[0]
         x_batch = torch.tensor(graph[batch_indices, :].toarray()).float()
         x_batch = x_batch.cuda() if self.has_cuda else x_batch

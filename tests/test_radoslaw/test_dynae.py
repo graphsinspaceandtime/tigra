@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("../..")
+
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.dynae_wrapper import DynAE
 from data.bank import Databank

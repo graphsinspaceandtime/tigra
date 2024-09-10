@@ -104,6 +104,6 @@ class DynGEM(Embedding):
         singleton = SingletonEmbedding()
 
         for node in node_list:
-            singleton.add_embedding_vector(node, embedding[0].tolist())
+            singleton.add_embedding_vector(node, embedding[node].tolist())
 
         return [singleton]
