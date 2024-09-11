@@ -122,7 +122,7 @@ class Graph:
         """
         This method returns the undirected version of the graph.
         """
-        return Graph(self.name + "-undirected", self.G.to_undirected())
+        return Graph(self.name + "-undirected", self.G.to_undirected())  # type: ignore
 
     def is_empty(self):
         """
@@ -504,14 +504,24 @@ class DynamicSparseMatrixGraph:
     """
 
     def __init__(
-        self, name, event_sequence: EventSequence, time_resolution: str, directed=True
+        self,
+        name,
+        event_sequence: EventSequence,
+        time_resolution: str,
+        directed=True,
+        value_type="bool",
     ):
         print("============== DynamicSparseMatrixGraph ==============")
         number_of_nodes = event_sequence.num_nodes()
         print(number_of_nodes)
 
         def make_matrix():
-            return lil_matrix((number_of_nodes, number_of_nodes), dtype=bool)
+            if value_type == "bool":
+                return lil_matrix((number_of_nodes, number_of_nodes), dtype=bool)
+            elif value_type == "float":
+                return lil_matrix((number_of_nodes, number_of_nodes), dtype=np.float64)
+            else:
+                raise ValueError(f"'{value_type}' is not a valid value_type value")
 
         tr = 24 * 60 * 60
         if time_resolution == "day":
