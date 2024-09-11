@@ -21,6 +21,7 @@ method = DynAE(
     batch_size=200,
     epochs=10,
     learning_rate=0.001,
+    weight_decay=1e-4,
 )
 method.make_embedding(dsmg)
 print(method.embeddings[0])
