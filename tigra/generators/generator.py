@@ -1,9 +1,5 @@
-import sys
 from abc import ABC, abstractmethod
 import random
-
-sys.path.append("../..")
-
 from tigra.core.dgraph import EventSequence
 
 
