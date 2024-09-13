@@ -3,6 +3,8 @@ TIGRA software library
 
 TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
 
+LID-based evaluation of dynamic graph embedding methods
+
 author: svc@dmi.uns.ac.rs, lucy@dmi.uns.ac.rs
 """
 
@@ -13,6 +15,10 @@ from statistics import mean, stdev
 import networkx as nx
 import numpy as np
 import torch
+
+
+from tigra.core.greval import GraphReconstructionEval
+from tigra.evaluation.cumstat import CumulativeCorrelation, CumulativeMWU, correlation
 
 
 class LIDEstimator(ABC):
@@ -376,7 +382,7 @@ class NCLIDEstimator(LIDEstimator):
         distr = [0] * (self.max_nc_size + 1)
         numn = len(self.nodes)
         for i in range(numn):
-            src = self.nodes[i][0]
+            src = self.nodes[i]
             distr[self.nc_size[src]] += 1
 
         dstr = "NC_SIZE,#NODES\n"
@@ -390,3 +396,79 @@ class NCLIDEstimator(LIDEstimator):
 
     def nc_len(self, node):
         return self.nc_size[node]
+    
+    def nc_size_stats(self):
+        numn = len(self.nodes)
+        l = []
+        
+        for i in range(numn):
+            src = self.nodes[i]
+            l.append(self.nc_size[src])
+
+        max_nc = max(l) / numn
+        sum_nc = sum(l) / numn
+        avg_nc = sum_nc / numn
+
+        return max_nc, avg_nc
+    
+
+class LIDEval:
+    def __init__(self, embedding, dg):
+        self.embedding = embedding
+        self.graph_sequence = dg.get_graph_sequence()
+        self.f1_nclid_cumul = CumulativeCorrelation()
+        self.prec_nclid_cumul = CumulativeCorrelation()
+        self.rec_nclid_cumul = CumulativeCorrelation()
+        self.f1_nclid_mwu = CumulativeMWU()
+
+    def eval_snapshot(self, index, emb, graph):        
+        bc = dict(nx.betweenness_centrality(graph.G))
+        cc = dict(nx.closeness_centrality(graph.G))
+        ec = dict(nx. eigenvector_centrality(graph.G, max_iter=1000))
+
+        lightcopyg = graph.G
+        lightcopyg.remove_edges_from(nx.selfloop_edges(lightcopyg))
+        si = dict(nx.core_number(lightcopyg))
+        deg = dict(nx.degree(graph.G))
+
+        lidestimator = NCLIDEstimator(graph.G)
+        lidestimator.estimate_lids()
+        lid_vals = lidestimator.get_lid_values()
+
+        gre = GraphReconstructionEval(graph, emb, report_warnings=False)
+        f1_vals = gre.get_F1_per_node()
+        prec_vals = gre.get_precision_per_node()
+        rec_vals = gre.get_recall_per_node()
+
+        self.f1_nclid_cumul.add_data(f1_vals, lid_vals)
+        self.prec_nclid_cumul.add_data(prec_vals, lid_vals)
+        self.rec_nclid_cumul.add_data(rec_vals, lid_vals)
+
+        self.f1_nclid_mwu.add_high_low_groups(lid_vals, f1_vals)
+
+        s = str(index + 1) + ","
+        s += str(round(gre.getF1(), 4)) + ","
+        s += str(round(gre.get_avg_precision(), 4)) + ","
+        s += str(round(gre.get_avg_recall(), 4)) + ","
+        s += str(round(correlation(f1_vals, bc), 4)) + ","
+        s += str(round(correlation(f1_vals, cc), 4)) + ","
+        s += str(round(correlation(f1_vals, ec), 4)) + ","
+        s += str(round(correlation(f1_vals, si), 4)) + ","
+        s += str(round(correlation(f1_vals, deg), 4)) + ","
+        s += str(round(correlation(lid_vals, f1_vals), 4)) + ","
+        s += str(round(correlation(lid_vals, prec_vals), 4)) + ","
+        s += str(round(correlation(lid_vals, rec_vals), 4))
+
+        return s
+
+
+    def eval(self):
+        N = len(self.graph_sequence)
+        for i in range(N):
+            s = self.eval_snapshot(i, self.embedding[i], self.graph_sequence[i])
+            print(s)
+        print("-------------------\n")
+        print("F1\n", self.f1_nclid_cumul.get_correlation())
+        print("\nPREC\n", self.prec_nclid_cumul.get_correlation())
+        print("\nREC\n", self.rec_nclid_cumul.get_correlation())
+        print("MWU\n", self.f1_nclid_mwu.mwu())
