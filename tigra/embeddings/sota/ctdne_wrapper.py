@@ -9,8 +9,8 @@ Wrapper for CTDNE
 import networkx as nx
 from typing import List
 
-from ..embedding import Embedding, SingletonEmbedding
-from ...core.dgraph import DynamicAggregateGraph
+from tigra.embeddings.embedding import Embedding, SingletonEmbedding
+from tigra.core.dgraph import DynamicAggregateGraph
 from tigra.embeddings.sota.ctdnesrc.ctdne import CTDNE
 
 
@@ -60,8 +60,8 @@ class Ctdne(Embedding):
         nx.set_edge_attributes(graph, edge2time, "time")
         CTDNE_model = CTDNE(
             graph,
-            p=self.p,
-            q=self.q,
+            p=self.p,  # type: ignore
+            q=self.q,  # type: ignore
             dimensions=self.dim,
             walk_length=self.walk_length,
             num_walks=self.num_walks,

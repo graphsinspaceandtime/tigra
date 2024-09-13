@@ -8,10 +8,10 @@ Module defining functions and classes for loading datasets
 
 import re
 
-from .dgraph import EventSequence, Event
-from .time import determine_time_resolution
+from tigra.core.dgraph import EventSequence, Event
+from tigra.core.time import determine_time_resolution
 
-from data.bank import Databank
+from data.bank import Databank, Dataset
 
 
 datasets = {
@@ -37,7 +37,7 @@ def load_event_sequence(dataset_name: str):
         return
 
     databank = Databank()
-    es = databank.get_data(dataset_name)
+    es = databank.get_data(dataset_name)  # type: ignore
 
     resol, shrink = datasets[dataset_name]
 

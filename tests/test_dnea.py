@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("..")
-
 from data.bank import Databank
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics

@@ -29,8 +29,8 @@ NUM_RUNS = 5
 #NUM_RUNS = 1
 
 WORKERS = 16
-WALKLEN = 32
-NUMWALKS = 10
+WALKLEN = 64
+NUMWALKS = 50
 #NUMWALKS = 1
 
 from tigra.core.loaders import load_event_sequence
@@ -55,8 +55,8 @@ def tune_dynnode2vec(last_graph, dg):
         dg, 
         P, 
         Q,
-        [8, 16, 32],                  # walk length
-        [10],                         # num walks
+        [WALKLEN],                  # walk length
+        [NUMWALKS],                  # num walks
         num_runs=NUM_RUNS, 
         parallel_processes=WORKERS
     )
@@ -135,23 +135,22 @@ if __name__ == "__main__":
     org_graphs = dg.get_graph_sequence()
     last_graph = org_graphs[-1]
 
-    dag = DynamicAggregateGraph(dataset_name, es, directed=False)
+    #dag = DynamicAggregateGraph(dataset_name, es, directed=False)
 
-    """
     start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
+    
     """
-
     start_time = time.time()
     tune_ctdne(last_graph, dag)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
     
-    """
+    
     start_time = time.time()
     tune_stwalk(last_graph, dg)
     end_time = time.time()

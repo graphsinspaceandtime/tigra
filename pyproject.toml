@@ -1,0 +1,11 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tigra"
+version = "0.1.0"
+requires-python = ">= 3.8.0"
+authors = [{ name = "Dušan Simić", email = "dusan.simic@dmi.uns.ac.rs" }]
+maintainers = [{ name = "Dušan Simić", email = "dusan.simic@dmi.uns.ac.rs" }]
+readme = "README.md"
