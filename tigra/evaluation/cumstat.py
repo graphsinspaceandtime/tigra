@@ -12,6 +12,7 @@ from scipy.stats import spearmanr
 from scipy.stats import mannwhitneyu
 from statistics import mean
 
+
 def correlation(dict1, dict2):
     x, y = [], []
 
@@ -31,7 +32,6 @@ class CumulativeStatistics:
         self.x = []
         self.y = []
 
-
     def add_data(self, dict1, dict2):
         for n in dict1:
             if n in dict2:
@@ -41,10 +41,9 @@ class CumulativeStatistics:
                 self.x.append(_x)
                 self.y.append(_y)
 
-
     def add_high_low_groups(self, xdict, ydict):
         avg = sum(xdict.values()) / len(xdict.values())
-        
+
         for node in xdict:
             l = xdict[node]
             if node in ydict:
@@ -53,7 +52,6 @@ class CumulativeStatistics:
                     self.x.append(mval)
                 elif l < avg:
                     self.y.append(mval)
-
 
 
 class CumulativeCorrelation(CumulativeStatistics):
@@ -91,5 +89,22 @@ class CumulativeMWU(CumulativeStatistics):
         y_frac = round(len(self.y) / total, 4)
         acc = "yes" if pU >= 0.05 else "no"
 
-        return str(avg_x) + "," + str(avg_y) + "," + str(x_frac) + "," + str(y_frac) + "," +\
-            str(U) + "," + str(pU) + "," + acc + "," + str(ps1) + "," + str(ps2)
+        return (
+            str(avg_x)
+            + ","
+            + str(avg_y)
+            + ","
+            + str(x_frac)
+            + ","
+            + str(y_frac)
+            + ","
+            + str(U)
+            + ","
+            + str(pU)
+            + ","
+            + acc
+            + ","
+            + str(ps1)
+            + ","
+            + str(ps2)
+        )

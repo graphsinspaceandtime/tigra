@@ -3,8 +3,6 @@ from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.CTGCN.baseline.timers import our_timers
 import numpy as np
-from scipy.sparse.linalg import svds
-from scipy.sparse import find, csr_matrix, lil_matrix
 
 
 class Timers(Embedding):

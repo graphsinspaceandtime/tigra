@@ -62,7 +62,7 @@ Create the preconfigured environment for the TIGRA library. It contains most of
 the required libraries for testing and usage of all TIGRA software.
 
 ```sh
-conda env create -f environment.yaml
+conda env create -f environment.tigranew.yaml
 ```
 
 If environment configuration sometimes changes, the created environment should
@@ -70,7 +70,7 @@ be updated accordingly. The following command does that. It is not required to
 execute the command all the time, only when the yaml file changes.
 
 ```sh
-conda env update -f environment.yaml
+conda env update -f environment.tigranew.yaml
 ```
 
 There is also an option to add machine specific configuration of the

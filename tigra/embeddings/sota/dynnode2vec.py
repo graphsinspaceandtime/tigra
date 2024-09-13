@@ -68,7 +68,7 @@ class Dynnode2vec(Embedding):
                 if id in orgG.nodes():
                     vect = vectors[i].tolist()
                     singleton.add_embedding_vector(id, vect)
-                
+
             embeddings.append(singleton)
 
         return embeddings

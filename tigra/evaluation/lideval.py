@@ -115,7 +115,7 @@ class EmbLIDMLEEstimator(LIDMLEEstimator):
 
         super().__init__("EMB-LID", graph, k)
 
-    def compute_distance(self, src, dst):
+    def compute_distance(self, src, dst):  # type: ignore
         return np.linalg.norm(
             np.array(self.node_vectors[src]) - np.array(self.node_vectors[dst])
         )
@@ -396,11 +396,11 @@ class NCLIDEstimator(LIDEstimator):
 
     def nc_len(self, node):
         return self.nc_size[node]
-    
+
     def nc_size_stats(self):
         numn = len(self.nodes)
         l = []
-        
+
         for i in range(numn):
             src = self.nodes[i]
             l.append(self.nc_size[src])
@@ -410,7 +410,7 @@ class NCLIDEstimator(LIDEstimator):
         avg_nc = sum_nc / numn
 
         return max_nc, avg_nc
-    
+
 
 class LIDEval:
     def __init__(self, embedding, dg):
@@ -421,10 +421,10 @@ class LIDEval:
         self.rec_nclid_cumul = CumulativeCorrelation()
         self.f1_nclid_mwu = CumulativeMWU()
 
-    def eval_snapshot(self, index, emb, graph):        
+    def eval_snapshot(self, index, emb, graph):
         bc = dict(nx.betweenness_centrality(graph.G))
         cc = dict(nx.closeness_centrality(graph.G))
-        ec = dict(nx. eigenvector_centrality(graph.G, max_iter=1000))
+        ec = dict(nx.eigenvector_centrality(graph.G, max_iter=1000))
 
         lightcopyg = graph.G
         lightcopyg.remove_edges_from(nx.selfloop_edges(lightcopyg))
@@ -460,7 +460,6 @@ class LIDEval:
         s += str(round(correlation(lid_vals, rec_vals), 4))
 
         return s
-
 
     def eval(self):
         N = len(self.graph_sequence)
