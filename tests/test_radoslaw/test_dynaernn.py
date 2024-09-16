@@ -1,6 +1,7 @@
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
+from tigra.embeddings.utils import n_nodes_to_ae_layers
 from data.bank import Databank
 
 databank = Databank()
@@ -8,10 +9,12 @@ es = databank.get_data("radoslaw-email")
 
 dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month")
 
+n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, 10)
+
 method = DynAERNN(
     dim=10,
-    ae_units=[500, 300],
-    rnn_units=[500, 300],
+    ae_units=n_units,
+    rnn_units=n_units,
     look_back=5,
     beta=5,
     nu1=1e-6,

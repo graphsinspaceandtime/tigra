@@ -535,6 +535,7 @@ class DynamicSparseMatrixGraph:
         print("============== DynamicSparseMatrixGraph ==============")
         number_of_nodes = event_sequence.num_nodes()
         print(number_of_nodes)
+        self.number_of_nodes = number_of_nodes
 
         def make_matrix():
             if value_type == "bool":

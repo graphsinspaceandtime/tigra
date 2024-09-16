@@ -1,6 +1,7 @@
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.sota.dyngem_wrapper import DynGEM
+from tigra.embeddings.utils import n_nodes_to_ae_layers
 from data.bank import Databank
 
 databank = Databank()
@@ -8,9 +9,11 @@ es = databank.get_data("radoslaw-email")
 
 dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month")
 
+n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, 10)
+
 method = DynGEM(
     dim=10,
-    n_units=[500, 300],
+    n_units=n_units,
     alpha=5,
     beta=5,
     nu1=1e-6,
