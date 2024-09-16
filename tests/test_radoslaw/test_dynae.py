@@ -4,6 +4,7 @@ sys.path.append("../..")
 
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.dynae_wrapper import DynAE
+from tigra.core.greval import GraphReconstructionEval
 from data.bank import Databank
 
 databank = Databank()
@@ -24,4 +25,8 @@ method = DynAE(
     weight_decay=1e-4,
 )
 method.make_embedding(dsmg)
-print(method.embeddings[0])
+
+gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), method.embeddings[0])
+print("Precision", gre.get_avg_precision())
+print("Recall", gre.get_avg_recall())
+print("F1", gre.getF1())

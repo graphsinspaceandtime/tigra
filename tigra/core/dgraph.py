@@ -394,7 +394,7 @@ class DynamicGraph:
         print("#snapshots =", len(self.graphs))
         if self.timespan_in_days != None:
             print("#timespan[days] =", self.timespan_in_days)
-        
+
         s = ""
         node_set, link_set = set(), set()
 
@@ -415,7 +415,6 @@ class DynamicGraph:
             node_set.update(list(g.G.nodes()))
             link_set.update(list(g.G.edges()))
 
-        
         print(s)
         print("#nodes", len(node_set))
         print("#links", len(link_set))
@@ -474,14 +473,13 @@ class DynamicAggregateGraph:
         for _ in range(num_samples):
             current = sample(N, 1)[0]
             current_time = 0
-            
+
             if self_avoiding:
                 visited = set()
                 visited.add(current)
 
             visited = set()
             visited.add(current)
-
 
             walk_length = 0
             while True:
@@ -494,7 +492,7 @@ class DynamicAggregateGraph:
                         if self_avoiding:
                             if nei in visited:
                                 to_add = False
-                        
+
                         if to_add:
                             cands.append((nei, time))
 
@@ -504,7 +502,7 @@ class DynamicAggregateGraph:
                 next_node = sample(cands, 1)[0]
                 current = next_node[0]
                 current_time = next_node[1]
-                
+
                 if self_avoiding:
                     visited.add(current)
 
@@ -585,6 +583,12 @@ class DynamicSparseMatrixGraph:
 
     def get_scipy_sparse_matrices(self):
         return self.matrices
+
+    def get_last_matrix_as_graph(self):
+        M = self.matrices[-1]
+        G = nx.from_scipy_sparse_array(M, create_using=nx.Graph)
+        graph = Graph(self.name, nx_graph=G)
+        return graph
 
 
 """

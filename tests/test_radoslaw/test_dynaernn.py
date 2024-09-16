@@ -1,4 +1,5 @@
 from tigra.core.dgraph import DynamicSparseMatrixGraph
+from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
 from data.bank import Databank
 
@@ -20,4 +21,8 @@ method = DynAERNN(
     learning_rate=0.001,
 )
 method.make_embedding(dsmg)
-print(method.embeddings[0])
+
+gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), method.embeddings[0])
+print("Precision", gre.get_avg_precision())
+print("Recall", gre.get_avg_recall())
+print("F1", gre.getF1())
