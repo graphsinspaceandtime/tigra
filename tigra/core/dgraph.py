@@ -431,6 +431,16 @@ class DynamicGraph:
     def get_nx_undirected_graph_sequence(self):
         return [g.G.to_undirected() for g in self.graphs]
 
+    def get_neighbours(self, n) -> List[int]:
+        neighbours = []
+        for g in self.graphs:
+            G = g.G.to_undirected()
+            if n not in G:
+                continue
+            for m in G.adj[n].keys():
+                neighbours.append(m)
+        return list(set(neighbours))
+
 
 class DynamicAggregateGraph:
     """
@@ -516,6 +526,12 @@ class DynamicAggregateGraph:
 
         return avg_wl, max_wl, std_wl
 
+    def get_neighbours(self, n: int) -> List[int]:
+        G = self.agg_graph.G
+        if n not in G:
+            return []
+        return list(G.adj[n].keys())
+
 
 class DynamicSparseMatrixGraph:
     """
@@ -536,6 +552,7 @@ class DynamicSparseMatrixGraph:
         number_of_nodes = event_sequence.num_nodes()
         print(number_of_nodes)
         self.number_of_nodes = number_of_nodes
+        self.value_type = value_type
 
         def make_matrix():
             if value_type == "bool":
@@ -590,6 +607,25 @@ class DynamicSparseMatrixGraph:
         G = nx.from_scipy_sparse_array(M, create_using=nx.Graph)
         graph = Graph(self.name, nx_graph=G)
         return graph
+
+    def get_neighbours(self, n: int) -> List[int]:
+        neighbours = []
+
+        for M in self.matrices:
+            from_row = np.array([])
+            from_col = np.array([])
+            if self.value_type == "bool":
+                from_row = np.where(M.getrow(n).toarray()[0])[0]
+                from_col = np.where(M.getcol(n).toarray()[0])[0]
+            if self.value_type == "float":
+                from_row = np.nonzero(M.getrow(n).toarray()[0])[0]
+                from_col = np.nonzero(M.getcol(n).toarray()[0])[0]
+            S = set()
+            S = S.union(from_row.tolist())
+            S = S.union(from_col.tolist())
+            for m in S:
+                neighbours.append(m)
+        return list(set(neighbours))
 
 
 """
