@@ -6,4 +6,4 @@ es = db.get_data("radoslaw-email")
 
 dg = DynamicSparseMatrixGraph("test", es, time_resolution="day")
 
-print(dg.get_neigbours(0))
+print(dg.get_neighbours(0))
