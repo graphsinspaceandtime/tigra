@@ -14,9 +14,11 @@ from statistics import mean
 from tigra.embeddings.embedding import Embedding
 from tigra.core.greval import GraphReconstructionEval
 
-from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
-from tigra.embeddings.sota.ctdne_wrapper import Ctdne
-from tigra.embeddings.sota.stwalk import STWalk
+from tigra.embeddings.sota.dynae_wrapper import DynAE
+
+# from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+# from tigra.embeddings.sota.ctdne_wrapper import Ctdne
+# from tigra.embeddings.sota.stwalk import STWalk
 
 
 class Tuner(ABC):
@@ -161,20 +163,20 @@ class Dynnode2vec_Tuner(N2VMethods_Tuner):
             parallel_processes=parallel_processes,
         )
 
-    def create_instance(self, conf_index) -> Embedding:
-        dim = self.confs[conf_index][0]
-        p = self.confs[conf_index][1]
-        q = self.confs[conf_index][2]
-        wl = self.confs[conf_index][3]
-        nw = self.confs[conf_index][4]
-        return Dynnode2vec(
-            dim,
-            p=p,
-            q=q,
-            walk_length=wl,
-            n_walks_per_node=nw,
-            parallel_processes=self.parallel_processes,
-        )
+    # def create_instance(self, conf_index) -> Embedding:
+    #     dim = self.confs[conf_index][0]
+    #     p = self.confs[conf_index][1]
+    #     q = self.confs[conf_index][2]
+    #     wl = self.confs[conf_index][3]
+    #     nw = self.confs[conf_index][4]
+    #     return Dynnode2vec(
+    #         dim,
+    #         p=p,
+    #         q=q,
+    #         walk_length=wl,
+    #         n_walks_per_node=nw,
+    #         parallel_processes=self.parallel_processes,
+    #     )
 
 
 class CTDNE_Tuner(N2VMethods_Tuner):
@@ -204,20 +206,20 @@ class CTDNE_Tuner(N2VMethods_Tuner):
             parallel_processes=parallel_processes,
         )
 
-    def create_instance(self, conf_index) -> Embedding:
-        dim = self.confs[conf_index][0]
-        p = self.confs[conf_index][1]
-        q = self.confs[conf_index][2]
-        wl = self.confs[conf_index][3]
-        nw = self.confs[conf_index][4]
-        return Ctdne(
-            dim,
-            p,
-            q,
-            walk_length=wl,
-            num_walks=nw,
-            workers=self.parallel_processes,
-        )
+    # def create_instance(self, conf_index) -> Embedding:
+    #     dim = self.confs[conf_index][0]
+    #     p = self.confs[conf_index][1]
+    #     q = self.confs[conf_index][2]
+    #     wl = self.confs[conf_index][3]
+    #     nw = self.confs[conf_index][4]
+    #     return Ctdne(
+    #         dim,
+    #         p,
+    #         q,
+    #         walk_length=wl,
+    #         num_walks=nw,
+    #         workers=self.parallel_processes,
+    #     )
 
 
 class STWalk_Tuner(Tuner):
@@ -249,16 +251,84 @@ class STWalk_Tuner(Tuner):
 
         return confs
 
+    # def create_instance(self, conf_index) -> Embedding:
+    #     dim = self.confs[conf_index][0]
+    #     tws = self.confs[conf_index][1]
+    #     ts = len(self.data.get_nx_graph_sequence())
+    #     return STWalk(
+    #         number_restart=self.n_walks_per_node,
+    #         walk_length=self.walk_length,
+    #         dimension=dim,
+    #         time_step=ts,
+    #         time_window_size=tws,
+    #         workers=self.parallel_processes,
+    #         vocab_window_size=5,
+    #     )
+
+
+class AE_Tuner(Tuner):
+    """
+    Tuner for Autoencoders
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        n_units,
+        look_back,
+        beta,
+        nu1,
+        nu2,
+        batch_size,
+        learning_rate,
+        weight_decay,
+        epochs,
+    ):
+        super().__init__(graph, data, "N_UNITS, LOOK_BACK, BETA, NU1, NU2")
+        self.n_units = n_units
+        self.look_back = look_back
+        self.beta = beta
+        self.nu1 = nu1
+        self.nu2 = nu2
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.epochs = epochs
+
     def create_instance(self, conf_index) -> Embedding:
-        dim = self.confs[conf_index][0]
-        tws = self.confs[conf_index][1]
-        ts = len(self.data.get_nx_graph_sequence())
-        return STWalk(
-            number_restart=self.n_walks_per_node,
-            walk_length=self.walk_length,
-            dimension=dim,
-            time_step=ts,
-            time_window_size=tws,
-            workers=self.parallel_processes,
-            vocab_window_size=5,
+        dimension = self.confs[conf_index][0]
+        n_units = self.confs[conf_index][1]
+        look_back = self.confs[conf_index][2]
+        beta = self.confs[conf_index][3]
+        nu1 = self.confs[conf_index][4]
+        nu2 = self.confs[conf_index][5]
+
+        return DynAE(
+            dim=dimension,
+            n_units=n_units,
+            look_back=look_back,
+            beta=beta,
+            nu1=nu1,
+            nu2=nu2,
+            batch_size=self.batch_size,
+            learning_rate=self.learning_rate,
+            weight_decay=self.weight_decay,
+            epochs=self.epochs,
+            bias=True,
+            shuffle=True,
+            has_cuda=False,
         )
+
+    def create_configurations(self):
+        confs = []
+
+        for d in EMBEDDING_DIMENSIONS:
+            for n_u in self.n_units:
+                for l_b in self.look_back:
+                    for b in self.beta:
+                        for n1 in self.nu1:
+                            for n2 in self.nu2:
+                                confs.append((d, n_u, l_b, b, n1, n2))
+
+        return confs
