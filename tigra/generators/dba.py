@@ -7,7 +7,6 @@ Dynamic Barabasi-Albert graph generator
 """
 
 import typing
-import networkx as nx
 from scipy.sparse import lil_matrix
 from tigra.core.dgraph import EventSequence, Event
 from tigra.generators.generator import Generator
@@ -16,7 +15,7 @@ from tigra.generators.generator import Generator
 class DBAGenerator(Generator):
     """
         n   -- the number of nodes
-        m   -- the number of nodes to which a newly added node is attached to (n > m)
+        m   -- the number of old nodes to which a newly created node is attached (n > m)
         m_0 -- the number of nodes in the initial graph (m <= m_0)
     """
     def __init__(self,
