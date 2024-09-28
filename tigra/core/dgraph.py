@@ -154,6 +154,50 @@ class Graph:
         """
         self.G.edges[src, dst]["weight"] = self.G.edges[src, dst]["weight"] + 1
 
+    def degree_distribution(self, to_print=False):
+        """
+        computes degree distributions
+        """
+        degrees = [self.G.degree(node) for node in self.G.nodes()]
+        maxdeg = max(degrees)
+    
+        dd = np.zeros(maxdeg + 1)
+        for d in degrees:
+            dd[d] += 1
+
+        # normalization to probabilities
+        num_nodes = self.G.number_of_nodes()
+        for i in range(len(dd)):
+            dd[i] /= num_nodes
+
+        if to_print:
+            for i in range(len(dd)):
+                if dd[i] != 0:
+                    print(i, dd[i])
+        
+        return dd
+
+    def determine_connected_comps(self, to_print=False):
+        """
+        determines (weakly) connected components
+        """
+        comps = nx.connected_components(self.G)
+        components = [self.G.subgraph(c).copy() for c in comps]
+
+        # sort components from the largest to the smallest
+        components.sort(reverse=True, key=lambda G: G.number_of_nodes())
+
+        if to_print:
+            print("#components", len(components))
+            s = ""
+            for comp in components:
+                c_nodes = len(comp.nodes())
+                c_edges = len(comp.edges())
+                s += "[" + str(c_nodes) + ", " + str(c_edges) + "]"
+            print(s)
+
+        return components
+
 
 class Event:
     """
