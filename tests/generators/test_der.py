@@ -3,8 +3,8 @@ from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics
 
-derg = DERGenerator(1000, 0.01, time_resolution="hour")
-derg.generate_and_save("der_1000_001.events")
+#derg = DERGenerator(1000, 0.01, time_resolution="hour")
+#derg.generate_and_save("der_1000_001.events")
 
 es = load_snap_dataset("der_1000_001.events")
 
