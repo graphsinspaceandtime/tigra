@@ -29,8 +29,8 @@ NUM_RUNS = 5
 #NUM_RUNS = 1
 
 WORKERS = 16
-WALKLEN = 64
-NUMWALKS = 50
+WALKLEN = 32
+NUMWALKS = 10
 #NUMWALKS = 1
 
 from tigra.core.loaders import load_event_sequence
@@ -71,8 +71,8 @@ def tune_ctdne(last_graph, dag):
         dag,
         P,
         Q,
-        [2, 3],                              # walk length
-        [10, 50],                           # num walks
+        [WALKLEN],                              # walk length
+        [NUMWALKS],                           # num walks
         num_runs=NUM_RUNS,
         parallel_processes=WORKERS
     )
