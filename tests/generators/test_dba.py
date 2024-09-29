@@ -1,6 +1,7 @@
 from tigra.generators.dba import DBAGenerator
 from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
+from tigra.core.dnea import EvolDynamics
 
 #derg = DBAGenerator(1000, 5, 10, time_resolution="hour")
 #derg.generate_and_save("dba_1000_5_10.events")
@@ -16,6 +17,8 @@ print("Degree distribution")
 last_snap.degree_distribution(to_print=True)
 for g in dg.get_graph_sequence():
     g.determine_connected_comps(to_print=True)
+ed = EvolDynamics(dg)
+ed.info()
 
 print()
 print("Non-cumulative DBA")
@@ -24,3 +27,5 @@ dg.init_from_event_sequence(es, time_resolution="month", directed=False, cumulat
 dg.info()
 for g in dg.get_graph_sequence():
     g.determine_connected_comps(to_print=True)
+ed = EvolDynamics(dg)
+ed.info()

@@ -30,10 +30,17 @@ class DERGenerator(Generator):
     def generate(self) -> EventSequence:
         events: typing.List[Event] = []
 
+        pairs = []
+
         for j in range(1, self.n):
             for i in range(0, j):
-                if self.rng.random() <= self.p:
-                    events.append(Event(i, j, self.current_t))
-                    self.current_t += self.delta_t
+                pairs.append((i, j))
+
+        self.rng.shuffle(pairs)
+
+        for pair in pairs:
+            if self.rng.random() <= self.p:
+                events.append(Event(pair[0], pair[1], self.current_t))
+                self.current_t += self.delta_t
                     
         return EventSequence(events)
