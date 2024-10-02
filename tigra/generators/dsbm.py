@@ -33,9 +33,10 @@ class DPPGenerator(Generator):
         NC: typing.List[int],
         p: float,
         q: float,
-        seed: typing.Union[typing.Any, None] = None
+        time_resolution="hour",
+        seed: typing.Union[typing.Any, None]=None
     ):
-        super().__init__(seed)
+        super().__init__(seed, time_resolution)
 
         self.num_communities = len(NC)
         if self.num_communities < 2:
@@ -63,7 +64,7 @@ class DPPGenerator(Generator):
 
 
     def generate(self) -> EventSequence:
-        events = []
+        events: typing.List[Event] = []
 
         pairs = []
         for j in range(1, self.total_nodes):

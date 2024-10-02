@@ -7,11 +7,14 @@ Dynamic Barabasi-Albert graph generator
 """
 
 import typing
+import networkx as nx
 from scipy.sparse import lil_matrix
 from tigra.core.dgraph import EventSequence, Event
 from tigra.generators.generator import Generator
 
-
+#
+# svc, dynamic scale-free networks by the Barabasi-Albert model
+#
 class DBAGenerator(Generator):
     """
         n   -- the number of nodes
@@ -19,9 +22,9 @@ class DBAGenerator(Generator):
         m_0 -- the number of nodes in the initial graph (m <= m_0)
     """
     def __init__(self,
-        n,
-        m,
-        m_0, 
+        n: int,
+        m: int,
+        m_0: int, 
         seed: typing.Union[int, None]=None,
         time_resolution="hour"
     ):
@@ -74,7 +77,150 @@ class DBAGenerator(Generator):
 
         return EventSequence(events)
 
+
+
+#
+# svc, dynamic scale-free networks with communities
+#
+class DBACGenerator(Generator):
+    """
+        NC
+            the number of nodes per community/cluster
+        m_in 
+            the number of old nodes in the same cluster to which a newly created node is attached
+        m_out
+            the number of old nodes outside the cluster to which a newly created node is attached 
+        m_0 
+            the initial number of nodes per cluster (m <= m_0)
+    """
+    def __init__(self,
+        NC: typing.List[int],
+        m_in: int,
+        m_out: int,
+        m_0: int,
+        time_resolution="hour",
+        seed: typing.Union[typing.Any, None]=None
+    ):
+        self.total_attachment_links = m_in + m_out
+        self.total_nodes = sum(NC)
+
+        if self.total_attachment_links >= self.total_nodes:
+            raise Exception("DBACGenerator, m_in + m_out >= total nodes")
+
+        if self.total_attachment_links > m_0:
+            raise Exception("DBACGenerator, m_in + m_out > m_0")
+
+        for nc in NC:
+            if m_0 > nc:
+                raise Exception("DBACGenerator, m_0 > nc, invalid NC")
+
+        super().__init__(seed, time_resolution)
+        self.NC = NC
+        self.m_in = m_in
+        self.m_out = m_out
+        self.m_0 = m_0
         
+
+    def init(self):
+        initial_communities = []
+        self.community_map = dict()
+        current_id, community_id = 0, 0
+        for nc in self.NC:
+            init = list(range(current_id, current_id + self.m_0))
+            initial_communities.append(init)
+            next_id = current_id + nc
+            for i in range(current_id, next_id):
+                self.community_map[i] = community_id
+            
+            community_id += 1
+            current_id = next_id
+
+        self.all_nodes = set(range(0, self.total_nodes))
+
+        # create initial chain of cliques
+        for c in initial_communities:
+            for n in c:
+                self.G.add_node(n)
+                self.all_nodes.remove(n)
+
+            for j in range(c[1], c[-1] + 1):
+                for i in range(c[0], j):
+                    self.G.add_edge(i, j)
+                    event_data_str = str(self.community_map[i]) + "," + str(self.community_map[j])
+                    self.events.append(Event(i, j, self.current_t, event_data=event_data_str))
+                    self.current_t += self.delta_t
+
+        for i in range(len(initial_communities) - 1):
+            n1 = initial_communities[i][0]
+            n2 = initial_communities[i + 1][0]
+            self.G.add_edge(n1, n2)
+            event_data_str = str(self.community_map[n1]) + "," + str(self.community_map[n2])
+            self.events.append(Event(n1, n2, self.current_t, event_data=event_data_str))
+            self.current_t += self.delta_t
+
+
+    def generate(self) -> EventSequence:
+        self.events: typing.List[Event] = []
+        self.G = nx.Graph()
+        
+        self.init()
+
+        nodes_to_add = list(self.all_nodes)
+        #self.rng.shuffle(nodes_to_add)
+
+        #print(len(self.G.nodes()))
+        #print(len(nodes_to_add))
+
+        for new_node in nodes_to_add:
+            old_nodes = self.G.nodes()
+            
+            in_nodes, out_nodes = [], []
+            in_degs, out_degs = [], []
+            total_in, total_out = 0, 0
+            
+            for old_node in old_nodes:
+                deg_old = self.G.degree(old_node)
+                if self.community_map[old_node] == self.community_map[new_node]:
+                    in_nodes.append(old_node)
+                    in_degs.append(deg_old)
+                    total_in += deg_old
+                else:
+                    out_nodes.append(old_node)
+                    out_degs.append(deg_old)
+                    total_out += deg_old
+
+            P_in  = [k / total_in for k in in_degs]
+            P_out = [k / total_out for k in out_degs]
+            
+            self.G.add_node(new_node)
+
+            adj_nodes_in = self.rng.choices(
+                in_nodes,
+                weights=P_in,
+                k=self.m_in
+            )
+
+            for adj_node in adj_nodes_in:
+                self.G.add_edge(adj_node, new_node)
+                event_data_str = str(self.community_map[adj_node]) + "," + str(self.community_map[new_node])
+                self.events.append(Event(adj_node, new_node, self.current_t, event_data=event_data_str))
+                self.current_t += self.delta_t
+
+            adj_nodes_out = self.rng.choices(
+                out_nodes,
+                weights=P_out,
+                k=self.m_out
+            )
+
+            for adj_node in adj_nodes_out:
+                self.G.add_edge(adj_node, new_node)
+                event_data_str = str(self.community_map[adj_node]) + "," + str(self.community_map[new_node])
+                self.events.append(Event(adj_node, new_node, self.current_t, event_data=event_data_str))
+                self.current_t += self.delta_t   
+
+        return EventSequence(self.events)
+
+
 
 
 # ===============================

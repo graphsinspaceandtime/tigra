@@ -1,21 +1,60 @@
 import sys
 sys.path.append("../..")
 
-from tigra.generators.dba import DBAGenerator
+from tigra.generators.dba import DBAGenerator, DBACGenerator
 from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics
 
-
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
 from tigra.core.greval import GraphReconstructionEval
+
+
+def radicchi_in_out(community, G):
+    total_in, total_out = 0, 0
+
+    for node in community:
+        if not node in G.nodes():
+            continue
+
+        neis = G.neighbors(node)
+        links_in, links_out = 0, 0
+        for nei in neis:
+            if nei in community:
+                links_in += 1 
+            else:
+                links_out += 1
+
+        total_in += links_in
+        total_out += links_out
+
+    return total_in / 2, total_out
+
+
+def examine_partition(G, partition):
+    print("# communities", len(partition))
+    s = "["
+    for i in range(len(partition)):
+        s += str(len(partition[i]))
+        if i < len(partition) - 1:
+            s += ","
+    s += "]"
+    print("comm size", s)
+
+    for i in range(len(partition)):
+        total_in, total_out = radicchi_in_out(partition[i], G)
+        print("Community", i, ", in = ", total_in, ", out = ", total_out)
+
 
 #derg = DBAGenerator(1000, 5, 10, time_resolution="hour")
 #derg.generate_and_save("dba_1000_5_10.events")
 
-es = load_snap_dataset("dba_1000_5_10.events")
+#dbac = DBACGenerator([500, 250, 150, 100], 4, 1, 8)
+#dbac.generate_and_save("dbac_1000_4.events")
 
-print("Cumulative DBA")
+es = load_snap_dataset("dbac_1000_4.events")
+
+print("Cumulative DBAC")
 dg = DynamicGraph()
 dg.init_from_event_sequence(es, time_resolution="month", directed=False, cumulative=True)
 dg.info()
@@ -27,6 +66,15 @@ for g in dg.get_graph_sequence():
 ed = EvolDynamics(dg)
 ed.info()
 
+print("\nCommunity examination")
+examine_partition(last_snap.G, 
+    [
+        set(range(0, 500)), 
+        set(range(500, 750)),
+        set(range(750, 900)),
+        set(range(900, 1000))
+    ]
+)
 
 print("########################")
 
