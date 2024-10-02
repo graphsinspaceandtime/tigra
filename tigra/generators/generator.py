@@ -1,3 +1,11 @@
+"""
+TIGRA software library
+
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
+
+Base class for dynamic graph generators
+"""
+
 from abc import ABC, abstractmethod
 import random
 from tigra.core.dgraph import EventSequence
@@ -24,7 +32,12 @@ class Generator(ABC):
         print("#total events generated", es.num_events())
         f = open(file_name, "w")
         for e in es:
-            s = str(e.src) + "," + str(e.dst) + "," + str(e.timestamp) + "\n"
+            s = str(e.src) + "," + str(e.dst) + "," + str(e.timestamp)
+            ed = e.event_data
+            if ed != None:
+                s += "," + str(ed)
+            s += '\n'
+
             f.write(s)
 
         f.close()
