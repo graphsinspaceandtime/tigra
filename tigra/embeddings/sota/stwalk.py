@@ -99,7 +99,7 @@ class STWalk(Embedding):
         start: the start node of the random walk.
         """
         G = SpaceTimegraph
-        if start:
+        if start or start == 0:
             path = [start]
         else:
             sys.exit("ERROR: Start node not mentioned for random_walk")
