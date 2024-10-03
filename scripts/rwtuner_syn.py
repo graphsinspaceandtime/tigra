@@ -38,20 +38,11 @@ if __name__ == "__main__":
     print(agr_graph.agg_graph.num_nodes())
     print(agr_graph.agg_graph.num_edges())
     
-    #print("TUNING DYNNODE2VEC")
-    #tune_dynnode2vec(last_graph, dg)
-    #print()
-    #print("TUNING CTDNE")
-    #tune_ctdne(last_graph, agr_graph)
-    
-    
-    print("DEBUG........")
-    seq = dg.get_nx_undirected_graph_sequence()
-    for g in seq:
-        print(list(nx.isolates(g)))
-        
-    print("END DEBUG......")
-    
+    print("TUNING DYNNODE2VEC")
+    tune_dynnode2vec(last_graph, dg)
+    print()
+    print("TUNING CTDNE")
+    tune_ctdne(last_graph, agr_graph)
     print()
     print("TUNING STWALK")
     tune_stwalk(last_graph, dg)
