@@ -7,25 +7,26 @@ sys.path.append("..")
 
 from tigra.core.dgraph import EventSequence, Event
 
-Dataset = typing.TypeVar(
-    "Dataset",
-    bound=typing.Literal[
-        "radoslaw-email",
-        "fb-forum",
-        "fb-messages",
-        "ia-contacts_hypertext2009",
-        "ia-enron-employees",
-        "ia-hospital-ward-proximity-attr",
-        "ia-primary-school-proximity-attr",
-        "ia-reality-call",
-        "CollegeMsg",
-        "email-Eu-core-temporal",
-        "sx-askubuntu",
-        "sx-mathoverflow",
-        "sx-superuser",
-        "wiki-talk-temporal",
-    ],
-)
+Dataset = typing.Literal[
+    "radoslaw-email",
+    "fb-forum",
+    "fb-messages",
+    "ia-contacts_hypertext2009",
+    "ia-enron-employees",
+    "ia-hospital-ward-proximity-attr",
+    "ia-primary-school-proximity-attr",
+    "ia-reality-call",
+    "CollegeMsg",
+    "email-Eu-core-temporal",
+    "sx-askubuntu",
+    "sx-mathoverflow",
+    "sx-superuser",
+    "wiki-talk-temporal",
+    "synthetic-dba",
+    "synthetic-dbac",
+    "synthetic-der",
+    "synthetic-dpp",
+]
 
 
 class Databank:
@@ -62,6 +63,7 @@ class Databank:
 
         self.__netrep_path = self.__data_path / "netrep"
         self.__snap_path = self.__data_path / "snap"
+        self.__synthetic_path = self.__data_path / "synthetic"
 
         self.__filename_map: typing.Dict[str, Path] = {
             "radoslaw-email": self.__netrep_path
@@ -90,6 +92,10 @@ class Databank:
             "sx-mathoverflow": self.__snap_path / "sx-mathoverflow.txt",
             "sx-superuser": self.__snap_path / "sx-superuser.txt",
             "wiki-talk-temporal": self.__snap_path / "wiki-talk-temporal.txt",
+            "synthetic-dba": self.__synthetic_path / "dba_1000_5_10.events",
+            "synthetic-dbac": self.__synthetic_path / "dbac_1000_4.events",
+            "synthetic-der": self.__synthetic_path / "der_1000_001.events",
+            "synthetic-dpp": self.__synthetic_path / "dpp_1000_4.events",
         }
 
     def get_data(self, dataset: Dataset) -> EventSequence:
@@ -125,6 +131,13 @@ class Databank:
             return self.__read_three_whitespace_separated_columns(
                 self.__filename_map[dataset]
             )
+        if dataset in [
+            "synthetic-dba",
+            "synthetic-dbac",
+            "synthetic-der",
+            "synthetic-dpp",
+        ]:
+            return self.__read_csv_vert_time(self.__filename_map[dataset])
         else:
             raise Exception("{} dataset is not available".format(dataset))
 
