@@ -2,6 +2,7 @@ import typing
 import sys
 from pathlib import Path
 import re
+import math
 
 sys.path.append("..")
 
@@ -27,6 +28,12 @@ Dataset = typing.Literal[
     "synthetic-der",
     "synthetic-dpp",
 ]
+
+
+class DatasetMetadata(typing.TypedDict):
+    path: Path
+    shrink: typing.Union[int, None]
+    resolution: typing.Union[str, None]
 
 
 class Databank:
@@ -65,6 +72,109 @@ class Databank:
         self.__snap_path = self.__data_path / "snap"
         self.__synthetic_path = self.__data_path / "synthetic"
 
+        self.__dataset_metadata: typing.Dict[str, DatasetMetadata] = {
+            "radoslaw-email": {
+                "path": self.__netrep_path / "radoslaw_email" / "radoslaw_email.edges",
+                "shrink": 0,
+                "resolution": "month",
+            },
+            "fb-forum": {
+                "path": self.__netrep_path / "fb-forum" / "fb-forum.edges",
+                "shrink": -1,
+                "resolution": "month",
+            },
+            "fb-messages": {
+                "path": self.__netrep_path / "fb-messages" / "fb-messages.edges",
+                "shrink": 0,
+                "resolution": "month",
+            },
+            "ia-contacts_hypertext2009": {
+                "path": self.__netrep_path
+                / "ia-contacts_hypertext2009"
+                / "ia-contacts_hypertext2009.edges",
+                "shrink": 0,
+                "resolution": "day",
+            },
+            "ia-enron-employees": {
+                "path": self.__netrep_path
+                / "ia-enron-employees"
+                / "ia-enron-employees.edges",
+                "shrink": -2,
+                "resolution": "3-months",
+            },
+            "ia-hospital-ward-proximity-attr": {
+                "path": self.__netrep_path
+                / "ia-hospital-ward-proximity-attr"
+                / "ia-hospital-ward-proximity-attr.edges",
+                "shrink": -1,
+                "resolution": "day",
+            },
+            "ia-primary-school-proximity-attr": {
+                "path": self.__netrep_path
+                / "ia-primary-school-proximity-attr"
+                / "ia-primary-school-proximity-attr.edges",
+                "shrink": 0,
+                "resolution": "day",
+            },
+            "ia-reality-call": {
+                "path": self.__netrep_path
+                / "ia-reality-call"
+                / "ia-reality-call.edges",
+                "shrink": -1,
+                "resolution": "week",
+            },
+            "CollegeMsg": {
+                "path": self.__snap_path / "CollegeMsg.txt",
+                "shrink": -1,
+                "resolution": "month",
+            },
+            "email-Eu-core-temporal": {
+                "path": self.__snap_path / "email-Eu-core-temporal.txt",
+                "shrink": -1,
+                "resolution": "month",
+            },
+            "sx-askubuntu": {
+                "path": self.__snap_path / "sx-askubuntu.txt",
+                "shrink": 0,
+                "resolution": "3-months",
+            },
+            "sx-mathoverflow": {
+                "path": self.__snap_path / "sx-mathoverflow.txt",
+                "shrink": 0,
+                "resolution": "3-months",
+            },
+            "sx-superuser": {
+                "path": self.__snap_path / "sx-superuser.txt",
+                "shrink": 0,
+                "resolution": "3-monhts",
+            },
+            "wiki-talk-temporal": {
+                "path": self.__snap_path / "wiki-talk-temporal.txt",
+                "shrink": None,
+                "resolution": None,
+            },
+            "synthetic-dba": {
+                "path": self.__synthetic_path / "dba_1000_5_10.events",
+                "shrink": None,
+                "resolution": None,
+            },
+            "synthetic-dbac": {
+                "path": self.__synthetic_path / "dbac_1000_4.events",
+                "shrink": None,
+                "resolution": None,
+            },
+            "synthetic-der": {
+                "path": self.__synthetic_path / "der_1000_001.events",
+                "shrink": None,
+                "resolution": None,
+            },
+            "synthetic-dpp": {
+                "path": self.__synthetic_path / "dpp_1000_4.events",
+                "shrink": None,
+                "resolution": None,
+            },
+        }
+
         self.__filename_map: typing.Dict[str, Path] = {
             "radoslaw-email": self.__netrep_path
             / "radoslaw_email"
@@ -98,7 +208,7 @@ class Databank:
             "synthetic-dpp": self.__synthetic_path / "dpp_1000_4.events",
         }
 
-    def get_data(self, dataset: Dataset) -> EventSequence:
+    def get_data(self, dataset: Dataset, shrink_sequence=False) -> EventSequence:
         """
         Read a specified dataset and return an EventSequence object.
 
@@ -108,18 +218,28 @@ class Databank:
         ```
         """
         if dataset in ["radoslaw-email", "ia-enron-employees"]:
-            return self.__read_wsp_vert_weig_time(self.__filename_map[dataset])
+            es = self.__read_wsp_vert_weig_time(
+                self.__dataset_metadata[dataset]["path"]
+            )
         if dataset in ["fb-forum", "ia-contacts_hypertext2009"]:
-            return self.__read_csv_vert_time(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time(self.__dataset_metadata[dataset]["path"])
         if dataset == "fb-messages":
-            return self.__read_csv_vert_float_time(self.__filename_map[dataset])
+            es = self.__read_csv_vert_float_time(
+                self.__dataset_metadata[dataset]["path"]
+            )
         if dataset == "ia-hospital-ward-proximity-attr":
-            return self.__read_csv_vert_time_attr(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time_attr(
+                self.__dataset_metadata[dataset]["path"]
+            )
         if dataset == "ia-primary-school-proximity-attr":
             # TODO: Za ovaj mozda uraditi diskretizaciju atributa?
-            return self.__read_csv_vert_time_str_attr(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time_str_attr(
+                self.__dataset_metadata[dataset]["path"]
+            )
         if dataset == "ia-reality-call":
-            return self.__read_csv_vert_time_weig(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time_weig(
+                self.__dataset_metadata[dataset]["path"]
+            )
         if dataset in [
             "CollegeMsg",
             "email-Eu-core-temporal",
@@ -128,8 +248,8 @@ class Databank:
             "sx-superuser",
             "wiki-talk-temporal",
         ]:
-            return self.__read_three_whitespace_separated_columns(
-                self.__filename_map[dataset]
+            es = self.__read_three_whitespace_separated_columns(
+                self.__dataset_metadata[dataset]["path"]
             )
         if dataset in [
             "synthetic-dba",
@@ -137,9 +257,37 @@ class Databank:
             "synthetic-der",
             "synthetic-dpp",
         ]:
-            return self.__read_csv_vert_time(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time(self.__filename_map[dataset])
         else:
             raise Exception("{} dataset is not available".format(dataset))
+
+        if not shrink_sequence:
+            return es
+
+        if self.__dataset_metadata[dataset]["resolution"] == None:
+            raise Exception(
+                f"{dataset} dataset doesn't have the timeresolution defined"
+            )
+
+        tr = self.__determine_time_resolution(
+            self.__dataset_metadata[dataset]["resolution"]  # type: ignore
+        )
+
+        timespan = es.get_timespan()
+        snaps = timespan / tr
+        snaps = math.ceil(snaps)
+
+        snaps_to_keep = snaps + self.__dataset_metadata[dataset]["shrink"]
+        time_to_keep = es.events[0].timestamp + snaps_to_keep * tr
+
+        i = len(es.events) - 1
+        while i >= 0 and es.events[i].timestamp > time_to_keep:
+            i -= 1
+
+        i += 1
+        es.shrink_to(i)
+
+        return es
 
     def get_keys(self) -> typing.List[Dataset]:
         """
@@ -153,6 +301,26 @@ class Databank:
         ```
         """
         return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
+
+    def __determine_time_resolution(self, time_resolution: str) -> int:
+        # time resoultion for one day
+        tr = 24 * 60 * 60
+        if time_resolution == "hour":
+            tr = 60 * 60
+        elif time_resolution == "day":
+            pass
+        elif time_resolution == "week":
+            tr *= 7
+        elif time_resolution == "month":
+            tr *= 31
+        elif time_resolution == "3-months":
+            tr *= 31 * 3
+        elif time_resolution == "6-months":
+            tr *= 31 * 6
+        else:
+            tr *= 31 * 12
+
+        return tr
 
     def __read_wsp_vert_weig_time(self, filename: Path) -> EventSequence:
         events = []
