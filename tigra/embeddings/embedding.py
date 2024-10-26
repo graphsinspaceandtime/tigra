@@ -109,6 +109,18 @@ class SingletonEmbedding:
                 f.write(",".join(vector))
                 f.write("\n")
 
+    def load_from_file(self, file: str):
+        """
+        Loads embeddings from a csv file. It needs to be formatted in the same
+        way as saved file.
+        """
+        with open(file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.split(",")
+                self.add_embedding_vector(
+                    int(line[0]), [float(point) for point in line[1:]]
+                )
+
 
 class Embedding(ABC):
     """
