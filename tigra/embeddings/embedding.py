@@ -98,6 +98,17 @@ class SingletonEmbedding:
         """
         return self.embedding[node]
 
+    def save_to_file(self, file: str):
+        """
+        Saves embeddings to a csv file.
+        """
+        with open(file, "w", encoding="utf-8") as f:
+            for id, vector in self.embedding:
+                f.write(str(id))
+                f.write(",")
+                f.write(",".join(vector))
+                f.write("\n")
+
 
 class Embedding(ABC):
     """
