@@ -63,6 +63,10 @@ class DynAE(Embedding):
             )
 
         graphs = data.get_scipy_sparse_matrices()
+        #print("DEBUG, len(graphs)", len(graphs))
+        #for i in range(0, len(graphs)):
+        #    print("DEBUG, num_nodes", graphs[i].shape[0])
+        
         num_nodes = graphs[0].shape[0]
         node_list = list(range(num_nodes))
 
@@ -106,6 +110,10 @@ class DynAE(Embedding):
         )
 
         singleton = SingletonEmbedding()
+
+        # SVC, 27.10.2024
+        last_graph = data.get_last_matrix_as_graph()
+        node_list = last_graph.G.nodes()
 
         for node in node_list:
             singleton.add_embedding_vector(node, embedding[node].tolist())
