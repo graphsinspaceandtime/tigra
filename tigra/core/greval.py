@@ -57,7 +57,6 @@ class GraphReconstructionEval:
 
             if num_real_edges == 0 and num_predicted_edges == 0:
                 precision, recall = 1, 1
-                print("ISOLATED NODE")
             else:
                 node_s = 0
                 for p_edge in predicted_edges:

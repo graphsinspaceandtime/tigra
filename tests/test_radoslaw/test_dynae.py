@@ -27,7 +27,7 @@ method = DynAE(
     nu1=1e-6,
     nu2=1e-6,
     batch_size=16,
-    epochs=1000,
+    epochs=5000,
     learning_rate=0.001,
     weight_decay=1e-4,
 )
