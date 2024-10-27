@@ -221,26 +221,26 @@ class Databank:
             es = self.__read_wsp_vert_weig_time(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset in ["fb-forum", "ia-contacts_hypertext2009"]:
+        elif dataset in ["fb-forum", "ia-contacts_hypertext2009"]:
             es = self.__read_csv_vert_time(self.__dataset_metadata[dataset]["path"])
-        if dataset == "fb-messages":
+        elif dataset == "fb-messages":
             es = self.__read_csv_vert_float_time(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset == "ia-hospital-ward-proximity-attr":
+        elif dataset == "ia-hospital-ward-proximity-attr":
             es = self.__read_csv_vert_time_attr(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset == "ia-primary-school-proximity-attr":
+        elif dataset == "ia-primary-school-proximity-attr":
             # TODO: Za ovaj mozda uraditi diskretizaciju atributa?
             es = self.__read_csv_vert_time_str_attr(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset == "ia-reality-call":
+        elif dataset == "ia-reality-call":
             es = self.__read_csv_vert_time_weig(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset in [
+        elif dataset in [
             "CollegeMsg",
             "email-Eu-core-temporal",
             "sx-askubuntu",
@@ -251,7 +251,7 @@ class Databank:
             es = self.__read_three_whitespace_separated_columns(
                 self.__dataset_metadata[dataset]["path"]
             )
-        if dataset in [
+        elif dataset in [
             "synthetic-dba",
             "synthetic-dbac",
             "synthetic-der",
