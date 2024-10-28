@@ -27,13 +27,14 @@ method = DynAE(
     nu1=1e-6,
     nu2=1e-6,
     batch_size=16,
-    epochs=100,
+    epochs=10,
     learning_rate=0.001,
     weight_decay=1e-4,
 )
 method.make_embedding(dsmg)
 
 gre = GraphReconstructionEval(dsmg.get_matrix_as_graph(-1), method.embeddings[0])
+print(len(method.embeddings[0].embedding))
 print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())

@@ -644,6 +644,7 @@ class DynamicSparseMatrixGraph:
 
             M[event_sequence[i].src - 1, event_sequence[i].dst - 1] = True
             if not directed:
+                print("EVO ME...")
                 M[event_sequence[i].dst - 1, event_sequence[i].src - 1] = True
             i += 1
 

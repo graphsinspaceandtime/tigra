@@ -88,19 +88,19 @@ class DynGEM(Embedding):
 
         embeddings = []
 
+        trainer = DynamicEmbedding(
+            node_list=node_list,
+            model=model,
+            loss=loss,
+            batch_generator=batch_generator,
+            batch_predictor=batch_predictor,
+            has_cuda=self.has_cuda,
+            base_path="",
+            origin_folder="",
+            embedding_folder="",
+        )
+
         for i in range(len(graphs)):
-            trainer = DynamicEmbedding(
-                node_list=node_list,
-                model=model,
-                loss=loss,
-                batch_generator=batch_generator,
-                batch_predictor=batch_predictor,
-                has_cuda=self.has_cuda,
-                base_path="",
-                origin_folder="",
-                embedding_folder="",
-            )
-            
             embedding = trainer.learn_embedding(
                 [graphs[i]], epoch=self.epochs, lr=self.learning_rate, export=False
             )

@@ -7,7 +7,7 @@ from data.bank import Databank
 databank = Databank()
 es = databank.get_data("radoslaw-email")
 
-dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month")
+dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month", directed=False)
 
 DIM = 25
 
