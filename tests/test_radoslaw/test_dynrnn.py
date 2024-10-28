@@ -9,17 +9,20 @@ es = databank.get_data("radoslaw-email")
 
 dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month")
 
-n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, 10)
+DIM = 25
+
+n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, DIM)
+print(n_units)
 
 method = DynRNN(
-    dim=10,
+    dim=DIM,
     n_units=n_units,
-    look_back=5,
+    look_back=3,
     beta=5,
     nu1=1e-6,
     nu2=1e-6,
     batch_size=200,
-    epochs=10,
+    epochs=100,
     learning_rate=0.001,
 )
 method.make_embedding(dsmg)

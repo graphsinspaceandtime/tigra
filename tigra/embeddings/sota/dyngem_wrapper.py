@@ -86,24 +86,33 @@ class DynGEM(Embedding):
             node_list=node_list, batch_size=self.batch_size, has_cuda=self.has_cuda
         )
 
-        trainer = DynamicEmbedding(
-            node_list=node_list,
-            model=model,
-            loss=loss,
-            batch_generator=batch_generator,
-            batch_predictor=batch_predictor,
-            has_cuda=self.has_cuda,
-            base_path="",
-            origin_folder="",
-            embedding_folder="",
-        )
-        embedding = trainer.learn_embedding(
-            graphs, epoch=self.epochs, lr=self.learning_rate, export=False
-        )
+        embeddings = []
 
-        singleton = SingletonEmbedding()
+        for i in range(len(graphs)):
+            trainer = DynamicEmbedding(
+                node_list=node_list,
+                model=model,
+                loss=loss,
+                batch_generator=batch_generator,
+                batch_predictor=batch_predictor,
+                has_cuda=self.has_cuda,
+                base_path="",
+                origin_folder="",
+                embedding_folder="",
+            )
+            
+            embedding = trainer.learn_embedding(
+                [graphs[i]], epoch=self.epochs, lr=self.learning_rate, export=False
+            )
 
-        for node in node_list:
-            singleton.add_embedding_vector(node, embedding[node].tolist())
+            singleton = SingletonEmbedding()
 
-        return [singleton]
+            learn_graph = data.get_matrix_as_graph(i)
+            nl = learn_graph.G.nodes()
+
+            for node in nl:
+                singleton.add_embedding_vector(node, embedding[node].tolist())
+
+            embeddings.append(singleton)
+
+        return embeddings

@@ -66,6 +66,8 @@ class DynGEMLoss(nn.Module):
         hx_loss = torch.mean(torch.sum(torch.square(hx_i - hx_j), dim=1) * edge_weight)
 
         reconstruction_loss = xi_loss + xj_loss + self.alpha * hx_loss
+        #reconstruction_loss = xi_loss + self.alpha * hx_loss
+
         regularization_loss = self.regularization(model)
         return reconstruction_loss + regularization_loss
 

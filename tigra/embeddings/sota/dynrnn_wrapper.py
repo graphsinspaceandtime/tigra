@@ -60,6 +60,9 @@ class DynRNN(Embedding):
             )
 
         graphs = data.get_scipy_sparse_matrices()
+        num_graphs = len(graphs)
+        start_index = num_graphs - 1 - self.look_back
+        graphs = graphs[start_index:]
         num_nodes = graphs[0].shape[0]
         node_list = list(range(num_nodes))
 
@@ -99,6 +102,9 @@ class DynRNN(Embedding):
         )
 
         singleton = SingletonEmbedding()
+
+        learn_graph = data.get_matrix_as_graph(-1)
+        node_list = learn_graph.G.nodes()
 
         for node in node_list:
             singleton.add_embedding_vector(node, embedding[node].tolist())
