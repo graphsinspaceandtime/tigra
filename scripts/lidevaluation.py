@@ -33,6 +33,7 @@ def lideval(dataset):
 if __name__ == "__main__":
 
     for dataset in datasets:
-        print("DATASET", dataset)
-        lideval(dataset)
-        print("......................................................................")
+        if "synt" in dataset:
+            print("DATASET", dataset)
+            lideval(dataset)
+            print("......................................................................")
