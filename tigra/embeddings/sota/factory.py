@@ -50,7 +50,7 @@ class DN2V_Factory(Factory):
             q = float(tokens[3])
             walk_len = int(tokens[4])
             num_walks = int(tokens[5])
-            cumulative = bool(tokens[6])
+            cumulative = True ? tokens[6]=="True" : False
 
             self.configs[dsname] = (dim, p, q, walk_len, num_walks, cumulative)
 
