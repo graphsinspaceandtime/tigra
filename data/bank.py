@@ -156,22 +156,22 @@ class Databank:
             "synthetic-dba": {
                 "path": self.__synthetic_path / "dba_1000_5_10.events",
                 "shrink": None,
-                "resolution": None,
+                "resolution": "month",
             },
             "synthetic-dbac": {
                 "path": self.__synthetic_path / "dbac_1000_4.events",
                 "shrink": None,
-                "resolution": None,
+                "resolution": "month",
             },
             "synthetic-der": {
                 "path": self.__synthetic_path / "der_1000_001.events",
                 "shrink": None,
-                "resolution": None,
+                "resolution": "month",
             },
             "synthetic-dpp": {
                 "path": self.__synthetic_path / "dpp_1000_4.events",
                 "shrink": None,
-                "resolution": None,
+                "resolution": "month",
             },
         }
 

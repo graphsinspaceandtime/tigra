@@ -13,7 +13,7 @@ sys.path.append("..")
 sys.dont_write_bytecode = True
 
 from tigra.core.dgraph import DynamicGraph
-from tigra.evaluation.lid_eval import NCLIDEstimator
+from tigra.evaluation.lideval import NCLIDEstimator
 from tigra.core.loaders import load_event_sequence
 
 from data.bank import Databank

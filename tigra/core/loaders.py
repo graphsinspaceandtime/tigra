@@ -28,6 +28,10 @@ datasets = {
     "sx-askubuntu": ("3-months", 0),
     "sx-mathoverflow": ("3-months", 0),
     "sx-superuser": ("3-months", 0),
+    "synthetic-der": ("month", 0),
+    "synthetic-dba": ("month", 0),
+    "synthetic-dbac": ("month", 0),
+    "synthetic-dpp": ("month", 0),
 }
 
 
