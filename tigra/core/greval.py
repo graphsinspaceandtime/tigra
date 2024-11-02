@@ -48,23 +48,26 @@ class GraphReconstructionEval:
                     print("[WARNING, greval] Node", node, "skipped")
                 continue
 
+            real_edges = self.graph.edges(node)
+            num_real_edges = len(real_edges)
             predicted_edges = reconstructed_graph.edges(node)
+            num_predicted_edges = len(predicted_edges)
 
             precision, recall = 0, 0
 
-            if len(predicted_edges) != 0:
-                real_edges = self.graph.edges(node)
-                num_real_edges = len(real_edges)
+            if num_real_edges == 0 and num_predicted_edges == 0:
+                precision, recall = 1, 1
+            else:
+                node_s = 0
+                for p_edge in predicted_edges:
+                    if p_edge in real_edges:
+                        node_s += 1
 
                 if num_real_edges != 0:
-                    node_s = 0
-                    for p_edge in predicted_edges:
-                        if p_edge in real_edges:
-                            node_s += 1
-                            
-
                     recall = node_s / num_real_edges
-                    precision = node_s / len(predicted_edges)
+                
+                if num_predicted_edges != 0:
+                    precision = node_s / num_predicted_edges
 
             nodes_cnt += 1
             self.recall_per_node[node] = recall

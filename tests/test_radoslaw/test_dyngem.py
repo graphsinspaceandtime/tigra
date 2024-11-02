@@ -7,24 +7,27 @@ from data.bank import Databank
 databank = Databank()
 es = databank.get_data("radoslaw-email")
 
-dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month")
+dsmg = DynamicSparseMatrixGraph("radoslaw", es, time_resolution="month", directed=False)
 
-n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, 10)
+DIM = 25
+
+n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, DIM)
+print(n_units)
 
 method = DynGEM(
-    dim=10,
+    dim=DIM,
     n_units=n_units,
-    alpha=5,
-    beta=5,
+    alpha=1e-6,
+    beta=10,
     nu1=1e-6,
     nu2=1e-6,
-    batch_size=200,
+    batch_size=256,
     epochs=10,
     learning_rate=0.001,
 )
 method.make_embedding(dsmg)
 
-gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), method.embeddings[0])
+gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), method.embeddings[-1])
 print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
