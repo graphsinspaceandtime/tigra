@@ -34,6 +34,7 @@ class DatasetMetadata(typing.TypedDict):
     path: Path
     shrink: typing.Union[int, None]
     resolution: typing.Union[str, None]
+    cumulative: bool
 
 
 class Databank:
@@ -77,16 +78,19 @@ class Databank:
                 "path": self.__netrep_path / "radoslaw_email" / "radoslaw_email.edges",
                 "shrink": 0,
                 "resolution": "month",
+                "cumulative": False,
             },
             "fb-forum": {
                 "path": self.__netrep_path / "fb-forum" / "fb-forum.edges",
                 "shrink": -1,
                 "resolution": "month",
+                "cumulative": False,
             },
             "fb-messages": {
                 "path": self.__netrep_path / "fb-messages" / "fb-messages.edges",
                 "shrink": 0,
                 "resolution": "month",
+                "cumulative": False,
             },
             "ia-contacts_hypertext2009": {
                 "path": self.__netrep_path
@@ -94,6 +98,7 @@ class Databank:
                 / "ia-contacts_hypertext2009.edges",
                 "shrink": 0,
                 "resolution": "day",
+                "cumulative": False,
             },
             "ia-enron-employees": {
                 "path": self.__netrep_path
@@ -101,6 +106,7 @@ class Databank:
                 / "ia-enron-employees.edges",
                 "shrink": -2,
                 "resolution": "3-months",
+                "cumulative": False,
             },
             "ia-hospital-ward-proximity-attr": {
                 "path": self.__netrep_path
@@ -108,6 +114,7 @@ class Databank:
                 / "ia-hospital-ward-proximity-attr.edges",
                 "shrink": -1,
                 "resolution": "day",
+                "cumulative": False,
             },
             "ia-primary-school-proximity-attr": {
                 "path": self.__netrep_path
@@ -115,6 +122,7 @@ class Databank:
                 / "ia-primary-school-proximity-attr.edges",
                 "shrink": 0,
                 "resolution": "day",
+                "cumulative": False,
             },
             "ia-reality-call": {
                 "path": self.__netrep_path
@@ -122,56 +130,67 @@ class Databank:
                 / "ia-reality-call.edges",
                 "shrink": -1,
                 "resolution": "week",
+                "cumulative": False,
             },
             "CollegeMsg": {
                 "path": self.__snap_path / "CollegeMsg.txt",
                 "shrink": -1,
                 "resolution": "month",
+                "cumulative": False,
             },
             "email-Eu-core-temporal": {
                 "path": self.__snap_path / "email-Eu-core-temporal.txt",
                 "shrink": -1,
                 "resolution": "month",
+                "cumulative": False,
             },
             "sx-askubuntu": {
                 "path": self.__snap_path / "sx-askubuntu.txt",
                 "shrink": 0,
                 "resolution": "3-months",
+                "cumulative": False,
             },
             "sx-mathoverflow": {
                 "path": self.__snap_path / "sx-mathoverflow.txt",
                 "shrink": 0,
                 "resolution": "3-months",
+                "cumulative": False,
             },
             "sx-superuser": {
                 "path": self.__snap_path / "sx-superuser.txt",
                 "shrink": 0,
                 "resolution": "3-monhts",
+                "cumulative": False,
             },
             "wiki-talk-temporal": {
                 "path": self.__snap_path / "wiki-talk-temporal.txt",
                 "shrink": None,
-                "resolution": None,
+                "resolution": "day",
+                "cumulative": False,
             },
             "synthetic-dba": {
                 "path": self.__synthetic_path / "dba_1000_5_10.events",
                 "shrink": None,
                 "resolution": None,
+                "cumulative": True,
             },
             "synthetic-dbac": {
                 "path": self.__synthetic_path / "dbac_1000_4.events",
                 "shrink": None,
                 "resolution": None,
+                "cumulative": True,
             },
             "synthetic-der": {
                 "path": self.__synthetic_path / "der_1000_001.events",
                 "shrink": None,
                 "resolution": None,
+                "cumulative": True,
             },
             "synthetic-dpp": {
                 "path": self.__synthetic_path / "dpp_1000_4.events",
                 "shrink": None,
                 "resolution": None,
+                "cumulative": True,
             },
         }
 
@@ -301,6 +320,9 @@ class Databank:
         ```
         """
         return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
+
+    def get_metadata(self, name: Dataset) -> DatasetMetadata:
+        return self.__dataset_metadata[name]
 
     def __determine_time_resolution(self, time_resolution: str) -> int:
         # time resoultion for one day

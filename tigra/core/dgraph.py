@@ -158,9 +158,9 @@ class Graph:
         """
         computes degree distributions
         """
-        degrees = [self.G.degree(node) for node in self.G.nodes()]
+        degrees = [self.G.degree(node) for node in self.G.nodes()]  # type: ignore
         maxdeg = max(degrees)
-    
+
         dd = np.zeros(maxdeg + 1)
         for d in degrees:
             dd[d] += 1
@@ -174,7 +174,7 @@ class Graph:
             for i in range(len(dd)):
                 if dd[i] != 0:
                     print(i, dd[i])
-        
+
         return dd
 
     def determine_connected_comps(self, to_print=False):
@@ -306,8 +306,7 @@ class EventSequence:
             nodes.add(event.src)
             nodes.add(event.dst)
 
-        print(f"min: {min(nodes)}; max: {max(nodes)}")
-        return len(nodes)
+        return max(nodes) + 1
 
     def get_events(self):
         """
@@ -492,7 +491,11 @@ class DynamicAggregateGraph:
     """
 
     def __init__(
-        self, name, event_sequence: EventSequence, directed=True, weighted=False
+        self,
+        name,
+        event_sequence: EventSequence,
+        directed=True,
+        weighted=False,
     ):
         self.event_sequence = event_sequence
         self.agg_graph = Graph(name + "-agg", directed=directed)
@@ -591,6 +594,7 @@ class DynamicSparseMatrixGraph:
         time_resolution: str,
         directed=True,
         value_type="bool",
+        cumulative=False,
     ):
         print("============== DynamicSparseMatrixGraph ==============")
         number_of_nodes = event_sequence.num_nodes()
@@ -606,19 +610,7 @@ class DynamicSparseMatrixGraph:
             else:
                 raise ValueError(f"'{value_type}' is not a valid value_type value")
 
-        tr = 24 * 60 * 60
-        if time_resolution == "day":
-            pass
-        elif time_resolution == "week":
-            tr *= 7
-        elif time_resolution == "month":
-            tr *= 31
-        elif time_resolution == "3-months":
-            tr *= 31 * 3
-        elif time_resolution == "6-months":
-            tr *= 31 * 6
-        else:
-            tr *= 31 * 12
+        tr = determine_time_resolution(time_resolution)
 
         if event_sequence.is_empty():
             return
@@ -635,7 +627,8 @@ class DynamicSparseMatrixGraph:
             curr_time = event_sequence[i].timestamp
             if curr_time - start_time > tr:
                 self.matrices.append(M.tocsr())
-                M = make_matrix()
+                if not cumulative:
+                    M = make_matrix()
                 start_time = curr_time
 
             M[event_sequence[i].src - 1, event_sequence[i].dst - 1] = True
@@ -670,6 +663,9 @@ class DynamicSparseMatrixGraph:
             for m in S:
                 neighbours.append(m)
         return list(set(neighbours))
+
+    def get_num_snaps(self) -> int:
+        return len(self.matrices)
 
 
 """
