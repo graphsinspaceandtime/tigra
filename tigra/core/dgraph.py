@@ -197,10 +197,9 @@ class Graph:
             print(s)
 
         return components
-    
+
     def remove_isolated_nodes(self):
         self.G.remove_nodes_from(list(nx.isolates(self.G)))
-
 
 
 class Event:
@@ -640,12 +639,15 @@ class DynamicSparseMatrixGraph:
                 M[event_sequence[i].dst - 1, event_sequence[i].src - 1] = True
             i += 1
 
+        if M.nonzero():
+            self.matrices.append(M.tocsr())
+
     def get_scipy_sparse_matrices(self):
         return self.matrices
 
     def get_last_matrix_as_graph(self):
         return self.get_matrix_as_graph(-1)
-    
+
     def get_matrix_as_graph(self, index):
         M = self.matrices[index]
         G = nx.from_scipy_sparse_array(M, create_using=nx.Graph)
