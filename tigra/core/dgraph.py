@@ -417,7 +417,8 @@ class DynamicGraph:
             event_sequence[0].event_data,
         )
         if (
-            event_sequence[0].event_data["src_class"] != None
+            event_sequence[0].event_data != None
+            and event_sequence[0].event_data["src_class"] != None
             and event_sequence[0].event_data["dst_class"] != None
         ):
             g.update_node_label(
@@ -449,7 +450,8 @@ class DynamicGraph:
                 event_sequence[i].event_data,
             )
             if (
-                event_sequence[i].event_data["src_class"] != None
+                event_sequence[0].event_data != None
+                and event_sequence[i].event_data["src_class"] != None
                 and event_sequence[i].event_data["dst_class"] != None
             ):
                 g.update_node_label(
