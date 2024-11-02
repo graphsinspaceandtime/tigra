@@ -8,6 +8,7 @@ Main base class for dynamic/temporal graph embeddings
 
 from abc import ABC, abstractmethod
 from typing import List
+import typing
 from tigra.core.dgraph import Graph
 
 import numpy as np
@@ -144,7 +145,7 @@ class Embedding(ABC):
         return self.embeddings[index]
 
     @abstractmethod
-    def construct(self, data) -> List[SingletonEmbedding]:
+    def construct(self, data) -> List[typing.Union[SingletonEmbedding, None]]:
         """
         Embedding algorithm that must be implemented in subclasses.
         """
