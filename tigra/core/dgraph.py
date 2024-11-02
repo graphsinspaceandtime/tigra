@@ -68,6 +68,18 @@ class Graph:
         """
         self.G.nodes[node_id]["node_data"] = node_vector
 
+    def get_node_label(self, node_id):
+        """
+        Returns label of node.
+        """
+        return self.G.nodes[node_id]["node_label"]
+
+    def get_node_data(self, node_id):
+        """
+        Returns label of node.
+        """
+        return self.G.nodes[node_id]["node_data"]
+
     def add_edge(self, src, dst, weight=None, edge_data=None):
         """
         Adds a new edge to the graph, users can provide edge weight and a data object attached to the edge
@@ -404,6 +416,16 @@ class DynamicGraph:
             event_sequence[0].weight,
             event_sequence[0].event_data,
         )
+        if (
+            event_sequence[0].event_data["src_class"] != None
+            and event_sequence[0].event_data["dst_class"] != None
+        ):
+            g.update_node_label(
+                event_sequence[0].src, event_sequence[0].event_data["src_class"]
+            )
+            g.update_node_label(
+                event_sequence[0].dst, event_sequence[0].event_data["dst_class"]
+            )
 
         i = 1
         while i < event_sequence.num_events():
@@ -426,6 +448,16 @@ class DynamicGraph:
                 event_sequence[i].weight,
                 event_sequence[i].event_data,
             )
+            if (
+                event_sequence[i].event_data["src_class"] != None
+                and event_sequence[i].event_data["dst_class"] != None
+            ):
+                g.update_node_label(
+                    event_sequence[i].src, event_sequence[i].event_data["src_class"]
+                )
+                g.update_node_label(
+                    event_sequence[i].dst, event_sequence[i].event_data["dst_class"]
+                )
             i += 1
 
         if not g.is_empty():
