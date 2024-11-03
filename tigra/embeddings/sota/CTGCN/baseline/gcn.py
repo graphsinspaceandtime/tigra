@@ -24,11 +24,11 @@ class GraphConvolution(nn.Module):
         if bias:
             self.bias = nn.Parameter(torch.FloatTensor(output_dim))
         else:
-            self.register_parameter('bias', None)
+            self.register_parameter("bias", None)
         self.reset_parameters()
 
     def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.weight.size(1))
+        stdv = 1.0 / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
@@ -43,9 +43,14 @@ class GraphConvolution(nn.Module):
             return output
 
     def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-               + str(self.input_dim) + ' -> ' \
-               + str(self.output_dim) + ')'
+        return (
+            self.__class__.__name__
+            + " ("
+            + str(self.input_dim)
+            + " -> "
+            + str(self.output_dim)
+            + ")"
+        )
 
 
 # Original version of GCN
@@ -66,7 +71,7 @@ class GCN(nn.Module):
         self.output_dim = output_dim
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'GCN'
+        self.method_name = "GCN"
 
         self.gc1 = GraphConvolution(input_dim, hidden_dim, bias=bias)
         self.gc2 = GraphConvolution(hidden_dim, output_dim, bias=bias)
@@ -100,7 +105,18 @@ class TgGCN(torch.nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, feature_dim, hidden_dim, output_dim, feature_pre=True, layer_num=2, dropout=0.5, bias=True, **kwargs):
+    def __init__(
+        self,
+        input_dim,
+        feature_dim,
+        hidden_dim,
+        output_dim,
+        feature_pre=True,
+        layer_num=2,
+        dropout=0.5,
+        bias=True,
+        **kwargs,
+    ):
         super(TgGCN, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
@@ -110,14 +126,19 @@ class TgGCN(torch.nn.Module):
         self.layer_num = layer_num
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'TgGCN'
+        self.method_name = "TgGCN"
 
         if feature_pre:
             self.linear_pre = nn.Linear(input_dim, feature_dim, bias=bias)
             self.conv_first = tg.nn.GCNConv(feature_dim, hidden_dim, bias=bias)
         else:
             self.conv_first = tg.nn.GCNConv(input_dim, hidden_dim, bias=bias)
-        self.conv_hidden = nn.ModuleList([tg.nn.GCNConv(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)])
+        self.conv_hidden = nn.ModuleList(
+            [
+                tg.nn.GCNConv(hidden_dim, hidden_dim, bias=bias)
+                for i in range(layer_num - 2)
+            ]
+        )
         self.conv_out = tg.nn.GCNConv(hidden_dim, output_dim, bias=bias)
 
     def forward(self, x, edge_index):
@@ -136,7 +157,7 @@ class TgGCN(torch.nn.Module):
         x = self.conv_first(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, self.dropout, training=self.training)
-        for i in range(self.layer_num-2):
+        for i in range(self.layer_num - 2):
             x = self.conv_hidden[i](x, edge_index)
             x = F.relu(x)
             x = F.dropout(x, self.dropout, training=self.training)

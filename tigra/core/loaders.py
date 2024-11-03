@@ -103,7 +103,6 @@ def load_snap_dataset(path, has_weight=False) -> EventSequence:
 
     with open(path) as file:
         for line in file:
-
             line = line.strip()
 
             tokens = re.split(r"\D+", line)

@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../..")
 
 from tigra.generators.dba import DBAGenerator, DBACGenerator
@@ -21,7 +22,7 @@ def radicchi_in_out(community, G):
         links_in, links_out = 0, 0
         for nei in neis:
             if nei in community:
-                links_in += 1 
+                links_in += 1
             else:
                 links_out += 1
 
@@ -46,17 +47,19 @@ def examine_partition(G, partition):
         print("Community", i, ", in = ", total_in, ", out = ", total_out)
 
 
-#derg = DBAGenerator(1000, 5, 10, time_resolution="hour")
-#derg.generate_and_save("dba_1000_5_10.events")
+# derg = DBAGenerator(1000, 5, 10, time_resolution="hour")
+# derg.generate_and_save("dba_1000_5_10.events")
 
-#dbac = DBACGenerator([500, 250, 150, 100], 4, 1, 8)
-#dbac.generate_and_save("dbac_1000_4.events")
+# dbac = DBACGenerator([500, 250, 150, 100], 4, 1, 8)
+# dbac.generate_and_save("dbac_1000_4.events")
 
 es = load_snap_dataset("dbac_1000_4.events")
 
 print("Cumulative DBAC")
 dg = DynamicGraph()
-dg.init_from_event_sequence(es, time_resolution="month", directed=False, cumulative=True)
+dg.init_from_event_sequence(
+    es, time_resolution="month", directed=False, cumulative=True
+)
 dg.info()
 last_snap = dg.get_graph_sequence()[-1]
 print("Degree distribution")
@@ -67,13 +70,14 @@ ed = EvolDynamics(dg)
 ed.info()
 
 print("\nCommunity examination")
-examine_partition(last_snap.G, 
+examine_partition(
+    last_snap.G,
     [
-        set(range(0, 500)), 
+        set(range(0, 500)),
         set(range(500, 750)),
         set(range(750, 900)),
-        set(range(900, 1000))
-    ]
+        set(range(900, 1000)),
+    ],
 )
 
 print("########################")
@@ -104,4 +108,3 @@ for g in dg.get_graph_sequence():
 ed = EvolDynamics(dg)
 ed.info()
 """
-

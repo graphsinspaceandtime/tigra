@@ -114,7 +114,6 @@ class BaseEmbedding:
 
 # Supervised embedding class(used for node classification)
 class SupervisedEmbedding(BaseEmbedding):
-
     def __init__(
         self,
         base_path,
@@ -417,18 +416,23 @@ class SupervisedEmbedding(BaseEmbedding):
         model, loss_model, optimizer, classifier = self.prepare(
             load_model, model_file, classifier_file, lr, weight_decay
         )
-        idx_train, label_train, idx_val, label_val, idx_test, label_test = (
-            self.get_batch_info(
-                learning_type,
-                node_labels,
-                edge_labels,
-                edge_list,
-                batch_size,
-                shuffle,
-                train_ratio,
-                val_ratio,
-                test_ratio,
-            )
+        (
+            idx_train,
+            label_train,
+            idx_val,
+            label_val,
+            idx_test,
+            label_test,
+        ) = self.get_batch_info(
+            learning_type,
+            node_labels,
+            edge_labels,
+            edge_list,
+            batch_size,
+            shuffle,
+            train_ratio,
+            val_ratio,
+            test_ratio,
         )
         self.clear_cache()
         # time.sleep(100)

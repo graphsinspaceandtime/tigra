@@ -10,6 +10,7 @@ import torch_geometric as tg
 # # Author: jhljx
 # # Email: jhljx8918@gmail.com
 
+
 class SpecialSpmmFunction(torch.autograd.Function):
     """Special function for only sparse region backpropataion layer."""
 
@@ -61,7 +62,6 @@ class SpGraphAttentionLayer(nn.Module):
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.special_spmm = SpecialSpmm()
 
-
     def forward(self, input, adj):
         # dv = 'cuda' if input.is_cuda else 'cpu'
         N = input.size()[0]
@@ -83,7 +83,12 @@ class SpGraphAttentionLayer(nn.Module):
         assert not torch.isnan(edge_e).any()
         # edge_e: E
 
-        e_rowsum = self.special_spmm(edge_index, edge_e, torch.Size([N, N]), torch.ones(size=(N, 1), device=input.device))
+        e_rowsum = self.special_spmm(
+            edge_index,
+            edge_e,
+            torch.Size([N, N]),
+            torch.ones(size=(N, 1), device=input.device),
+        )
         # e_rowsum: N x 1
 
         edge_e = self.dropout(edge_e)
@@ -105,7 +110,14 @@ class SpGraphAttentionLayer(nn.Module):
             return h_prime
 
     def __repr__(self):
-        return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
+        return (
+            self.__class__.__name__
+            + " ("
+            + str(self.in_features)
+            + " -> "
+            + str(self.out_features)
+            + ")"
+        )
 
 
 # Original version of GAT
@@ -118,7 +130,16 @@ class GAT(nn.Module):
     head_num: int
     method_name: str
 
-    def __init__(self, input_dim, hidden_dim, output_dim, dropout=0.6, alpha=0.2, head_num=8, learning_type='U-neg'):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim,
+        output_dim,
+        dropout=0.6,
+        alpha=0.2,
+        head_num=8,
+        learning_type="U-neg",
+    ):
         """Sparse version of GAT."""
         super(GAT, self).__init__()
         self.input_dim = input_dim
@@ -127,15 +148,26 @@ class GAT(nn.Module):
         self.dropout = dropout
         self.alpha = alpha
         self.head_num = head_num
-        assert learning_type in ['U-neg', 'S-node', 'S-edge', 'S-link-st', 'S-link-dy']
+        assert learning_type in ["U-neg", "S-node", "S-edge", "S-link-st", "S-link-dy"]
         self.learning_type = learning_type
-        self.method_name = 'GAT'
+        self.method_name = "GAT"
 
-        self.attentions = [SpGraphAttentionLayer(input_dim, hidden_dim, dropout=dropout, alpha=alpha, concat=True) for _ in range(head_num)]
+        self.attentions = [
+            SpGraphAttentionLayer(
+                input_dim, hidden_dim, dropout=dropout, alpha=alpha, concat=True
+            )
+            for _ in range(head_num)
+        ]
         for i, attention in enumerate(self.attentions):
-            self.add_module('attention_{}'.format(i), attention)
+            self.add_module("attention_{}".format(i), attention)
 
-        self.out_att = SpGraphAttentionLayer(hidden_dim * head_num, output_dim, dropout=dropout, alpha=alpha, concat=False)
+        self.out_att = SpGraphAttentionLayer(
+            hidden_dim * head_num,
+            output_dim,
+            dropout=dropout,
+            alpha=alpha,
+            concat=False,
+        )
 
     def forward(self, x, adj):
         if isinstance(x, list):
@@ -152,7 +184,7 @@ class GAT(nn.Module):
         x = torch.cat([att(x, adj) for att in self.attentions], dim=1)
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.elu(self.out_att(x, adj))
-        if self.learning_type == 'U-neg':
+        if self.learning_type == "U-neg":
             return F.log_softmax(x, dim=1)
         return x
 
@@ -169,7 +201,18 @@ class TgGAT(torch.nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, feature_dim, hidden_dim, output_dim, feature_pre=True, layer_num=2, dropout=0.5, bias=True, **kwargs):
+    def __init__(
+        self,
+        input_dim,
+        feature_dim,
+        hidden_dim,
+        output_dim,
+        feature_pre=True,
+        layer_num=2,
+        dropout=0.5,
+        bias=True,
+        **kwargs,
+    ):
         super(TgGAT, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
@@ -179,14 +222,19 @@ class TgGAT(torch.nn.Module):
         self.layer_num = layer_num
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'TgGAT'
+        self.method_name = "TgGAT"
 
         if feature_pre:
             self.linear_pre = nn.Linear(input_dim, feature_dim, bias=bias)
             self.conv_first = tg.nn.GATConv(feature_dim, hidden_dim, bias=bias)
         else:
             self.conv_first = tg.nn.GATConv(input_dim, hidden_dim, bias=bias)
-        self.conv_hidden = nn.ModuleList([tg.nn.GATConv(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)])
+        self.conv_hidden = nn.ModuleList(
+            [
+                tg.nn.GATConv(hidden_dim, hidden_dim, bias=bias)
+                for i in range(layer_num - 2)
+            ]
+        )
         self.conv_out = tg.nn.GATConv(hidden_dim, output_dim, bias=bias)
 
     def forward(self, x, edge_index):
@@ -204,7 +252,7 @@ class TgGAT(torch.nn.Module):
         x = self.conv_first(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, self.dropout, training=self.training)
-        for i in range(self.layer_num-2):
+        for i in range(self.layer_num - 2):
             x = self.conv_hidden[i](x, edge_index)
             x = F.relu(x)
             F.dropout(x, self.dropout, training=self.training)

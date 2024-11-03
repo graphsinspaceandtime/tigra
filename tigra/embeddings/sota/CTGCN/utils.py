@@ -13,18 +13,20 @@ def sigmoid(x):
 
 # Check the existence of directory(file) path, if not, create one
 def check_and_make_path(to_make):
-    if to_make == '':
+    if to_make == "":
         return
     if not os.path.exists(to_make):
         os.makedirs(to_make)
 
 
 # Get networkx graph object from file path. If the graph is unweighted, then add the 'weight' attribute
-def get_nx_graph(file_path, full_node_list, sep='\t'):
+def get_nx_graph(file_path, full_node_list, sep="\t"):
     df = pd.read_csv(file_path, sep=sep)
     if df.shape[1] == 2:
-        df['weight'] = 1.0
-    graph = nx.from_pandas_edgelist(df, "from_id", "to_id", edge_attr='weight', create_using=nx.Graph)
+        df["weight"] = 1.0
+    graph = nx.from_pandas_edgelist(
+        df, "from_id", "to_id", edge_attr="weight", create_using=nx.Graph
+    )
     graph.add_nodes_from(full_node_list)
     graph.remove_edges_from(nx.selfloop_edges(graph))
     return graph
@@ -32,11 +34,11 @@ def get_nx_graph(file_path, full_node_list, sep='\t'):
 
 # Get sparse.lil_matrix type adjacent matrix
 # Note that if you want to use this function, please transform the sparse matrix type, i.e. sparse.coo_matrix, sparse.csc_matrix if needed!
-def get_sp_adj_mat(file_path, full_node_list, sep='\t'):
+def get_sp_adj_mat(file_path, full_node_list, sep="\t"):
     node_num = len(full_node_list)
     node2idx_dict = dict(zip(full_node_list, np.arange(node_num)))
     A = sp.lil_matrix((node_num, node_num))
-    with open(file_path, 'r') as fp:
+    with open(file_path, "r") as fp:
         content_list = fp.readlines()
         # ignore header
         for line in content_list[1:]:
@@ -46,7 +48,11 @@ def get_sp_adj_mat(file_path, full_node_list, sep='\t'):
             if col_num == 2:
                 from_node, to_node, weight = line_list[0], line_list[1], 1
             else:
-                from_node, to_node, weight = line_list[0], line_list[1], float(line_list[2])
+                from_node, to_node, weight = (
+                    line_list[0],
+                    line_list[1],
+                    float(line_list[2]),
+                )
             from_id = node2idx_dict[from_node]
             to_id = node2idx_dict[to_node]
             # remove self-loop data
@@ -73,8 +79,11 @@ def get_normalized_adj(adj, row_norm=False):
         if x == 0:
             return x
         if x < 0:
-            raise ValueError('invalid value encountered in power, x is negative, p is negative!')
+            raise ValueError(
+                "invalid value encountered in power, x is negative, p is negative!"
+            )
         return np.power(x, p)
+
     inv_func = np.vectorize(inv)
     r_inv = inv_func(rowsum, p).flatten()
     r_mat_inv = sp.diags(r_inv)
@@ -144,12 +153,12 @@ def get_format_str(cnt):
     while cnt > 0:
         cnt //= 10
         max_bit += 1
-    format_str = '{:0>' + str(max_bit) + 'd}'
+    format_str = "{:0>" + str(max_bit) + "d}"
     return format_str
 
 
 # Print separate lines
-def separate(info='', sep='=', num=8):
+def separate(info="", sep="=", num=8):
     if len(info) == 0:
         print(sep * (2 * num))
     else:
@@ -157,26 +166,76 @@ def separate(info='', sep='=', num=8):
 
 
 def get_static_gnn_methods():
-    gnn_list = ['GCN', 'TgGCN', 'GAT', 'TgGAT', 'SAGE', 'TgSAGE', 'GIN', 'TgGIN', 'PGNN', 'CGCN-C', 'CGCN-S']
+    gnn_list = [
+        "GCN",
+        "TgGCN",
+        "GAT",
+        "TgGAT",
+        "SAGE",
+        "TgSAGE",
+        "GIN",
+        "TgGIN",
+        "PGNN",
+        "CGCN-C",
+        "CGCN-S",
+    ]
     return dict(zip(gnn_list, np.ones(len(gnn_list), dtype=np.int)))
 
 
 def get_dynamic_gnn_methods():
-    gnn_list = ['GCRN', 'EvolveGCN', 'VGRNN', 'CTGCN-C', 'CTGCN-S']
+    gnn_list = ["GCRN", "EvolveGCN", "VGRNN", "CTGCN-C", "CTGCN-S"]
     return dict(zip(gnn_list, np.ones(len(gnn_list), dtype=np.int)))
 
 
 def get_core_based_methods():
-    gnn_list = ['CGCN-C', 'CGCN-S', 'CTGCN-C', 'CTGCN-S']
+    gnn_list = ["CGCN-C", "CGCN-S", "CTGCN-C", "CTGCN-S"]
     return dict(zip(gnn_list, np.ones(len(gnn_list), dtype=np.int)))
 
 
 def get_supported_gnn_methods():
-    gnn_list = ['GCN', 'TgGCN', 'GAT', 'TgGAT', 'SAGE', 'TgSAGE', 'GIN', 'TgGIN', 'PGNN', 'CGCN-C', 'CGCN-S', 'GCRN', 'EvolveGCN', 'VGRNN', 'CTGCN-C', 'CTGCN-S']
+    gnn_list = [
+        "GCN",
+        "TgGCN",
+        "GAT",
+        "TgGAT",
+        "SAGE",
+        "TgSAGE",
+        "GIN",
+        "TgGIN",
+        "PGNN",
+        "CGCN-C",
+        "CGCN-S",
+        "GCRN",
+        "EvolveGCN",
+        "VGRNN",
+        "CTGCN-C",
+        "CTGCN-S",
+    ]
     return dict(zip(gnn_list, np.ones(len(gnn_list), dtype=np.int)))
 
 
 def get_supported_methods():
-    method_list = ['DynGEM', 'DynAE', 'DynRNN', 'DynAERNN', 'TIMERS', 'GCN', 'TgGCN', 'GAT', 'TgGAT', 'SAGE', 'TgSAGE', 'GIN', 'TgGIN', 'PGNN',
-                   'CGCN-C', 'CGCN-S', 'GCRN', 'EvolveGCN', 'VGRNN', 'CTGCN-C', 'CTGCN-S']
+    method_list = [
+        "DynGEM",
+        "DynAE",
+        "DynRNN",
+        "DynAERNN",
+        "TIMERS",
+        "GCN",
+        "TgGCN",
+        "GAT",
+        "TgGAT",
+        "SAGE",
+        "TgSAGE",
+        "GIN",
+        "TgGIN",
+        "PGNN",
+        "CGCN-C",
+        "CGCN-S",
+        "GCRN",
+        "EvolveGCN",
+        "VGRNN",
+        "CTGCN-C",
+        "CTGCN-S",
+    ]
     return dict(zip(method_list, np.ones(len(method_list), dtype=np.int)))

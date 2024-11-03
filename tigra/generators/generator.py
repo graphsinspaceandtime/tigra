@@ -16,8 +16,7 @@ class Generator(ABC):
     def __init__(self, seed, time_resolution="hour"):
         self.rng = random.Random(seed)
         self.delta_t = determine_time_resolution(time_resolution)
-        self.current_t = 0   #  January 1, 1970 12:00:00 AM
-    
+        self.current_t = 0  #  January 1, 1970 12:00:00 AM
 
     @abstractmethod
     def generate(self) -> EventSequence:
@@ -25,7 +24,6 @@ class Generator(ABC):
         Generates an EventSequence based on the Generator parameters.
         """
         pass
-
 
     def generate_and_save(self, file_name):
         es = self.generate()
@@ -36,7 +34,7 @@ class Generator(ABC):
             ed = e.event_data
             if ed != None:
                 s += "," + str(ed)
-            s += '\n'
+            s += "\n"
 
             f.write(s)
 

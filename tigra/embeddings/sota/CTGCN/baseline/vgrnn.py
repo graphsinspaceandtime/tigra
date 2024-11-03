@@ -39,11 +39,11 @@ def zeros(tensor):
 
 def reset(nn):
     def _reset(item):
-        if hasattr(item, 'reset_parameters'):
+        if hasattr(item, "reset_parameters"):
             item.reset_parameters()
 
     if nn is not None:
-        if hasattr(nn, 'children') and len(list(nn.children())) > 0:
+        if hasattr(nn, "children") and len(list(nn.children())) > 0:
             for item in nn.children():
                 _reset(item)
         else:
@@ -67,15 +67,15 @@ def scatter_(name, src, index, dim_size=None):
     :rtype: :class:`Tensor`
     """
 
-    assert name in ['add', 'mean', 'max']
+    assert name in ["add", "mean", "max"]
 
-    op = getattr(torch_scatter, 'scatter_{}'.format(name))
-    fill_value = -1e38 if name is 'max' else 0
+    op = getattr(torch_scatter, "scatter_{}".format(name))
+    fill_value = -1e38 if name is "max" else 0
     out = op(src, index, 0, None, dim_size)
     if isinstance(out, tuple):
         out = out[0]
 
-    if name is 'max':
+    if name is "max":
         out[out == fill_value] = 0
 
     return out
@@ -95,7 +95,7 @@ class MessagePassing(torch.nn.Module):
     create_gnn.html>`__ for the accompanying tutorial.
     """
 
-    def __init__(self, aggr='add'):
+    def __init__(self, aggr="add"):
         super(MessagePassing, self).__init__()
 
         self.message_args = inspect.getfullargspec(self.message)[0][1:]
@@ -107,17 +107,17 @@ class MessagePassing(torch.nn.Module):
         :obj:`"max"`), the edge indices, and all additional data which is
         needed to construct messages and to update node embeddings."""
 
-        assert aggr in ['add', 'mean', 'max']
-        kwargs['edge_index'] = edge_index
+        assert aggr in ["add", "mean", "max"]
+        kwargs["edge_index"] = edge_index
 
         size = None
         message_args = []
         for arg in self.message_args:
-            if arg[-2:] == '_i':
+            if arg[-2:] == "_i":
                 tmp = kwargs[arg[:-2]]
                 size = tmp.size(0)
                 message_args.append(tmp[edge_index[0]])
-            elif arg[-2:] == '_j':
+            elif arg[-2:] == "_j":
                 tmp = kwargs[arg[:-2]]
                 size = tmp.size(0)
                 message_args.append(tmp[edge_index[1]])
@@ -154,8 +154,11 @@ class MessagePassing(torch.nn.Module):
 
 # layers
 
+
 class GCNConv(MessagePassing):
-    def __init__(self, in_channels, out_channels, act=F.relu, improved=True, bias=False):
+    def __init__(
+        self, in_channels, out_channels, act=F.relu, improved=True, bias=False
+    ):
         super(GCNConv, self).__init__()
 
         self.in_channels = in_channels
@@ -168,7 +171,7 @@ class GCNConv(MessagePassing):
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
         else:
-            self.register_parameter('bias', None)
+            self.register_parameter("bias", None)
 
         self.reset_parameters()
 
@@ -178,20 +181,24 @@ class GCNConv(MessagePassing):
 
     def forward(self, x, edge_index, edge_weight=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=x.dtype, device=x.device)
+            edge_weight = torch.ones(
+                (edge_index.size(1),), dtype=x.dtype, device=x.device
+            )
         edge_weight = edge_weight.view(-1)
         assert edge_weight.size(0) == edge_index.size(1)
         edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
-        loop_weight = torch.full((x.size(0),), 1 if not self.improved else 2, dtype=x.dtype, device=x.device)
+        loop_weight = torch.full(
+            (x.size(0),), 1 if not self.improved else 2, dtype=x.dtype, device=x.device
+        )
         edge_weight = torch.cat([edge_weight, loop_weight], dim=0)
         row, col = edge_index
         deg = scatter_add(edge_weight, row, dim=0, dim_size=x.size(0))
         deg_inv = deg.pow(-0.5)
-        deg_inv[deg_inv == float('inf')] = 0
+        deg_inv[deg_inv == float("inf")] = 0
 
         norm = deg_inv[row] * edge_weight * deg_inv[col]
         x = torch.matmul(x, self.weight)
-        out = self.propagate('add', edge_index, x=x, norm=norm)
+        out = self.propagate("add", edge_index, x=x, norm=norm)
         return self.act(out)
 
     def message(self, x_j, norm):
@@ -203,11 +210,21 @@ class GCNConv(MessagePassing):
         return aggr_out
 
     def __repr__(self):
-        return '{}({}, {})'.format(self.__class__.__name__, self.in_channels, self.out_channels)
+        return "{}({}, {})".format(
+            self.__class__.__name__, self.in_channels, self.out_channels
+        )
 
 
 class SAGEConv(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, pool='mean', act=F.relu, normalize=False, bias=False):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        pool="mean",
+        act=F.relu,
+        normalize=False,
+        bias=False,
+    ):
         super(SAGEConv, self).__init__()
 
         self.in_channels = in_channels
@@ -220,7 +237,7 @@ class SAGEConv(torch.nn.Module):
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
         else:
-            self.register_parameter('bias', None)
+            self.register_parameter("bias", None)
 
         self.reset_parameters()
 
@@ -236,28 +253,28 @@ class SAGEConv(torch.nn.Module):
         x = x.unsqueeze(-1) if x.dim() == 1 else x
         row, col = edge_index
 
-        if self.pool == 'mean':
+        if self.pool == "mean":
             out = torch.matmul(x, self.weight)
             if self.bias is not None:
                 out = out + self.bias
             out = self.act(out)
             out = scatter_mean(out[col], row, dim=0, dim_size=out.size(0))
 
-        elif self.pool == 'max':
+        elif self.pool == "max":
             out = torch.matmul(x, self.weight)
             if self.bias is not None:
                 out = out + self.bias
             out = self.act(out)
             out, _ = scatter_max(out[col], row, dim=0, dim_size=out.size(0))
 
-        elif self.pool == 'add':
+        elif self.pool == "add":
             out = torch.matmul(x, self.weight)
             if self.bias is not None:
                 out = out + self.bias
             out = self.act(out)
             out = scatter_add(x[col], row, dim=0, dim_size=x.size(0))
         else:
-            print('pooling not defined!')
+            print("pooling not defined!")
 
         if self.normalize:
             out = F.normalize(out, p=2, dim=-1)
@@ -265,7 +282,9 @@ class SAGEConv(torch.nn.Module):
         return out
 
     def __repr__(self):
-        return '{}({}, {})'.format(self.__class__.__name__, self.in_channels, self.out_channels)
+        return "{}({}, {})".format(
+            self.__class__.__name__, self.in_channels, self.out_channels
+        )
 
 
 class GINConv(torch.nn.Module):
@@ -276,7 +295,7 @@ class GINConv(torch.nn.Module):
         if train_eps:
             self.eps = torch.nn.Parameter(torch.Tensor([eps]))
         else:
-            self.register_buffer('eps', torch.Tensor([eps]))
+            self.register_buffer("eps", torch.Tensor([eps]))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -294,7 +313,7 @@ class GINConv(torch.nn.Module):
         return out
 
     def __repr__(self):
-        return '{}(nn={})'.format(self.__class__.__name__, self.nn)
+        return "{}(nn={})".format(self.__class__.__name__, self.nn)
 
 
 class graph_gru_sage(nn.Module):
@@ -314,33 +333,73 @@ class graph_gru_sage(nn.Module):
 
         for i in range(self.n_layer):
             if i == 0:
-                self.weight_xz.append(SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hz.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xr.append(SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hr.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xh.append(SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hh.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
+                self.weight_xz.append(
+                    SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hz.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xr.append(
+                    SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hr.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xh.append(
+                    SAGEConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hh.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
             else:
-                self.weight_xz.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hz.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xr.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hr.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xh.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hh.append(SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
+                self.weight_xz.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hz.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xr.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hr.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xh.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hh.append(
+                    SAGEConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
 
     def forward(self, inp, edgidx, h):
         h_out = torch.zeros(h.size(), device=h.device)
         for i in range(self.n_layer):
             if i == 0:
-                z_g = torch.sigmoid(self.weight_xz[i](inp, edgidx) + self.weight_hz[i](h[i], edgidx))
-                r_g = torch.sigmoid(self.weight_xr[i](inp, edgidx) + self.weight_hr[i](h[i], edgidx))
-                h_tilde_g = torch.tanh(self.weight_xh[i](inp, edgidx) + self.weight_hh[i](r_g * h[i], edgidx))
+                z_g = torch.sigmoid(
+                    self.weight_xz[i](inp, edgidx) + self.weight_hz[i](h[i], edgidx)
+                )
+                r_g = torch.sigmoid(
+                    self.weight_xr[i](inp, edgidx) + self.weight_hr[i](h[i], edgidx)
+                )
+                h_tilde_g = torch.tanh(
+                    self.weight_xh[i](inp, edgidx)
+                    + self.weight_hh[i](r_g * h[i], edgidx)
+                )
                 h_out[i] = z_g * h[i] + (1 - z_g) * h_tilde_g
                 #         out = self.decoder(h_t.view(1,-1))
             else:
-                z_g = torch.sigmoid(self.weight_xz[i](h_out[i - 1], edgidx) + self.weight_hz[i](h[i], edgidx))
-                r_g = torch.sigmoid(self.weight_xr[i](h_out[i - 1], edgidx) + self.weight_hr[i](h[i], edgidx))
-                h_tilde_g = torch.tanh(self.weight_xh[i](h_out[i - 1], edgidx) + self.weight_hh[i](r_g * h[i], edgidx))
+                z_g = torch.sigmoid(
+                    self.weight_xz[i](h_out[i - 1], edgidx)
+                    + self.weight_hz[i](h[i], edgidx)
+                )
+                r_g = torch.sigmoid(
+                    self.weight_xr[i](h_out[i - 1], edgidx)
+                    + self.weight_hr[i](h[i], edgidx)
+                )
+                h_tilde_g = torch.tanh(
+                    self.weight_xh[i](h_out[i - 1], edgidx)
+                    + self.weight_hh[i](r_g * h[i], edgidx)
+                )
                 h_out[i] = z_g * h[i] + (1 - z_g) * h_tilde_g
         out = h_out
         return out, h_out
@@ -363,33 +422,73 @@ class graph_gru_gcn(nn.Module):
 
         for i in range(self.n_layer):
             if i == 0:
-                self.weight_xz.append(GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hz.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xr.append(GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hr.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xh.append(GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hh.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
+                self.weight_xz.append(
+                    GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hz.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xr.append(
+                    GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hr.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xh.append(
+                    GCNConv(input_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hh.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
             else:
-                self.weight_xz.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hz.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xr.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hr.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_xh.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
-                self.weight_hh.append(GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias))
+                self.weight_xz.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hz.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xr.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hr.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_xh.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
+                self.weight_hh.append(
+                    GCNConv(hidden_size, hidden_size, act=lambda x: x, bias=bias)
+                )
 
     def forward(self, inp, edgidx, h):
         h_out = torch.zeros(h.size(), device=h.device)
         for i in range(self.n_layer):
             if i == 0:
-                z_g = torch.sigmoid(self.weight_xz[i](inp, edgidx) + self.weight_hz[i](h[i], edgidx))
-                r_g = torch.sigmoid(self.weight_xr[i](inp, edgidx) + self.weight_hr[i](h[i], edgidx))
-                h_tilde_g = torch.tanh(self.weight_xh[i](inp, edgidx) + self.weight_hh[i](r_g * h[i], edgidx))
+                z_g = torch.sigmoid(
+                    self.weight_xz[i](inp, edgidx) + self.weight_hz[i](h[i], edgidx)
+                )
+                r_g = torch.sigmoid(
+                    self.weight_xr[i](inp, edgidx) + self.weight_hr[i](h[i], edgidx)
+                )
+                h_tilde_g = torch.tanh(
+                    self.weight_xh[i](inp, edgidx)
+                    + self.weight_hh[i](r_g * h[i], edgidx)
+                )
                 h_out[i] = z_g * h[i] + (1 - z_g) * h_tilde_g
                 #         out = self.decoder(h_t.view(1,-1))
             else:
-                z_g = torch.sigmoid(self.weight_xz[i](h_out[i - 1], edgidx) + self.weight_hz[i](h[i], edgidx))
-                r_g = torch.sigmoid(self.weight_xr[i](h_out[i - 1], edgidx) + self.weight_hr[i](h[i], edgidx))
-                h_tilde_g = torch.tanh(self.weight_xh[i](h_out[i - 1], edgidx) + self.weight_hh[i](r_g * h[i], edgidx))
+                z_g = torch.sigmoid(
+                    self.weight_xz[i](h_out[i - 1], edgidx)
+                    + self.weight_hz[i](h[i], edgidx)
+                )
+                r_g = torch.sigmoid(
+                    self.weight_xr[i](h_out[i - 1], edgidx)
+                    + self.weight_hr[i](h[i], edgidx)
+                )
+                h_tilde_g = torch.tanh(
+                    self.weight_xh[i](h_out[i - 1], edgidx)
+                    + self.weight_hh[i](r_g * h[i], edgidx)
+                )
                 h_out[i] = z_g * h[i] + (1 - z_g) * h_tilde_g
         # out = self.decoder(h_t.view(1,-1))
 
@@ -400,7 +499,7 @@ class graph_gru_gcn(nn.Module):
 # Inner product decoder(Only apply for small graphs and can not be apply into large scale graphs)
 # This decoder is memory-consuming!
 class InnerProductDecoder(nn.Module):
-    def __init__(self, act=torch.sigmoid, dropout=0.):
+    def __init__(self, act=torch.sigmoid, dropout=0.0):
         super(InnerProductDecoder, self).__init__()
 
         self.act = act
@@ -423,7 +522,15 @@ class VGRNN(nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, hidden_dim, output_dim, rnn_layer_num, conv_type='GCN', bias=True):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim,
+        output_dim,
+        rnn_layer_num,
+        conv_type="GCN",
+        bias=True,
+    ):
         super(VGRNN, self).__init__()
 
         self.input_dim = input_dim
@@ -432,50 +539,96 @@ class VGRNN(nn.Module):
         self.rnn_layer_num = rnn_layer_num
         self.conv_type = conv_type
         self.bias = bias
-        self.method_name = 'VGRNN'
+        self.method_name = "VGRNN"
 
-        assert conv_type in ['GCN', 'SAGE', 'GIN']
-        if conv_type == 'GCN':
-            self.phi_x = nn.Sequential(nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.phi_z = nn.Sequential(nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU())
+        assert conv_type in ["GCN", "SAGE", "GIN"]
+        if conv_type == "GCN":
+            self.phi_x = nn.Sequential(
+                nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.phi_z = nn.Sequential(
+                nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
 
             self.enc = GCNConv(hidden_dim + hidden_dim, hidden_dim, bias=bias)
             self.enc_mean = GCNConv(hidden_dim, output_dim, act=lambda x: x, bias=bias)
             self.enc_std = GCNConv(hidden_dim, output_dim, act=F.softplus, bias=bias)
 
-            self.prior = nn.Sequential(nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.prior_mean = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias))
-            self.prior_std = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus())
+            self.prior = nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.prior_mean = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias)
+            )
+            self.prior_std = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus()
+            )
 
-            self.rnn = graph_gru_gcn(hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias)
+            self.rnn = graph_gru_gcn(
+                hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias
+            )
 
-        elif conv_type == 'SAGE':
-            self.phi_x = nn.Sequential(nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.phi_z = nn.Sequential(nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU())
+        elif conv_type == "SAGE":
+            self.phi_x = nn.Sequential(
+                nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.phi_z = nn.Sequential(
+                nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
 
             self.enc = SAGEConv(hidden_dim + hidden_dim, hidden_dim, bias=bias)
             self.enc_mean = SAGEConv(hidden_dim, output_dim, act=lambda x: x, bias=bias)
             self.enc_std = SAGEConv(hidden_dim, output_dim, act=F.softplus, bias=bias)
 
-            self.prior = nn.Sequential(nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.prior_mean = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias))
-            self.prior_std = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus())
+            self.prior = nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.prior_mean = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias)
+            )
+            self.prior_std = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus()
+            )
 
-            self.rnn = graph_gru_sage(hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias)
+            self.rnn = graph_gru_sage(
+                hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias
+            )
 
         else:  # 'GIN':
-            self.phi_x = nn.Sequential(nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.phi_z = nn.Sequential(nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU())
+            self.phi_x = nn.Sequential(
+                nn.Linear(input_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.phi_z = nn.Sequential(
+                nn.Linear(output_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
 
-            self.enc = GINConv(nn.Sequential(nn.Linear(hidden_dim + hidden_dim, hidden_dim, bias=bias), nn.ReLU()))
-            self.enc_mean = GINConv(nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias)))
-            self.enc_std = GINConv(nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus()))
+            self.enc = GINConv(
+                nn.Sequential(
+                    nn.Linear(hidden_dim + hidden_dim, hidden_dim, bias=bias), nn.ReLU()
+                )
+            )
+            self.enc_mean = GINConv(
+                nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias))
+            )
+            self.enc_std = GINConv(
+                nn.Sequential(
+                    nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus()
+                )
+            )
 
-            self.prior = nn.Sequential(nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU())
-            self.prior_mean = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias))
-            self.prior_std = nn.Sequential(nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus())
+            self.prior = nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim, bias=bias), nn.ReLU()
+            )
+            self.prior_mean = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias)
+            )
+            self.prior_std = nn.Sequential(
+                nn.Linear(hidden_dim, output_dim, bias=bias), nn.Softplus()
+            )
 
-            self.rnn = graph_gru_gcn(hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias)
+            self.rnn = graph_gru_gcn(
+                hidden_dim + hidden_dim, hidden_dim, rnn_layer_num, bias=bias
+            )
 
         self.dec = InnerProductDecoder(act=lambda x: x)
 
@@ -484,7 +637,14 @@ class VGRNN(nn.Module):
         timestamp_num = len(x_list)
 
         if hx is None:
-            h = Variable(torch.zeros(self.rnn_layer_num, x_list[0].size(1), self.hidden_dim, device=x_list[0].device))
+            h = Variable(
+                torch.zeros(
+                    self.rnn_layer_num,
+                    x_list[0].size(1),
+                    self.hidden_dim,
+                    device=x_list[0].device,
+                )
+            )
         else:
             h = Variable(hx)
         loss_data_list = [[], [], [], [], []]

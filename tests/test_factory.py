@@ -9,6 +9,7 @@ from tigra.core.greval import GraphReconstructionEval
 dn2v_fact = get_dn2v_factory("../dn2v.conf")
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
@@ -28,7 +29,6 @@ for dataset in datasets:
 
         rg = emb.reconstruct(num_links, "REC")
         print("#nodes", rg.num_nodes(), "#links", rg.num_edges())
-
 
         gre = GraphReconstructionEval(og, emb, report_warnings=False)
         print("Snapshot", i)

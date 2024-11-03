@@ -301,7 +301,6 @@ class BatchPredictor:
 
 # Dynamic Embedding for DynGEM, DynAE, DynRNN, DynAERNN
 class DynamicEmbedding(BaseEmbedding):
-
     def __init__(
         self,
         base_path,

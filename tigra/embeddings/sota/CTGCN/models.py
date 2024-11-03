@@ -152,7 +152,6 @@ class InnerProduct(nn.Module):
 
 
 class EdgeClassifier(nn.Module):
-
     def __init__(
         self,
         input_dim,

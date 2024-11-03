@@ -20,7 +20,6 @@ from tigra.embeddings.embedding import Embedding
 
 
 class Factory(ABC):
-
     def __init__(self, datapath=None):
         if datapath == None:
             databank = Databank()
@@ -33,7 +32,6 @@ class Factory(ABC):
 
 
 class DN2V_Factory(Factory):
-
     def __init__(self, dn2vconf, datapath=None):
         super().__init__(datapath)
 
@@ -50,7 +48,7 @@ class DN2V_Factory(Factory):
             q = float(tokens[3])
             walk_len = int(tokens[4])
             num_walks = int(tokens[5])
-            cumulative = True if tokens[6]=="True" else False
+            cumulative = True if tokens[6] == "True" else False
 
             self.configs[dsname] = (dim, p, q, walk_len, num_walks, cumulative)
 
@@ -73,7 +71,9 @@ class DN2V_Factory(Factory):
         es, time_resolution = load_event_sequence(dataset)  # type: ignore
 
         dg = DynamicGraph()
-        dg.init_from_event_sequence(es, time_resolution=time_resolution, directed=False, cumulative=conf[5])
+        dg.init_from_event_sequence(
+            es, time_resolution=time_resolution, directed=False, cumulative=conf[5]
+        )
 
         dn2v.make_embedding(dg)
 

@@ -10,22 +10,19 @@ import typing
 from tigra.core.dgraph import EventSequence, Event
 from tigra.generators.generator import Generator
 
+
 class DERGenerator(Generator):
     """
-        n -- the number of nodes
-        p -- connection probability for each pair of nodes
+    n -- the number of nodes
+    p -- connection probability for each pair of nodes
     """
+
     def __init__(
-        self,
-        n,
-        p,
-        seed: typing.Union[int, None]=None,
-        time_resolution="hour"
+        self, n, p, seed: typing.Union[int, None] = None, time_resolution="hour"
     ):
         super().__init__(seed, time_resolution)
         self.n = n
         self.p = p
-
 
     def generate(self) -> EventSequence:
         events: typing.List[Event] = []
@@ -42,5 +39,5 @@ class DERGenerator(Generator):
             if self.rng.random() <= self.p:
                 events.append(Event(pair[0], pair[1], self.current_t))
                 self.current_t += self.delta_t
-                    
+
         return EventSequence(events)

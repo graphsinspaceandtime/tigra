@@ -23,7 +23,6 @@ from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 
 
 class STWalk(Embedding):
-
     def __init__(
         self,
         number_restart,

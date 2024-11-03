@@ -21,14 +21,14 @@ the $ j $-th node.
 Each row $ i $ in $ C $ represents class memberships at time $ i $ in the dynamic graph.
 """
 #              one of 3 classes         50 nodes            create 5 snapshots
-#C = np.array([[random.choice([0, 1, 2]) for _ in range(50)] for _ in range(5)])
+# C = np.array([[random.choice([0, 1, 2]) for _ in range(50)] for _ in range(5)])
 
 """
 $ P $ is a 3d array and $ P^i $ is a 2d array representing the matrix of probabilities for inter and
 intra links between each class in graph at time $ i $.
 """
 #               probabilities                                     create 5 snapshots
-#P = np.array([[[0.7, 0.2, 0.1], [0.2, 0.7, 0.1], [0.1, 0.2, 0.7]] for _ in range(5)])
+# P = np.array([[[0.7, 0.2, 0.1], [0.2, 0.7, 0.1], [0.1, 0.2, 0.7]] for _ in range(5)])
 
 """
 gen = DSBMGenerator(C, P)
@@ -61,6 +61,7 @@ def gmo(G):
     examine_partition(G, partition) 
 """
 
+
 def radicchi_in_out(community, G):
     total_in, total_out = 0, 0
 
@@ -72,7 +73,7 @@ def radicchi_in_out(community, G):
         links_in, links_out = 0, 0
         for nei in neis:
             if nei in community:
-                links_in += 1 
+                links_in += 1
             else:
                 links_out += 1
 
@@ -97,16 +98,16 @@ def examine_partition(G, partition):
         print("Community", i, ", in = ", total_in, ", out = ", total_out)
 
 
+# dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
+# dppg.generate_and_save('dpp_1000_4.events')
 
-
-#dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
-#dppg.generate_and_save('dpp_1000_4.events')
-
-es = load_snap_dataset('dpp_1000_4.events')
+es = load_snap_dataset("dpp_1000_4.events")
 
 print("Cumulative DPP")
 dg = DynamicGraph()
-dg.init_from_event_sequence(es, time_resolution="month", directed=False, cumulative=True)
+dg.init_from_event_sequence(
+    es, time_resolution="month", directed=False, cumulative=True
+)
 dg.info()
 last_snap = dg.get_graph_sequence()[-1]
 print("Degree distribution")
@@ -117,13 +118,14 @@ ed = EvolDynamics(dg)
 ed.info()
 
 print("\nCommunity examination")
-examine_partition(last_snap.G, 
+examine_partition(
+    last_snap.G,
     [
-        set(range(0, 500)), 
+        set(range(0, 500)),
         set(range(500, 750)),
         set(range(750, 900)),
-        set(range(900, 1000))
-    ]
+        set(range(900, 1000)),
+    ],
 )
 
 print("########################")

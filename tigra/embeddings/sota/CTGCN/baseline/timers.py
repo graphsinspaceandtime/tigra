@@ -413,7 +413,6 @@ def timers(
     S_perturb = csr_matrix((N, N))  # store cumulated perturbation from last rerun
     loss_rerun = Loss_store[0]  # store objective function of last rerun
     for i in range(1, time_slice + 1):
-
         # create the change in adjacency matrix
         fn = os.path.join(input_base_path, f_list[i])
         S_add = get_sp_delta_adj_mat(S_cum, fn, node2idx_dict, sep=sep)
@@ -544,7 +543,6 @@ def our_timers(dim, graphs, Theta=0.17, Update=True):
     S_perturb = csr_matrix((N, N))  # store cumulated perturbation from last rerun
     loss_rerun = Loss_store[0]  # store objective function of last rerun
     for i in range(1, time_slice + 1):
-
         # create the change in adjacency matrix
         S_add = get_sparse_matrix_delta(S_cum, graphs[i])
         S_perturb = S_perturb + S_add

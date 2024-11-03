@@ -15,13 +15,13 @@ import torch_geometric as tg
 # MLP with lienar output
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, layer_num, bias=True):
-        '''
-            layer_num: number of layers in the neural networks (EXCLUDING the input layer). If layer_num=1, this reduces to linear model.
-            input_dim: dimensionality of input features
-            hidden_dim: dimensionality of hidden units at ALL layers
-            output_dim: number of classes for prediction
-            device: which device to use
-        '''
+        """
+        layer_num: number of layers in the neural networks (EXCLUDING the input layer). If layer_num=1, this reduces to linear model.
+        input_dim: dimensionality of input features
+        hidden_dim: dimensionality of hidden units at ALL layers
+        output_dim: number of classes for prediction
+        device: which device to use
+        """
         super(MLP, self).__init__()
         self.linear_or_not = True  # default is linear model
         self.layer_num = layer_num
@@ -70,18 +70,29 @@ class GIN(nn.Module):
     dropout: float
     bias: bool
 
-    def __init__(self, input_dim, hidden_dim, output_dim, layer_num, mlp_layer_num, learn_eps, neighbor_pooling_type='sum', dropout=0.5, bias=True):
-        '''
-            input_dim: dimensionality of input features
-            hidden_dim: dimensionality of hidden units at ALL layers
-            output_dim: number of classes for prediction
-            layer_num: number of layers in the neural networks
-            mlp_layer_num: number of layers in mlps
-            learn_eps: If True, learn epsilon to distinguish center nodes from neighboring nodes. If False, aggregate neighbors and center nodes altogether.
-            neighbor_pooling_type: how to aggregate neighbors (sum, average, or max)
-            dropout: dropout ratio on the final linear layer
-            bias: whether to add bias for MLP
-        '''
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim,
+        output_dim,
+        layer_num,
+        mlp_layer_num,
+        learn_eps,
+        neighbor_pooling_type="sum",
+        dropout=0.5,
+        bias=True,
+    ):
+        """
+        input_dim: dimensionality of input features
+        hidden_dim: dimensionality of hidden units at ALL layers
+        output_dim: number of classes for prediction
+        layer_num: number of layers in the neural networks
+        mlp_layer_num: number of layers in mlps
+        learn_eps: If True, learn epsilon to distinguish center nodes from neighboring nodes. If False, aggregate neighbors and center nodes altogether.
+        neighbor_pooling_type: how to aggregate neighbors (sum, average, or max)
+        dropout: dropout ratio on the final linear layer
+        bias: whether to add bias for MLP
+        """
         super(GIN, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -92,9 +103,9 @@ class GIN(nn.Module):
         self.neighbor_pooling_type = neighbor_pooling_type
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'GIN'
+        self.method_name = "GIN"
         self.eps = nn.Parameter(torch.zeros(self.layer_num))
-        assert neighbor_pooling_type in ['sum', 'average', 'max']
+        assert neighbor_pooling_type in ["sum", "average", "max"]
 
         self.linear = nn.Linear(input_dim, hidden_dim)
         self.mlps = torch.nn.ModuleList()
@@ -102,9 +113,13 @@ class GIN(nn.Module):
         self.batch_norms = torch.nn.ModuleList()
 
         for layer in range(self.layer_num - 1):
-            self.mlps.append(MLP(hidden_dim, hidden_dim, hidden_dim, mlp_layer_num, bias=bias))
+            self.mlps.append(
+                MLP(hidden_dim, hidden_dim, hidden_dim, mlp_layer_num, bias=bias)
+            )
             self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
-        self.mlps.append(MLP(hidden_dim, hidden_dim, output_dim, mlp_layer_num, bias=bias))
+        self.mlps.append(
+            MLP(hidden_dim, hidden_dim, output_dim, mlp_layer_num, bias=bias)
+        )
         self.batch_norms.append(nn.BatchNorm1d(output_dim))
 
     def __preprocess_neighbors_maxpool(self, adj):
@@ -113,7 +128,9 @@ class GIN(nn.Module):
         row = adj._indices()[0, :].cpu().numpy()
         col = adj._indices()[1, :].cpu().numpy()
         node_num = adj.shape[0]
-        sp_neighbors = sp.coo_matrix((data, (row, col)), shape=(node_num, node_num)).tolil()
+        sp_neighbors = sp.coo_matrix(
+            (data, (row, col)), shape=(node_num, node_num)
+        ).tolil()
         neighbor_list = sp_neighbors.rows
         return neighbor_list
 
@@ -125,11 +142,15 @@ class GIN(nn.Module):
 
         if not self.learn_eps:
             # num_node = start_idx[-1]
-            self_loop_edge = torch.LongTensor([range(node_num), range(node_num)]).to(adj.device)
+            self_loop_edge = torch.LongTensor([range(node_num), range(node_num)]).to(
+                adj.device
+            )
             elem = torch.ones(node_num).to(adj.device)
             Adj_block_idx = torch.cat([edge_indices, self_loop_edge], 1)
             Adj_block_elem = torch.cat([weights, elem], 0)
-        Adj_block = torch.sparse.FloatTensor(Adj_block_idx, Adj_block_elem, torch.Size([node_num, node_num]))
+        Adj_block = torch.sparse.FloatTensor(
+            Adj_block_idx, Adj_block_elem, torch.Size([node_num, node_num])
+        )
         return Adj_block.to(adj.device)
 
     @staticmethod
@@ -152,7 +173,9 @@ class GIN(nn.Module):
             pooled = torch.spmm(Adj_block, h)
             if self.neighbor_pooling_type == "average":
                 # If average pooling
-                degree = torch.spmm(Adj_block, torch.ones((Adj_block.shape[0], 1)).to(h.device))
+                degree = torch.spmm(
+                    Adj_block, torch.ones((Adj_block.shape[0], 1)).to(h.device)
+                )
                 pooled = pooled / degree
         # Reweights the center node representation when aggregating it with its neighbors
         pooled = pooled + (1 + self.eps[layer]) * h
@@ -173,7 +196,9 @@ class GIN(nn.Module):
             pooled = torch.spmm(Adj_block, h)
             if self.neighbor_pooling_type == "average":
                 # If average pooling
-                degree = torch.spmm(Adj_block, torch.ones((Adj_block.shape[0], 1)).to(h.device))
+                degree = torch.spmm(
+                    Adj_block, torch.ones((Adj_block.shape[0], 1)).to(h.device)
+                )
                 pooled = pooled / degree
         # representation of neighboring and center nodes
         pooled_rep = self.mlps[layer](pooled)
@@ -226,7 +251,18 @@ class TgGIN(torch.nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, feature_dim, hidden_dim, output_dim, feature_pre=True, layer_num=2, dropout=True, bias=True, **kwargs):
+    def __init__(
+        self,
+        input_dim,
+        feature_dim,
+        hidden_dim,
+        output_dim,
+        feature_pre=True,
+        layer_num=2,
+        dropout=True,
+        bias=True,
+        **kwargs,
+    ):
         super(TgGIN, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
@@ -236,7 +272,7 @@ class TgGIN(torch.nn.Module):
         self.layer_num = layer_num
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'TgGIN'
+        self.method_name = "TgGIN"
 
         if feature_pre:
             self.linear_pre = nn.Linear(input_dim, feature_dim, bias=bias)
@@ -244,9 +280,15 @@ class TgGIN(torch.nn.Module):
             self.conv_first = tg.nn.GINConv(self.conv_first_nn)
         else:
             self.conv_first_nn = nn.Linear(input_dim, hidden_dim, bias=bias)
-            self.conv_first = tg.nn.GINConv(self.conv_first_nn)  # default: eps=0, train_eps=False
-        self.conv_hidden_nn = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)])
-        self.conv_hidden = nn.ModuleList([tg.nn.GINConv(self.conv_hidden_nn[i]) for i in range(layer_num - 2)])
+            self.conv_first = tg.nn.GINConv(
+                self.conv_first_nn
+            )  # default: eps=0, train_eps=False
+        self.conv_hidden_nn = nn.ModuleList(
+            [nn.Linear(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)]
+        )
+        self.conv_hidden = nn.ModuleList(
+            [tg.nn.GINConv(self.conv_hidden_nn[i]) for i in range(layer_num - 2)]
+        )
 
         self.conv_out_nn = nn.Linear(hidden_dim, output_dim, bias=bias)
         self.conv_out = tg.nn.GINConv(self.conv_out_nn)
@@ -266,7 +308,7 @@ class TgGIN(torch.nn.Module):
         x = self.conv_first(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, self.dropout, training=self.training)
-        for i in range(self.layer_num-2):
+        for i in range(self.layer_num - 2):
             x = self.conv_hidden[i](x, edge_index)
             x = F.relu(x)
             x = F.dropout(x, self.dropout, training=self.training)

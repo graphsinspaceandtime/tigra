@@ -21,23 +21,22 @@ class EvolveGCN(torch.nn.Module):
     method_name: str
     egcn_type: str
 
-    def __init__(self, input_dim, hidden_dim, output_dim, egcn_type='EGCNH'):
+    def __init__(self, input_dim, hidden_dim, output_dim, egcn_type="EGCNH"):
         super().__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.method_name = 'EvolveGCN'
+        self.method_name = "EvolveGCN"
         self.egcn_type = egcn_type
 
         self.GRCU_layers = nn.ModuleList()
         self.GRCU_layers.append(GRCU(input_dim, hidden_dim, egcn_type))
         self.GRCU_layers.append(GRCU(hidden_dim, output_dim, egcn_type))
-        assert self.egcn_type in ['EGCNO', 'EGCNH']
-
+        assert self.egcn_type in ["EGCNO", "EGCNH"]
 
     def forward(self, Nodes_list, A_list, nodes_mask_list=None):
         for unit in self.GRCU_layers:
-            if self.egcn_type == 'EGCNO':
+            if self.egcn_type == "EGCNO":
                 Nodes_list = unit(A_list, Nodes_list, nodes_mask_list)
             else:  # 'EGCNH'
                 Nodes_list = unit(A_list, Nodes_list, nodes_mask_list)
@@ -45,17 +44,17 @@ class EvolveGCN(torch.nn.Module):
 
 
 class GRCU(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, egcn_type='EGCNH'):
+    def __init__(self, input_dim, output_dim, egcn_type="EGCNH"):
         super().__init__()
         self.evolve_weights = mat_GRU_cell(input_dim, output_dim, egcn_type)
         self.egcn_type = egcn_type
         self.GCN_init_weights = Parameter(torch.FloatTensor(input_dim, output_dim))
         self.reset_param(self.GCN_init_weights)
-        assert self.egcn_type in ['EGCNO', 'EGCNH']
+        assert self.egcn_type in ["EGCNO", "EGCNH"]
 
     def reset_param(self, t):
         # Initialize based on the number of columns
-        stdv = 1. / math.sqrt(t.size(1))
+        stdv = 1.0 / math.sqrt(t.size(1))
         t.data.uniform_(-stdv, stdv)
 
     def forward(self, A_list, node_embs_list, mask_list=None):
@@ -64,11 +63,13 @@ class GRCU(torch.nn.Module):
         for t, Ahat in enumerate(A_list):
             node_embs = node_embs_list[t]
             # first evolve the weights from the initial and use the new weights with the node_embs
-            if self.egcn_type == 'EGCNO':
+            if self.egcn_type == "EGCNO":
                 GCN_weights = self.evolve_weights(GCN_weights)
             else:  # 'EGCNH'
                 if mask_list is not None:
-                    GCN_weights = self.evolve_weights(GCN_weights, node_embs, mask_list[t])
+                    GCN_weights = self.evolve_weights(
+                        GCN_weights, node_embs, mask_list[t]
+                    )
                 else:
                     GCN_weights = self.evolve_weights(GCN_weights, node_embs)
             node_embs = F.rrelu(Ahat.matmul(node_embs.matmul(GCN_weights)))
@@ -78,17 +79,17 @@ class GRCU(torch.nn.Module):
 
 
 class mat_GRU_cell(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, egcn_type='EGCNH'):
+    def __init__(self, input_dim, output_dim, egcn_type="EGCNH"):
         super().__init__()
         self.egcn_type = egcn_type
         self.update = mat_GRU_gate(input_dim, output_dim, torch.nn.Sigmoid())
         self.reset = mat_GRU_gate(input_dim, output_dim, torch.nn.Sigmoid())
         self.htilda = mat_GRU_gate(input_dim, output_dim, torch.nn.Tanh())
         self.choose_topk = TopK(feats=input_dim, k=output_dim)
-        assert self.egcn_type in ['EGCNO', 'EGCNH']
+        assert self.egcn_type in ["EGCNO", "EGCNH"]
 
     def forward(self, prev_Q, prev_Z=None, mask=None):
-        if self.egcn_type == 'EGCNO':
+        if self.egcn_type == "EGCNO":
             z_topk = prev_Q
         else:  # 'EGCNH'
             z_topk = self.choose_topk(prev_Z, mask)
@@ -114,7 +115,7 @@ class mat_GRU_gate(torch.nn.Module):
 
     def reset_param(self, t):
         # Initialize based on the number of columns
-        stdv = 1. / math.sqrt(t.size(1))
+        stdv = 1.0 / math.sqrt(t.size(1))
         t.data.uniform_(-stdv, stdv)
 
     def forward(self, x, hidden):
@@ -130,14 +131,12 @@ class TopK(torch.nn.Module):
 
     def reset_param(self, t):
         # Initialize based on the number of rows
-        stdv = 1. / math.sqrt(t.size(0))
+        stdv = 1.0 / math.sqrt(t.size(0))
         t.data.uniform_(-stdv, stdv)
 
     def pad_with_last_val(self, vect, k):
-        device = 'cuda' if vect.is_cuda else 'cpu'
-        pad = torch.ones(k - vect.size(0),
-                         dtype=torch.long,
-                         device=device) * vect[-1]
+        device = "cuda" if vect.is_cuda else "cpu"
+        pad = torch.ones(k - vect.size(0), dtype=torch.long, device=device) * vect[-1]
         vect = torch.cat([vect, pad])
         return vect
 
@@ -151,7 +150,9 @@ class TopK(torch.nn.Module):
         if topk_indices.size(0) < self.k:
             topk_indices = self.pad_with_last_val(topk_indices, self.k)
         tanh = torch.nn.Tanh()
-        if isinstance(node_embs, torch.sparse.FloatTensor) or isinstance(node_embs, torch.cuda.sparse.FloatTensor):
+        if isinstance(node_embs, torch.sparse.FloatTensor) or isinstance(
+            node_embs, torch.cuda.sparse.FloatTensor
+        ):
             node_embs = node_embs.to_dense()
         out = node_embs[topk_indices] * tanh(scores[topk_indices].view(-1, 1))
         # we need to transpose the output

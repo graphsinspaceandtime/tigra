@@ -17,6 +17,7 @@ from torch.nn import init
 
 ####################### Utility Function #####################
 
+
 def single_source_shortest_path_length_range(graph, node_range, cutoff):
     dists_dict = {}
     for node in node_range:
@@ -40,8 +41,21 @@ def all_pairs_shortest_path_length_parallel(graph, cutoff=None, num_workers=4):
         num_workers = int(num_workers / 2)
 
     pool = multiprocessing.Pool(processes=num_workers)
-    results = [pool.apply_async(single_source_shortest_path_length_range,
-                                args=(graph, nodes[int(len(nodes)/num_workers*i):int(len(nodes)/num_workers*(i+1))], cutoff)) for i in range(num_workers)]
+    results = [
+        pool.apply_async(
+            single_source_shortest_path_length_range,
+            args=(
+                graph,
+                nodes[
+                    int(len(nodes) / num_workers * i) : int(
+                        len(nodes) / num_workers * (i + 1)
+                    )
+                ],
+                cutoff,
+            ),
+        )
+        for i in range(num_workers)
+    ]
     output = [p.get() for p in results]
     dists_dict = merge_dicts(output)
     pool.close()
@@ -51,10 +65,10 @@ def all_pairs_shortest_path_length_parallel(graph, cutoff=None, num_workers=4):
 
 # approximate == -1 means exact shortest path (time consuming), approximate > 0 means shorted path with cut-off
 def precompute_dist_data(edge_indices, num_nodes, approximate):
-    '''
+    """
     Here dist is 1/real_dist, higher actually means closer, 0 means disconnected
     :return:
-    '''
+    """
     if isinstance(edge_indices, list):
         is_list = True
         timestamp_num = len(edge_indices)
@@ -78,7 +92,9 @@ def precompute_dist_data(edge_indices, num_nodes, approximate):
         dists_array = np.zeros((n, n))
         # dists_dict = nx.all_pairs_shortest_path_length(graph,cutoff=approximate if approximate>0 else None)
         # dists_dict = {c[0]: c[1] for c in dists_dict}
-        dists_dict = all_pairs_shortest_path_length_parallel(graph, cutoff=approximate if approximate > 0 else None)
+        dists_dict = all_pairs_shortest_path_length_parallel(
+            graph, cutoff=approximate if approximate > 0 else None
+        )
         for i, node_i in enumerate(graph.nodes()):
             shortest_dist = dists_dict[node_i]
             for j, node_j in enumerate(graph.nodes()):
@@ -120,11 +136,15 @@ def get_dist_max(anchorset_list, node_dist_list, device):
     for i in range(timestamp):
         node_dist = node_dist_list[i] if is_list else node_dist_list  # array
         dist_max = torch.zeros((node_dist.shape[0], anchor_set_num), device=device)
-        dist_argmax = torch.zeros((node_dist.shape[0], anchor_set_num), device=device).long()
+        dist_argmax = torch.zeros(
+            (node_dist.shape[0], anchor_set_num), device=device
+        ).long()
         for i in range(anchor_set_num):
             temp_id = anchorset_list[i]
             dist_temp = node_dist[:, temp_id]
-            dist_max_temp, dist_argmax_temp = np.max(dist_temp, axis=1), np.argmax(dist_temp, axis=1)
+            dist_max_temp, dist_argmax_temp = np.max(dist_temp, axis=1), np.argmax(
+                dist_temp, axis=1
+            )
             dist_max[:, i] = torch.from_numpy(dist_max_temp)
             dist_argmax[:, i] = torch.from_numpy(dist_argmax_temp)
         dist_max_list.append(dist_max)
@@ -138,11 +158,14 @@ def get_dist_max(anchorset_list, node_dist_list, device):
 # element of dist_mat_list is np.ndarray
 def preselect_anchor(node_num, node_dist_list, device):
     anchorset_list = get_random_anchorset(node_num, c=1)
-    dists_max_list, dists_argmax_list = get_dist_max(anchorset_list, node_dist_list, device)
+    dists_max_list, dists_argmax_list = get_dist_max(
+        anchorset_list, node_dist_list, device
+    )
     return dists_max_list, dists_argmax_list
 
 
 ####################### Basic Ops #############################
+
 
 # Non linearity
 class Nonlinear(nn.Module):
@@ -158,7 +181,9 @@ class Nonlinear(nn.Module):
     def reset_parameters(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                m.weight.data = init.xavier_uniform_(m.weight.data, gain=nn.init.calculate_gain('relu'))
+                m.weight.data = init.xavier_uniform_(
+                    m.weight.data, gain=nn.init.calculate_gain("relu")
+                )
                 if m.bias is not None:
                     m.bias.data = init.constant_(m.bias.data, 0.0)
 
@@ -179,7 +204,7 @@ class PGNN_layer(nn.Module):
         if self.dist_trainable:
             self.dist_compute = Nonlinear(1, output_dim, 1, bias=bias)
 
-        self.linear_hidden = nn.Linear(input_dim*2, output_dim, bias=bias)
+        self.linear_hidden = nn.Linear(input_dim * 2, output_dim, bias=bias)
         self.linear_out_position = nn.Linear(output_dim, 1, bias=bias)
         self.act = nn.ReLU()
         self.reset_parameters()
@@ -187,21 +212,39 @@ class PGNN_layer(nn.Module):
     def reset_parameters(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                m.weight.data = init.xavier_uniform_(m.weight.data, gain=nn.init.calculate_gain('relu'))
+                m.weight.data = init.xavier_uniform_(
+                    m.weight.data, gain=nn.init.calculate_gain("relu")
+                )
                 if m.bias is not None:
                     m.bias.data = init.constant_(m.bias.data, 0.0)
 
     def forward(self, feature, dists_max, dists_argmax):
         if self.dist_trainable:
-            dists_max = self.dist_compute(dists_max.unsqueeze(-1)).squeeze()  # [n, anchor_set_num]
-        subset_features = feature[dists_argmax.flatten(), :]  # [n, anchor_set_num, input_dim]
-        subset_features = subset_features.reshape((dists_argmax.shape[0], dists_argmax.shape[1], feature.shape[1]))  # [n, anchor_set_num, input_dim]
-        messages = subset_features * dists_max.unsqueeze(-1)  # [n, anchor_set_num, input_dim]
-        self_feature = feature.unsqueeze(1).repeat(1, dists_max.shape[1], 1)  # [n, anchor_set_num, input_dim]
-        messages = torch.cat((messages, self_feature), dim=-1)  # [n, anchor_set_num, 2 * input_dim]
-        messages = self.linear_hidden(messages).squeeze()   # [n, anchor_set_num, output_dim]
+            dists_max = self.dist_compute(
+                dists_max.unsqueeze(-1)
+            ).squeeze()  # [n, anchor_set_num]
+        subset_features = feature[
+            dists_argmax.flatten(), :
+        ]  # [n, anchor_set_num, input_dim]
+        subset_features = subset_features.reshape(
+            (dists_argmax.shape[0], dists_argmax.shape[1], feature.shape[1])
+        )  # [n, anchor_set_num, input_dim]
+        messages = subset_features * dists_max.unsqueeze(
+            -1
+        )  # [n, anchor_set_num, input_dim]
+        self_feature = feature.unsqueeze(1).repeat(
+            1, dists_max.shape[1], 1
+        )  # [n, anchor_set_num, input_dim]
+        messages = torch.cat(
+            (messages, self_feature), dim=-1
+        )  # [n, anchor_set_num, 2 * input_dim]
+        messages = self.linear_hidden(
+            messages
+        ).squeeze()  # [n, anchor_set_num, output_dim]
         messages = self.act(messages)  # [n, anchor_set_num, output_dim]
-        out_position = self.linear_out_position(messages).squeeze(-1)  # [n, anchor_set_num]
+        out_position = self.linear_out_position(messages).squeeze(
+            -1
+        )  # [n, anchor_set_num]
         out_structure = torch.mean(messages, dim=1)  # [n, output_dim]
         return out_position, out_structure
 
@@ -218,7 +261,17 @@ class PGNN(torch.nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, feature_dim, hidden_dim, output_dim, feature_pre=True, layer_num=2, dropout=0.5, bias=True):
+    def __init__(
+        self,
+        input_dim,
+        feature_dim,
+        hidden_dim,
+        output_dim,
+        feature_pre=True,
+        layer_num=2,
+        dropout=0.5,
+        bias=True,
+    ):
         super(PGNN, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
@@ -228,7 +281,7 @@ class PGNN(torch.nn.Module):
         self.layer_num = layer_num
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'PGNN'
+        self.method_name = "PGNN"
 
         if layer_num == 1:
             hidden_dim = output_dim
@@ -238,7 +291,12 @@ class PGNN(torch.nn.Module):
         else:
             self.conv_first = PGNN_layer(input_dim, hidden_dim, bias=bias)
         if layer_num > 1:
-            self.conv_hidden = nn.ModuleList([PGNN_layer(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)])
+            self.conv_hidden = nn.ModuleList(
+                [
+                    PGNN_layer(hidden_dim, hidden_dim, bias=bias)
+                    for i in range(layer_num - 2)
+                ]
+            )
             self.conv_out = PGNN_layer(hidden_dim, output_dim, bias=bias)
 
     def forward(self, x, dists_max, dists_argmax):
@@ -258,7 +316,7 @@ class PGNN(torch.nn.Module):
             return x_position
         # x = F.relu(x) # Note: optional!
         x = F.dropout(x, self.dropout, training=self.training)
-        for i in range(self.layer_num-2):
+        for i in range(self.layer_num - 2):
             _, x = self.conv_hidden[i](x, dists_max, dists_argmax)
             # x = F.relu(x) # Note: optional!
             x = F.dropout(x, self.dropout, training=self.training)

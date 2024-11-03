@@ -13,7 +13,7 @@ class CoreDiffusion(nn.Module):
     bias: bool
     rnn_type: str
 
-    def __init__(self, input_dim, output_dim, core_num=1, bias=True, rnn_type='GRU'):
+    def __init__(self, input_dim, output_dim, core_num=1, bias=True, rnn_type="GRU"):
         super(CoreDiffusion, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -23,11 +23,23 @@ class CoreDiffusion(nn.Module):
 
         self.linear = nn.Linear(input_dim, output_dim)
         # self.att_weight = nn.Parameter(torch.FloatTensor(core_num))
-        assert self.rnn_type in ['LSTM', 'GRU']
-        if self.rnn_type == 'LSTM':
-            self.rnn = nn.LSTM(input_size=input_dim, hidden_size=output_dim, num_layers=1, bias=bias, batch_first=True)
+        assert self.rnn_type in ["LSTM", "GRU"]
+        if self.rnn_type == "LSTM":
+            self.rnn = nn.LSTM(
+                input_size=input_dim,
+                hidden_size=output_dim,
+                num_layers=1,
+                bias=bias,
+                batch_first=True,
+            )
         else:
-            self.rnn = nn.GRU(input_size=input_dim, hidden_size=output_dim, num_layers=1, bias=bias, batch_first=True)
+            self.rnn = nn.GRU(
+                input_size=input_dim,
+                hidden_size=output_dim,
+                num_layers=1,
+                bias=bias,
+                batch_first=True,
+            )
         self.norm = nn.LayerNorm(output_dim)
         # self.reset_parameters()
 
@@ -55,7 +67,9 @@ class CoreDiffusion(nn.Module):
         # output = self.linear(out)
         ##################################
         # Add RNN to improve performance, but this will reduce the computation efficiency a little.
-        hx = torch.stack(hx_list, dim=0).transpose(0, 1)  # [batch_size, core_num, input_dim]
+        hx = torch.stack(hx_list, dim=0).transpose(
+            0, 1
+        )  # [batch_size, core_num, input_dim]
         output, _ = self.rnn(hx)
         output = output.sum(dim=1)
         # Layer normalization could improve performance and make rnn stable
@@ -72,7 +86,9 @@ class MLP(nn.Module):
     bias: bool
     activate_type: str
 
-    def __init__(self, input_dim, hidden_dim, output_dim, layer_num, bias=True, activate_type='N'):
+    def __init__(
+        self, input_dim, hidden_dim, output_dim, layer_num, bias=True, activate_type="N"
+    ):
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -80,7 +96,7 @@ class MLP(nn.Module):
         self.layer_num = layer_num
         self.bias = bias
         self.activate_type = activate_type
-        assert self.activate_type in ['L', 'N']
+        assert self.activate_type in ["L", "N"]
         assert self.layer_num > 0
 
         if layer_num == 1:
@@ -95,12 +111,12 @@ class MLP(nn.Module):
     def forward(self, x):
         if self.layer_num == 1:  # Linear model
             x = self.linear(x)
-            if self.activate_type == 'N':
+            if self.activate_type == "N":
                 x = F.selu(x)
             return x
         h = x  # MLP
         for layer in range(self.layer_num):
             h = self.linears[layer](h)
-            if self.activate_type == 'N':
+            if self.activate_type == "N":
                 h = F.selu(h)
         return h

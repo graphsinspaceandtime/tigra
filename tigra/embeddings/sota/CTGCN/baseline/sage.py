@@ -19,7 +19,8 @@ class Aggregator(nn.Module):
     """
     Aggregates a node's embeddings using mean of neighbors' embeddings
     """
-    def __init__(self, num_sample=None, pooling_type='sum', gcn=False):
+
+    def __init__(self, num_sample=None, pooling_type="sum", gcn=False):
         """
         Initializes the aggregator for a specific graph.
         num_sample --- number of neighbors to sample. No sampling if None.
@@ -29,7 +30,7 @@ class Aggregator(nn.Module):
         self.num_sample = num_sample
         self.pooling_type = pooling_type
         self.gcn = gcn
-        assert pooling_type in ['sum', 'average', 'max']
+        assert pooling_type in ["sum", "average", "max"]
 
     def forward(self, features, nodes, to_neighs):
         """
@@ -38,16 +39,23 @@ class Aggregator(nn.Module):
         """
         # Local pointers to functions (speed hack)
         if not self.num_sample is None:
-            samp_neighs = [random.sample(to_neigh, self.num_sample) if len(to_neigh) >= self.num_sample else to_neigh for to_neigh in to_neighs]
+            samp_neighs = [
+                random.sample(to_neigh, self.num_sample)
+                if len(to_neigh) >= self.num_sample
+                else to_neigh
+                for to_neigh in to_neighs
+            ]
         else:
             samp_neighs = to_neighs
 
         if self.gcn:
             # print('gcn version!')
-            samp_neighs = [samp_neigh + [nodes[i]] for i, samp_neigh in enumerate(samp_neighs)]
+            samp_neighs = [
+                samp_neigh + [nodes[i]] for i, samp_neigh in enumerate(samp_neighs)
+            ]
         sample_num = len(samp_neighs)
 
-        if self.pooling_type in ['sum', 'average']:
+        if self.pooling_type in ["sum", "average"]:
             all_node_list = []
             for samp_neigh in samp_neighs:
                 all_node_list += samp_neigh
@@ -56,16 +64,24 @@ class Aggregator(nn.Module):
             unique_nodes_dict = dict(zip(unique_nodes_list, np.arange(unique_node_num)))
 
             mask = torch.zeros(sample_num, unique_node_num)
-            column_indices = [unique_nodes_dict[nid] for samp_neigh in samp_neighs for nid in samp_neigh]
-            row_indices = [i for i in range(sample_num) for j in range(len(samp_neighs[i]))]
+            column_indices = [
+                unique_nodes_dict[nid]
+                for samp_neigh in samp_neighs
+                for nid in samp_neigh
+            ]
+            row_indices = [
+                i for i in range(sample_num) for j in range(len(samp_neighs[i]))
+            ]
             mask[row_indices, column_indices] = 1
             mask = mask.to(features.device)
 
-            if self.pooling_type == 'average':
+            if self.pooling_type == "average":
                 num_neigh = mask.sum(dim=1, keepdim=True)
                 num_neigh[num_neigh == 0] = 1  # in case div operation produce nan
                 mask = mask.div(num_neigh)
-            unique_nodes_indices = torch.LongTensor(unique_nodes_list).to(features.device)
+            unique_nodes_indices = torch.LongTensor(unique_nodes_list).to(
+                features.device
+            )
             embed_matrix = features[unique_nodes_indices]
             to_feats = mask.mm(embed_matrix)
         else:  # self.pooling_type == 'max'
@@ -81,7 +97,16 @@ class SAGE_Layer(nn.Module):
     """
     Encodes a node's using 'convolutional' GraphSage approach
     """
-    def __init__(self, input_dim, output_dim, num_sample=10, pooling_type='sum', gcn=False, bias=True):
+
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        num_sample=10,
+        pooling_type="sum",
+        gcn=False,
+        bias=True,
+    ):
         super(SAGE_Layer, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -90,8 +115,12 @@ class SAGE_Layer(nn.Module):
         self.gcn = gcn
         self.bias = bias
 
-        self.aggregator = Aggregator(num_sample=num_sample, pooling_type=pooling_type, gcn=gcn)
-        self.linear = nn.Linear(input_dim if self.gcn else 2 * input_dim, output_dim, bias=bias)
+        self.aggregator = Aggregator(
+            num_sample=num_sample, pooling_type=pooling_type, gcn=gcn
+        )
+        self.linear = nn.Linear(
+            input_dim if self.gcn else 2 * input_dim, output_dim, bias=bias
+        )
 
     def forward(self, features, nodes, neighbor_list):
         """
@@ -122,7 +151,17 @@ class SAGE(nn.Module):
     dropout: float
     bias: bool
 
-    def __init__(self, input_dim, hidden_dim, output_dim, num_sample=10, pooling_type='sum', gcn=False, dropout=0.5, bias=True):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim,
+        output_dim,
+        num_sample=10,
+        pooling_type="sum",
+        gcn=False,
+        dropout=0.5,
+        bias=True,
+    ):
         super(SAGE, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -131,11 +170,25 @@ class SAGE(nn.Module):
         self.pooling_type = pooling_type
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'SAGE'
+        self.method_name = "SAGE"
 
         self.linear = nn.Linear(input_dim, hidden_dim, bias=bias)
-        self.sage1 = SAGE_Layer(hidden_dim, hidden_dim, num_sample, pooling_type=pooling_type, gcn=gcn, bias=bias)
-        self.sage2 = SAGE_Layer(hidden_dim, output_dim, num_sample, pooling_type=pooling_type, gcn=gcn, bias=bias)
+        self.sage1 = SAGE_Layer(
+            hidden_dim,
+            hidden_dim,
+            num_sample,
+            pooling_type=pooling_type,
+            gcn=gcn,
+            bias=bias,
+        )
+        self.sage2 = SAGE_Layer(
+            hidden_dim,
+            output_dim,
+            num_sample,
+            pooling_type=pooling_type,
+            gcn=gcn,
+            bias=bias,
+        )
 
     def forward(self, x, adj):
         if isinstance(x, list):
@@ -152,10 +205,12 @@ class SAGE(nn.Module):
         row = adj._indices()[0, :].cpu().numpy()
         col = adj._indices()[1, :].cpu().numpy()
         node_num = adj.shape[0]
-        neighbor_list = sp.coo_matrix((data, (row, col)), shape=(node_num, node_num)).tolil().rows
+        neighbor_list = (
+            sp.coo_matrix((data, (row, col)), shape=(node_num, node_num)).tolil().rows
+        )
         # print('neighbor_list: ', neighbor_list[0])
         nodes = np.arange(node_num)
-        x = self.linear(x)   # [node_num, hidden_dim]
+        x = self.linear(x)  # [node_num, hidden_dim]
         h = self.sage1(x, nodes, neighbor_list)
         h = F.dropout(h, self.dropout, training=self.training)
         h = self.sage2(h, nodes, neighbor_list)
@@ -174,7 +229,18 @@ class TgSAGE(torch.nn.Module):
     bias: bool
     method_name: str
 
-    def __init__(self, input_dim, feature_dim, hidden_dim, output_dim, feature_pre=True, layer_num=2, dropout=0.5, bias=True, **kwargs):
+    def __init__(
+        self,
+        input_dim,
+        feature_dim,
+        hidden_dim,
+        output_dim,
+        feature_pre=True,
+        layer_num=2,
+        dropout=0.5,
+        bias=True,
+        **kwargs,
+    ):
         super(TgSAGE, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
@@ -184,14 +250,19 @@ class TgSAGE(torch.nn.Module):
         self.layer_num = layer_num
         self.dropout = dropout
         self.bias = bias
-        self.method_name = 'TgSAGE'
+        self.method_name = "TgSAGE"
 
         if feature_pre:
             self.linear_pre = nn.Linear(input_dim, feature_dim, bias=bias)
             self.conv_first = tg.nn.SAGEConv(feature_dim, hidden_dim, bias=bias)
         else:
             self.conv_first = tg.nn.SAGEConv(input_dim, hidden_dim, bias=bias)
-        self.conv_hidden = nn.ModuleList([tg.nn.SAGEConv(hidden_dim, hidden_dim, bias=bias) for i in range(layer_num - 2)])
+        self.conv_hidden = nn.ModuleList(
+            [
+                tg.nn.SAGEConv(hidden_dim, hidden_dim, bias=bias)
+                for i in range(layer_num - 2)
+            ]
+        )
         self.conv_out = tg.nn.SAGEConv(hidden_dim, output_dim, bias=bias)
 
     def forward(self, x, edge_index):
@@ -209,7 +280,7 @@ class TgSAGE(torch.nn.Module):
         x = self.conv_first(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, self.dropout, training=self.training)
-        for i in range(self.layer_num-2):
+        for i in range(self.layer_num - 2):
             x = self.conv_hidden[i](x, edge_index)
             x = F.relu(x)
             x = F.dropout(x, self.dropout, training=self.training)

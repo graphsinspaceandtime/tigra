@@ -24,12 +24,18 @@ class MLLSTM(nn.Module):
         self.bias = bias
 
         self.layer_list = nn.ModuleList()
-        self.layer_list.append(nn.LSTM(input_dim, n_units[0], bias=bias, batch_first=True))
+        self.layer_list.append(
+            nn.LSTM(input_dim, n_units[0], bias=bias, batch_first=True)
+        )
 
         layer_num = len(n_units)
         for i in range(1, layer_num):
-            self.layer_list.append(nn.LSTM(n_units[i - 1], n_units[i], bias=bias, batch_first=True))
-        self.layer_list.append(nn.LSTM(n_units[-1], output_dim, bias=bias, batch_first=True))
+            self.layer_list.append(
+                nn.LSTM(n_units[i - 1], n_units[i], bias=bias, batch_first=True)
+            )
+        self.layer_list.append(
+            nn.LSTM(n_units[-1], output_dim, bias=bias, batch_first=True)
+        )
         self.layer_num = layer_num + 1
 
     def forward(self, x):
@@ -49,13 +55,15 @@ class DynRNN(nn.Module):
     encoder: MLLSTM
     decoder: MLLSTM
 
-    def __init__(self, input_dim, output_dim, look_back=3, n_units=None,  bias=True, **kwargs):
+    def __init__(
+        self, input_dim, output_dim, look_back=3, n_units=None, bias=True, **kwargs
+    ):
         super(DynRNN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.look_back = look_back
         self.bias = bias
-        self.method_name = 'DynRNN'
+        self.method_name = "DynRNN"
 
         self.encoder = MLLSTM(input_dim, output_dim, n_units, bias=bias)
         self.decoder = MLLSTM(output_dim, input_dim, n_units[::-1], bias=bias)
