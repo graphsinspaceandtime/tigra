@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  CONDA_ENV: tigra
+  CONDA_ENV: tigranew
   LOGO_URL: https://tigraphs.pmf.uns.ac.rs/wp-content/uploads/2023/12/cropped-tigar-logo-final-3.png
 
 jobs:
@@ -33,10 +33,10 @@ jobs:
           CACHE_NUMBER: 0
         with:
           path: ~/miniconda3/envs/${{ env.CONDA_ENV }}
-          key: ${{ runner.os }}-mamba-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yaml') }}
+          key: ${{ runner.os }}-mamba-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
         id: cache-mamba
       - name: Update environment
-        run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yaml
+        run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yml
         if: steps.cache-mamba.outputs.cache-hit != 'true'
       - name: Build docs
         working-directory: data
