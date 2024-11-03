@@ -33,7 +33,7 @@ Dataset = typing.Literal[
 class DatasetMetadata(typing.TypedDict):
     path: Path
     shrink: typing.Union[int, None]
-    resolution: typing.Union[str, None]
+    resolution: str
     cumulative: bool
 
 
@@ -194,39 +194,6 @@ class Databank:
             },
         }
 
-        self.__filename_map: typing.Dict[str, Path] = {
-            "radoslaw-email": self.__netrep_path
-            / "radoslaw_email"
-            / "radoslaw_email.edges",
-            "fb-forum": self.__netrep_path / "fb-forum" / "fb-forum.edges",
-            "fb-messages": self.__netrep_path / "fb-messages" / "fb-messages.edges",
-            "ia-contacts_hypertext2009": self.__netrep_path
-            / "ia-contacts_hypertext2009"
-            / "ia-contacts_hypertext2009.edges",
-            "ia-enron-employees": self.__netrep_path
-            / "ia-enron-employees"
-            / "ia-enron-employees.edges",
-            "ia-hospital-ward-proximity-attr": self.__netrep_path
-            / "ia-hospital-ward-proximity-attr"
-            / "ia-hospital-ward-proximity-attr.edges",
-            "ia-primary-school-proximity-attr": self.__netrep_path
-            / "ia-primary-school-proximity-attr"
-            / "ia-primary-school-proximity-attr.edges",
-            "ia-reality-call": self.__netrep_path
-            / "ia-reality-call"
-            / "ia-reality-call.edges",
-            "CollegeMsg": self.__snap_path / "CollegeMsg.txt",
-            "email-Eu-core-temporal": self.__snap_path / "email-Eu-core-temporal.txt",
-            "sx-askubuntu": self.__snap_path / "sx-askubuntu.txt",
-            "sx-mathoverflow": self.__snap_path / "sx-mathoverflow.txt",
-            "sx-superuser": self.__snap_path / "sx-superuser.txt",
-            "wiki-talk-temporal": self.__snap_path / "wiki-talk-temporal.txt",
-            "synthetic-dba": self.__synthetic_path / "dba_1000_5_10.events",
-            "synthetic-dbac": self.__synthetic_path / "dbac_1000_4.events",
-            "synthetic-der": self.__synthetic_path / "der_1000_001.events",
-            "synthetic-dpp": self.__synthetic_path / "dpp_1000_4.events",
-        }
-
     def get_data(self, dataset: Dataset, shrink_sequence=False) -> EventSequence:
         """
         Read a specified dataset and return an EventSequence object.
@@ -276,7 +243,7 @@ class Databank:
             "synthetic-der",
             "synthetic-dpp",
         ]:
-            es = self.__read_csv_vert_time(self.__filename_map[dataset])
+            es = self.__read_csv_vert_time(self.__dataset_metadata[dataset]["path"])
         else:
             raise Exception("{} dataset is not available".format(dataset))
 
@@ -319,7 +286,7 @@ class Databank:
             es = databank.get_data(key)
         ```
         """
-        return typing.cast(typing.List[Dataset], list(self.__filename_map.keys()))
+        return typing.cast(typing.List[Dataset], list(self.__dataset_metadata.keys()))
 
     def get_metadata(self, name: Dataset) -> DatasetMetadata:
         return self.__dataset_metadata[name]
