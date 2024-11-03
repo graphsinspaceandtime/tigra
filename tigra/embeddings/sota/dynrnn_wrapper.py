@@ -22,6 +22,7 @@ class DynRNN(Embedding):
     learning_rate: float
     shuffle: bool
     has_cuda: bool
+    verbose: int
 
     def __init__(
         self,
@@ -37,6 +38,7 @@ class DynRNN(Embedding):
         bias=True,
         shuffle=True,
         has_cuda=False,
+        verbose=0,
     ):
         super(DynRNN, self).__init__(dim)
         self.n_units = n_units
@@ -50,6 +52,7 @@ class DynRNN(Embedding):
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
+        self.verbose = verbose
 
     def construct(self, data) -> List[SingletonEmbedding]:
         if not isinstance(data, DynamicSparseMatrixGraph):
@@ -98,7 +101,11 @@ class DynRNN(Embedding):
             embedding_folder="",
         )
         embedding = trainer.learn_embedding(
-            graphs, epoch=self.epochs, lr=self.learning_rate, export=False
+            graphs,
+            epoch=self.epochs,
+            lr=self.learning_rate,
+            export=False,
+            verbose=self.verbose,
         )
 
         singleton = SingletonEmbedding()

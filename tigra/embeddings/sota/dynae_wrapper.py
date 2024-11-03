@@ -25,6 +25,7 @@ class DynAE(Embedding):
     bias: bool
     shuffle: bool
     has_cuda: bool
+    verbose: int
 
     def __init__(
         self,
@@ -42,6 +43,7 @@ class DynAE(Embedding):
         bias=True,
         shuffle=True,
         has_cuda=False,
+        verbose=0,
     ):
         super(DynAE, self).__init__(dim)
         self.n_units = n_units
@@ -57,6 +59,7 @@ class DynAE(Embedding):
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
+        self.verbose = verbose
 
     def __learn(
         self,
@@ -106,6 +109,7 @@ class DynAE(Embedding):
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
             export=False,
+            verbose=self.verbose,
         )
 
         singleton = SingletonEmbedding()

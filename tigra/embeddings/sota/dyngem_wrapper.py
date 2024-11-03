@@ -27,6 +27,7 @@ class DynGEM(Embedding):
     bias: bool
     shuffle: bool
     has_cuda: bool
+    verbose: int
 
     def __init__(
         self,
@@ -42,6 +43,7 @@ class DynGEM(Embedding):
         bias=True,
         shuffle=True,
         has_cuda=False,
+        verbose=int,
     ):
         super(DynGEM, self).__init__(dim)
         self.n_units = n_units
@@ -55,6 +57,7 @@ class DynGEM(Embedding):
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
+        self.verbose = verbose
 
     def construct(self, data) -> List[SingletonEmbedding]:
         if not isinstance(data, DynamicSparseMatrixGraph):
@@ -102,7 +105,11 @@ class DynGEM(Embedding):
 
         for i in range(len(graphs)):
             embedding = trainer.learn_embedding(
-                [graphs[i]], epoch=self.epochs, lr=self.learning_rate, export=False
+                [graphs[i]],
+                epoch=self.epochs,
+                lr=self.learning_rate,
+                export=False,
+                verbose=self.verbose,
             )
 
             singleton = SingletonEmbedding()

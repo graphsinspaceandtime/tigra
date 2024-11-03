@@ -382,8 +382,10 @@ class DynamicEmbedding(BaseEmbedding):
         model_file="dynAE",
         load_model=False,
         export=True,
+        verbose=0,
     ):
-        print("start learning embedding!")
+        if verbose >= 1:
+            print("start learning embedding!")
         model, loss_model, optimizer, _ = self.prepare(
             load_model,
             model_file,
@@ -393,7 +395,8 @@ class DynamicEmbedding(BaseEmbedding):
         )
         batch_size, batch_num, train_size = self.get_batch_info(adj_list, model)
 
-        print("start training!")
+        if verbose >= 1:
+            print("start training!")
         st = time.time()
         for i in range(epoch):
             for j in range(batch_num):
@@ -407,24 +410,27 @@ class DynamicEmbedding(BaseEmbedding):
                     optimizer.step()  # update gradient
                     model.zero_grad()
                 t2 = time.time()
-                print(
-                    "epoch",
-                    i + 1,
-                    ", batch num = ",
-                    j + 1,
-                    ", loss:",
-                    loss.item(),
-                    ", cost time: ",
-                    t2 - t1,
-                    " seconds!",
-                )
-        print("finish training!")
-        print("start predicting!")
+                if verbose >= 2:
+                    print(
+                        "epoch",
+                        i + 1,
+                        ", batch num = ",
+                        j + 1,
+                        ", loss:",
+                        loss.item(),
+                        ", cost time: ",
+                        t2 - t1,
+                        " seconds!",
+                    )
+        if verbose >= 1:
+            print("finish training!")
+            print("start predicting!")
         # This needs the last look_back number of graphs to make prediction
         embedding_mat, next_adj = self.batch_predictor.predict(
             model, adj_list[train_size:]
         )
-        print("end predicting!")
+        if verbose >= 1:
+            print("end predicting!")
         en = time.time()
         cost_time = en - st
 
@@ -438,7 +444,8 @@ class DynamicEmbedding(BaseEmbedding):
         # del adj_list, embedding_mat, model
         del adj_list, model
         self.clear_cache()
-        print("learning embedding total time: ", cost_time, " seconds!")
+        if verbose >= 1:
+            print("learning embedding total time: ", cost_time, " seconds!")
         # ! Returning embedding_mat instead of cost_time because it's what we need
         # ! We don't want to save embeddings to a file
         # return cost_time
