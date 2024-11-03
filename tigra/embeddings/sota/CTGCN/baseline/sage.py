@@ -40,9 +40,11 @@ class Aggregator(nn.Module):
         # Local pointers to functions (speed hack)
         if not self.num_sample is None:
             samp_neighs = [
-                random.sample(to_neigh, self.num_sample)
-                if len(to_neigh) >= self.num_sample
-                else to_neigh
+                (
+                    random.sample(to_neigh, self.num_sample)
+                    if len(to_neigh) >= self.num_sample
+                    else to_neigh
+                )
                 for to_neigh in to_neighs
             ]
         else:
