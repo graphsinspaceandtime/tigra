@@ -1,7 +1,7 @@
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.dynae_wrapper import DynAE
 from tigra.core.greval import GraphReconstructionEval
-from tigra.embeddings.utils import n_nodes_to_ae_layers
+from tigra.embeddings.utils import n_nodes_to_ae_layers, iterate_valid_embeddings
 from tests.common import choose_graph
 
 es, meta = choose_graph()
@@ -41,7 +41,8 @@ method = DynAE(
 )
 method.make_embedding(dsmg)
 
-gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), method.embeddings[0])
-print("Precision", gre.get_avg_precision())
-print("Recall", gre.get_avg_recall())
-print("F1", gre.getF1())
+for i, singleton_embedding in iterate_valid_embeddings(method.embeddings):
+    gre = GraphReconstructionEval(dsmg.get_last_matrix_as_graph(), singleton_embedding)
+    print("Precision", gre.get_avg_precision())
+    print("Recall", gre.get_avg_recall())
+    print("F1", gre.getF1())
