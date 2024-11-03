@@ -2,9 +2,6 @@ from typing import List, Union
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 from tigra.embeddings.sota.CTGCN.baseline.dynAE import (
-    BatchGenerator,
-    BatchPredictor,
-    DynGraph2VecLoss,
     DynamicEmbedding,
 )
 from tigra.embeddings.sota.CTGCN.baseline.dynGEM import (
@@ -16,7 +13,7 @@ from tigra.embeddings.sota.CTGCN.baseline.dynGEM import (
 
 
 class DynGEM(Embedding):
-    n_units: int
+    n_units: List[int]
     alpha: float
     beta: float
     nu1: float
@@ -24,6 +21,7 @@ class DynGEM(Embedding):
     batch_size: int
     epochs: int
     learning_rate: float
+    weight_decay: float
     bias: bool
     shuffle: bool
     has_cuda: bool
@@ -31,15 +29,16 @@ class DynGEM(Embedding):
 
     def __init__(
         self,
-        dim,
-        n_units,
-        alpha,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
+        dim: int,
+        n_units: List[int],
+        alpha: float,
+        beta: float,
+        nu1: float,
+        nu2: float,
+        batch_size: int,
+        epochs: int,
+        learning_rate: float,
+        weight_decay: float,
         bias=True,
         shuffle=True,
         has_cuda=False,
@@ -54,6 +53,7 @@ class DynGEM(Embedding):
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
@@ -108,6 +108,7 @@ class DynGEM(Embedding):
                 [graphs[i]],
                 epoch=self.epochs,
                 lr=self.learning_rate,
+                weight_decay=self.weight_decay,
                 export=False,
                 verbose=self.verbose,
             )

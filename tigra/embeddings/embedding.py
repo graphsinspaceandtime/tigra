@@ -128,7 +128,9 @@ class Embedding(ABC):
     Base class for dynamic/temporal graph embeddings
     """
 
-    def __init__(self, dim):
+    dim: int
+
+    def __init__(self, dim: int):
         self.embeddings = []
         self.dim = dim
 

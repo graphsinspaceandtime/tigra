@@ -11,8 +11,8 @@ from tigra.embeddings.sota.CTGCN.baseline.dynAERNN import DynAERNN as _DynAERNN
 
 
 class DynAERNN(Embedding):
-    ae_units: int
-    rnn_units: int
+    ae_units: List[int]
+    rnn_units: List[int]
     look_back: int
     beta: float
     nu1: float
@@ -29,17 +29,17 @@ class DynAERNN(Embedding):
 
     def __init__(
         self,
-        dim,
-        ae_units,
-        rnn_units,
-        look_back,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
-        weight_decay,
+        dim: int,
+        ae_units: List[int],
+        rnn_units: List[int],
+        look_back: int,
+        beta: float,
+        nu1: float,
+        nu2: float,
+        batch_size: int,
+        epochs: int,
+        learning_rate: float,
+        weight_decay: float,
         last_only=True,
         bias=True,
         shuffle=True,

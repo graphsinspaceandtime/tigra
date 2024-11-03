@@ -11,7 +11,7 @@ from tigra.embeddings.sota.CTGCN.baseline.dynAE import (
 
 
 class DynAE(Embedding):
-    n_units: int
+    n_units: List[int]
     look_back: int
     beta: float
     nu1: float
@@ -28,16 +28,16 @@ class DynAE(Embedding):
 
     def __init__(
         self,
-        dim,
-        n_units,
-        look_back,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
-        weight_decay,
+        dim: int,
+        n_units: List[int],
+        look_back: int,
+        beta: float,
+        nu1: float,
+        nu2: float,
+        batch_size: int,
+        epochs: int,
+        learning_rate: float,
+        weight_decay: float,
         last_only=True,
         bias=True,
         shuffle=True,
