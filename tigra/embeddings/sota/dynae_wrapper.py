@@ -1,5 +1,4 @@
-from typing import List
-import typing
+from typing import List, Union
 from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.CTGCN.baseline.dynAE import (
@@ -61,7 +60,7 @@ class DynAE(Embedding):
         self.has_cuda = has_cuda
         self.verbose = verbose
 
-    def __learn(
+    def __construct(
         self,
         data: DynamicSparseMatrixGraph,
         graphs,
@@ -123,7 +122,7 @@ class DynAE(Embedding):
 
         return singleton
 
-    def construct(self, data) -> List[typing.Union[SingletonEmbedding, None]]:
+    def construct(self, data) -> List[Union[SingletonEmbedding, None]]:
         if not isinstance(data, DynamicSparseMatrixGraph):
             raise Exception(
                 "{} works with DynamicSparseMatrixGraph objects.".format(
@@ -136,15 +135,19 @@ class DynAE(Embedding):
         num_nodes = graphs[0].shape[0]
         node_list = list(range(num_nodes))
 
+        embs: List[Union[SingletonEmbedding, None]] = []
+
         if self.last_only:
-            embs = [self.__learn(data, graphs, num_graphs - 1, num_nodes, node_list)]
+            embs = [
+                self.__construct(data, graphs, num_graphs - 1, num_nodes, node_list)
+            ]
         else:
-            embs: typing.List[typing.Union[SingletonEmbedding, None]] = [
-                None
-            ] * self.look_back
+            embs = [None] * self.look_back
             for prediction_index in range(self.look_back, num_graphs):
                 embs.append(
-                    self.__learn(data, graphs, prediction_index, num_nodes, node_list)
+                    self.__construct(
+                        data, graphs, prediction_index, num_nodes, node_list
+                    )
                 )
 
         return embs

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.sota.CTGCN.baseline.dynAE import (
@@ -20,6 +20,8 @@ class DynAERNN(Embedding):
     batch_size: int
     epochs: int
     learning_rate: float
+    weight_decay: float
+    last_only: bool
     bias: bool
     shuffle: bool
     has_cuda: bool
@@ -37,10 +39,12 @@ class DynAERNN(Embedding):
         batch_size,
         epochs,
         learning_rate,
+        weight_decay,
+        last_only=True,
         bias=True,
         shuffle=True,
         has_cuda=False,
-        verbose: 0,
+        verbose=0,
     ):
         super(DynAERNN, self).__init__(dim)
         self.ae_units = ae_units
@@ -52,25 +56,23 @@ class DynAERNN(Embedding):
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.last_only = last_only
         self.bias = bias
         self.shuffle = shuffle
         self.has_cuda = has_cuda
         self.verbose = verbose
 
-    def construct(self, data) -> List[SingletonEmbedding]:
-        if not isinstance(data, DynamicSparseMatrixGraph):
-            raise Exception(
-                "{} works with DynamicSparseMatrixGraph objects.".format(
-                    type(self).__name__
-                )
-            )
-
-        graphs = data.get_scipy_sparse_matrices()
-        num_graphs = len(graphs)
-        start_index = num_graphs - 1 - self.look_back
-        graphs = graphs[start_index:]
-        num_nodes = graphs[0].shape[0]
-        node_list = list(range(num_nodes))
+    def __construct(
+        self,
+        data: DynamicSparseMatrixGraph,
+        graphs,
+        prediction_index,
+        num_nodes,
+        node_list,
+    ) -> SingletonEmbedding:
+        start_index = prediction_index - self.look_back
+        train_graphs = graphs[start_index : prediction_index + 1]
 
         model = _DynAERNN(
             input_dim=num_nodes,
@@ -105,16 +107,51 @@ class DynAERNN(Embedding):
             embedding_folder="",
         )
         embedding = trainer.learn_embedding(
-            graphs, epoch=self.epochs, lr=self.learning_rate, export=False, verbose=self.verbose
+            train_graphs,
+            epoch=self.epochs,
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            export=False,
+            verbose=self.verbose,
         )
 
         singleton = SingletonEmbedding()
 
         # SVC, 27.10.2024
-        learn_graph = data.get_matrix_as_graph(-1)
+        learn_graph = data.get_matrix_as_graph(prediction_index)
         node_list = learn_graph.G.nodes()
 
         for node in node_list:
             singleton.add_embedding_vector(node, embedding[node].tolist())
 
-        return [singleton]
+        return singleton
+
+    def construct(self, data) -> List[Union[SingletonEmbedding, None]]:
+        if not isinstance(data, DynamicSparseMatrixGraph):
+            raise Exception(
+                "{} works with DynamicSparseMatrixGraph objects.".format(
+                    type(self).__name__
+                )
+            )
+
+        graphs = data.get_scipy_sparse_matrices()
+        num_graphs = len(graphs)
+        num_nodes = graphs[0].shape[0]
+        node_list = list(range(num_nodes))
+
+        embs: List[Union[SingletonEmbedding, None]] = []
+
+        if self.last_only:
+            embs = [
+                self.__construct(data, graphs, num_graphs - 1, num_nodes, node_list)
+            ]
+        else:
+            embs = [None] * self.look_back
+            for prediction_index in range(self.look_back, num_graphs):
+                embs.append(
+                    self.__construct(
+                        data, graphs, prediction_index, num_nodes, node_list
+                    )
+                )
+
+        return embs

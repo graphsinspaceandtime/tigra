@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from tigra.embeddings.embedding import Embedding, SingletonEmbedding
 from tigra.embeddings.sota.CTGCN.baseline.dynAE import (
@@ -43,7 +43,7 @@ class DynGEM(Embedding):
         bias=True,
         shuffle=True,
         has_cuda=False,
-        verbose=int,
+        verbose=0,
     ):
         super(DynGEM, self).__init__(dim)
         self.n_units = n_units
@@ -59,7 +59,7 @@ class DynGEM(Embedding):
         self.has_cuda = has_cuda
         self.verbose = verbose
 
-    def construct(self, data) -> List[SingletonEmbedding]:
+    def construct(self, data) -> List[Union[SingletonEmbedding, None]]:
         if not isinstance(data, DynamicSparseMatrixGraph):
             raise Exception(
                 "{} works with DynamicSparseMatrixGraph objects.".format(
