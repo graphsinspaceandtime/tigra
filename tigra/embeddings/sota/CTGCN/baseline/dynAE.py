@@ -1,4 +1,5 @@
 # coding: utf-8
+import typing
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -378,7 +379,7 @@ class DynamicEmbedding(BaseEmbedding):
         lr=1e-3,
         idx=0,
         weight_decay=0.0,
-        model_file="dynAE",
+        model_file: typing.Union[str, None] = "dynAE",
         load_model=False,
         export=True,
         verbose=0,

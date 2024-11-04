@@ -109,6 +109,7 @@ class DynAE(Embedding):
             weight_decay=self.weight_decay,
             export=False,
             verbose=self.verbose,
+            model_file=None,
         )
 
         singleton = SingletonEmbedding()
