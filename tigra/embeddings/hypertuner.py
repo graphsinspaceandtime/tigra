@@ -10,13 +10,21 @@ from abc import ABC, abstractmethod
 import typing
 
 from statistics import mean
+import tqdm
+
+from sklearn.model_selection import ParameterGrid
 
 from tigra.embeddings.embedding import Embedding
 from tigra.core.greval import GraphReconstructionEval
+from tigra.embeddings.utils import n_nodes_to_ae_layers
 
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
 from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.embeddings.sota.stwalk import STWalk
+from tigra.embeddings.sota.dynae_wrapper import DynAE
+from tigra.embeddings.sota.dynrnn_wrapper import DynRNN
+from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
+from tigra.embeddings.sota.dyngem_wrapper import DynGEM
 
 
 class Tuner(ABC):
@@ -50,17 +58,25 @@ class Tuner(ABC):
         """
         pass
 
-    def tune(self):
+    def tune(self, progress_bar=False):
         self.best = None
         self.eval_res = []
         self.confs = self.create_configurations()
 
-        for i in range(len(self.confs)):
+        iterator = range(len(self.confs))
+        if progress_bar:
+            iterator = tqdm.tqdm(iterator)
+
+        for i in iterator:
             prec_values, rec_values, f1_values = [], [], []
             for _ in range(self.num_runs):
                 current_instance = self.create_instance(i)
                 current_instance.make_embedding(self.data)
                 last_embedding = current_instance.embeddings[-1]
+                if last_embedding == None:
+                    raise Exception(
+                        "this can't happen (last_embedding in abstract Tuner class is None)"
+                    )
                 gre = GraphReconstructionEval(
                     self.graph, last_embedding, report_warnings=False
                 )
@@ -79,7 +95,7 @@ class Tuner(ABC):
             if self.best == None or mean_f1 > self.best[1]:
                 self.best = (i, mean_f1, mean_prec, mean_rec)
 
-            if i % 10 == 0:
+            if not progress_bar and i % 10 == 0:
                 print("Done ", i, " out of", len(self.confs))
 
     def print_report(self):
@@ -262,3 +278,62 @@ class STWalk_Tuner(Tuner):
             workers=self.parallel_processes,
             vocab_window_size=5,
         )
+
+
+class DynamicEmbedding_Tuner(Tuner):
+    """
+    Tuner for DynamicEmbedding methods (DynGem, DynAE, DynRNN, DynAERNN)
+    """
+
+    ParamGrid = typing.Mapping[str, typing.Sequence[typing.Any]]
+    Method = typing.Literal["DynAE", "DynRNN", "DynAERNN", "DynGEM"]
+
+    method: Method
+    param_grid: ParamGrid
+    epochs: int
+    batch_size: int
+    n_nodes: int
+
+    def __init__(
+        self,
+        graph,
+        data,
+        params_desc,
+        method: Method,
+        param_grid: ParamGrid,
+        epochs: int,
+        batch_size: int,
+        n_nodes: int,
+        num_runs=1,
+    ):
+        super().__init__(graph, data, params_desc, num_runs)
+        self.method = method
+        self.param_grid = param_grid
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.n_nodes = n_nodes
+
+    def create_configurations(self) -> typing.List:
+        return list(ParameterGrid(self.param_grid))
+
+    def create_instance(self, conf_index) -> Embedding:
+        conf = self.confs[conf_index]
+        fixed_params = {
+            "beta": 5,
+            "nu1": 1e-6,
+            "nu2": 1e-6,
+            "batch_size": self.batch_size,
+            "epochs": self.epochs,
+            "learning_rate": 1e-3,
+            "weight_decay": 1e-4,
+        }
+        n_units = n_nodes_to_ae_layers(self.n_nodes, conf["dim"])
+        if self.method == "DynAE":
+            return DynAE(n_units=n_units, **conf, **fixed_params)
+        if self.method == "DynRNN":
+            return DynRNN(n_units=n_units, **conf, **fixed_params)
+        if self.method == "DynAERNN":
+            return DynAERNN(ae_units=n_units, rnn_units=n_units, **conf, **fixed_params)
+        if self.method == "DynGEM":
+            return DynGEM(n_units=n_units, **conf, **fixed_params)
+        raise Exception(f"method '{self.method}' is incorrect")
