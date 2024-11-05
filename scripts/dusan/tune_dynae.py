@@ -8,7 +8,7 @@ from tigra.embeddings.utils import n_nodes_to_ae_layers
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 
 
-es, meta = choose_graph()
+es, meta = choose_graph(name="radoslaw-email")
 
 dsmg = DynamicSparseMatrixGraph(
     "", es, time_resolution=meta["resolution"], directed=False
@@ -32,5 +32,5 @@ tuner = DynamicEmbedding_Tuner(
     n_nodes=dsmg.number_of_nodes,
 )
 
-tuner.tune(progress_bar=True)
+tuner.tune()
 tuner.print_report()
