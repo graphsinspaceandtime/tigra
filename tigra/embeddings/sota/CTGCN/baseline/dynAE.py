@@ -395,10 +395,10 @@ class DynamicEmbedding(BaseEmbedding):
         )
         batch_size, batch_num, train_size = self.get_batch_info(adj_list, model)
 
-        if verbose >= 1:
-            print("start training!")
         st = time.time()
         for i in range(epoch):
+            if verbose >= 1:
+                print("epoch", i + 1)
             for j in range(batch_num):
                 t1 = time.time()
                 generator = self.batch_generator.generate(adj_list)
@@ -423,14 +423,11 @@ class DynamicEmbedding(BaseEmbedding):
                         " seconds!",
                     )
         if verbose >= 1:
-            print("finish training!")
-            print("start predicting!")
+            print("predicting...")
         # This needs the last look_back number of graphs to make prediction
         embedding_mat, next_adj = self.batch_predictor.predict(
             model, adj_list[train_size:]
         )
-        if verbose >= 1:
-            print("end predicting!")
         en = time.time()
         cost_time = en - st
 
