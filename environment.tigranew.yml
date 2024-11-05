@@ -15,9 +15,10 @@ dependencies:
   - ca-certificates=2024.8.30=hbcca054_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
-  - certifi=2024.8.30=py312h06a4308_0
+  - certifi=2024.8.30=pyhd8ed1ab_0
   - cffi=1.17.1=py312h06ac9bb_0
   - charset-normalizer=3.3.2=pyhd8ed1ab_0
+  - colorama=0.4.6=pyhd8ed1ab_0
   - cpuonly=2.0=0
   - editables=0.5=pyhd8ed1ab_0
   - expat=2.6.3=h6a678d5_0
@@ -38,6 +39,7 @@ dependencies:
   - idna=3.8=pyhd8ed1ab_0
   - importlib-metadata=8.4.0=pyha770c72_0
   - jinja2=3.1.4=py312h06a4308_0
+  - joblib=1.4.2=pyhd8ed1ab_0
   - keras=3.5.0=pyhd8ed1ab_1
   - keyutils=1.6.1=h166bdaf_0
   - krb5=1.21.3=h659f571_0
@@ -86,6 +88,7 @@ dependencies:
   - networkx=3.3=pyhd8ed1ab_1
   - nomkl=3.0=0
   - numpy=1.26.4=py312heda63a1_0
+  - openblas=0.3.27=pthreads_h9eca1d5_1
   - openssl=3.3.2=hb9d3cd8_0
   - opt_einsum=3.3.0=pyhc1e730c_2
   - optree=0.12.1=py312h3402730_0
@@ -110,6 +113,7 @@ dependencies:
   - readline=8.2=h5eee18b_0
   - requests=2.32.3=pyhd8ed1ab_0
   - rich=13.7.1=pyhd8ed1ab_0
+  - scikit-learn=1.5.2=py312h7a48858_1
   - scipy=1.14.1=py312h7d485d2_0
   - setuptools=72.1.0=py312h06a4308_0
   - six=1.16.0=pyh6c4a22f_0
@@ -123,8 +127,10 @@ dependencies:
   - tensorflow-base=2.17.0=cpu_py312h823dedb_2
   - tensorflow-estimator=2.17.0=cpu_py312h4f468f2_2
   - termcolor=2.4.0=pyhd8ed1ab_0
+  - threadpoolctl=3.5.0=pyhc1e730c_0
   - tk=8.6.13=noxft_h4845f30_101
   - tomli=2.0.1=pyhd8ed1ab_0
+  - tqdm=4.66.6=pyhd8ed1ab_0
   - trove-classifiers=2024.7.2=pyhd8ed1ab_0
   - typing-extensions=4.12.2=hd8ed1ab_0
   - typing_extensions=4.12.2=pyha770c72_0
