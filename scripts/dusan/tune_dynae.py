@@ -8,7 +8,7 @@ from tigra.embeddings.utils import n_nodes_to_ae_layers
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from data.bank import Databank
 
-db = Databank(path=None if sys.argv[1] else sys.argv[1])
+db = Databank(path=None if len(sys.argv) == 1 else sys.argv[1])
 
 dataset_names = db.get_keys()
 
