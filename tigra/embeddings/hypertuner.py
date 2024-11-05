@@ -95,7 +95,7 @@ class Tuner(ABC):
             if self.best == None or mean_f1 > self.best[1]:
                 self.best = (i, mean_f1, mean_prec, mean_rec)
 
-            if not progress_bar and i % 10 == 0:
+            if not progress_bar:
                 print("Done ", i, " out of", len(self.confs))
 
     def print_report(self):
