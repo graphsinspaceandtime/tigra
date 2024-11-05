@@ -293,6 +293,7 @@ class DynamicEmbedding_Tuner(Tuner):
     epochs: int
     batch_size: int
     n_nodes: int
+    has_cuda: bool
 
     def __init__(
         self,
@@ -304,6 +305,7 @@ class DynamicEmbedding_Tuner(Tuner):
         epochs: int,
         batch_size: int,
         n_nodes: int,
+        has_cuda: bool,
         num_runs=1,
     ):
         super().__init__(graph, data, params_desc, num_runs)
@@ -312,6 +314,7 @@ class DynamicEmbedding_Tuner(Tuner):
         self.epochs = epochs
         self.batch_size = batch_size
         self.n_nodes = n_nodes
+        self.has_cuda = has_cuda
 
     def create_configurations(self) -> typing.List:
         return list(ParameterGrid(self.param_grid))
@@ -329,11 +332,23 @@ class DynamicEmbedding_Tuner(Tuner):
         }
         n_units = n_nodes_to_ae_layers(self.n_nodes, conf["dim"])
         if self.method == "DynAE":
-            return DynAE(n_units=n_units, **conf, **fixed_params)
+            return DynAE(
+                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
+            )
         if self.method == "DynRNN":
-            return DynRNN(n_units=n_units, **conf, **fixed_params)
+            return DynRNN(
+                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
+            )
         if self.method == "DynAERNN":
-            return DynAERNN(ae_units=n_units, rnn_units=n_units, **conf, **fixed_params)
+            return DynAERNN(
+                ae_units=n_units,
+                has_cuda=self.has_cuda,
+                rnn_units=n_units,
+                **conf,
+                **fixed_params,
+            )
         if self.method == "DynGEM":
-            return DynGEM(n_units=n_units, **conf, **fixed_params)
+            return DynGEM(
+                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
+            )
         raise Exception(f"method '{self.method}' is incorrect")

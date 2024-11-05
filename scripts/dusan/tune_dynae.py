@@ -30,6 +30,7 @@ tuner = DynamicEmbedding_Tuner(
     epochs=1000,
     batch_size=16,
     n_nodes=dsmg.number_of_nodes,
+    has_cuda=True,
 )
 
 tuner.tune()
