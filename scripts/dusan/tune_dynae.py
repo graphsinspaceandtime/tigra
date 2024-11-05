@@ -8,7 +8,7 @@ from tigra.embeddings.utils import n_nodes_to_ae_layers
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 
 
-es, meta = choose_graph(name="radoslaw-email")
+es, meta = choose_graph(base_path="/home/shared/tigra/data", name="radoslaw-email")
 
 dsmg = DynamicSparseMatrixGraph(
     "", es, time_resolution=meta["resolution"], directed=False
