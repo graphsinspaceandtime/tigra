@@ -43,6 +43,7 @@ class DynGEM(Embedding):
         shuffle=True,
         has_cuda=False,
         verbose=0,
+        **kawrgs,  # collect redundant arguments
     ):
         super(DynGEM, self).__init__(dim)
         self.n_units = n_units

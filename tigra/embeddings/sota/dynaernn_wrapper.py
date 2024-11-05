@@ -45,6 +45,7 @@ class DynAERNN(Embedding):
         shuffle=True,
         has_cuda=False,
         verbose=0,
+        **kawrgs,  # collect redundant arguments
     ):
         super(DynAERNN, self).__init__(dim)
         self.ae_units = ae_units
