@@ -42,7 +42,7 @@ class BaseEmbedding:
         )
         self.model_base_path = os.path.abspath(os.path.join(base_path, model_folder))
         self.has_cuda = has_cuda
-        self.device = torch.device("cuda: 0") if has_cuda else torch.device("cpu")
+        self.device = torch.device("cuda:0") if has_cuda else torch.device("cpu")
         self.model = model
         self.loss = loss
 
