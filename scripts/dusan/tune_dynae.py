@@ -6,9 +6,9 @@ from tigra.embeddings.hypertuner import DynamicEmbedding_Tuner
 from tigra.core.dgraph import DynamicSparseMatrixGraph
 from data.bank import Databank, Dataset
 
-db = Databank(path=None if len(sys.argv) == 1 else sys.argv[1])
+db = Databank(sys.argv[1])
 
-dataset_name: Dataset = sys.argv[1]  # type: ignore
+dataset_name: Dataset = sys.argv[2]  # type: ignore
 
 print(f"dataset: {dataset_name}")
 es = db.get_data(dataset_name)
