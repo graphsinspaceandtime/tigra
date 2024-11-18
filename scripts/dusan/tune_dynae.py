@@ -26,7 +26,11 @@ last_graph = dsmg.get_last_matrix_as_graph()
 num_snaps = dsmg.get_num_snaps()
 
 params_grid = {
-    "dim": [10, 25, 50, 100],
+    "dim": (
+        [10, 25, 50, 100]
+        if dataset_name != "ia-contacts_hypertext2009"
+        else [10, 25, 50]
+    ),
     "look_back": list(range(1, num_snaps)),
 }
 
