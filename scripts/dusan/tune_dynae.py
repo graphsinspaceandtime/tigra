@@ -15,7 +15,11 @@ es = db.get_data(dataset_name)
 meta = db.get_metadata(dataset_name)
 
 dsmg = DynamicSparseMatrixGraph(
-    dataset_name, es, time_resolution=meta["resolution"], directed=False
+    dataset_name,
+    es,
+    time_resolution=meta["resolution"],
+    directed=False,
+    cumulative=meta["cumulative"],
 )
 
 last_graph = dsmg.get_last_matrix_as_graph()
