@@ -1,4 +1,5 @@
 # coding: utf-8
+import typing
 import numpy as np
 import pandas as pd
 import os
@@ -623,7 +624,7 @@ class UnsupervisedEmbedding(BaseEmbedding):
         lr=1e-3,
         start_idx=0,
         weight_decay=0.0,
-        model_file="ctgcn",
+        model_file: typing.Union[str, None] = "ctgcn",
         load_model=False,
         shuffle=True,
         export=True,
@@ -688,7 +689,8 @@ class UnsupervisedEmbedding(BaseEmbedding):
             torch.save(
                 model.state_dict(), os.path.join(self.model_base_path, model_file)
             )
-        del adj_list, x_list, output_list, model
+        del adj_list, x_list, model
         self.clear_cache()
         print("learning embedding total time: ", cost_time, " seconds!")
-        return cost_time
+        # return cost_time
+        return output_list
