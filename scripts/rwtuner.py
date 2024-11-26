@@ -82,10 +82,15 @@ def tune_ctdne(last_graph, dag):
 
 def tune_stwalk(last_graph, dg):
     print("\nTUNING STWALK")
+    
+    ns = len(dg.get_graph_sequence())
+    timewindow = list(range(1, ns))
+    print(timewindow)
+    
     tuner = STWalk_Tuner(
         last_graph, 
         dg, 
-        TIMEWINDOW,
+        timewindow,
         num_runs=NUM_RUNS,
         parallel_processes=WORKERS, 
         walk_length=WALKLEN, 
@@ -135,25 +140,24 @@ if __name__ == "__main__":
     org_graphs = dg.get_graph_sequence()
     last_graph = org_graphs[-1]
 
-    #dag = DynamicAggregateGraph(dataset_name, es, directed=False)
-
+    dag = DynamicAggregateGraph(dataset_name, es, directed=False)
+    '''
     start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
-    
-    """
+    '''
     start_time = time.time()
     tune_ctdne(last_graph, dag)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
     
-    
+    '''
     start_time = time.time()
     tune_stwalk(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("STWALK TIME [sec]", elapsed_time)
-    """
+    '''
