@@ -11,6 +11,7 @@ import typing
 
 from statistics import mean
 import tqdm
+import math
 
 from sklearn.model_selection import ParameterGrid
 
@@ -69,8 +70,14 @@ class Tuner(ABC):
 
         for i in iterator:
             prec_values, rec_values, f1_values = [], [], []
-            for _ in range(self.num_runs):
-                current_instance = self.create_instance(i)
+            for run_num in range(self.num_runs):
+                try:
+                    current_instance = self.create_instance(i)
+                except:
+                    print("[tuner] failed to create instance")
+                    print("[tuner] configuration: " + str(self.confs[i]))
+                    print("[tuner] run_num: " + str(run_num))
+                    continue
                 current_instance.make_embedding(self.data)
                 last_embedding = current_instance.embeddings[-1]
                 if last_embedding == None:
@@ -294,6 +301,7 @@ class DynamicEmbedding_Tuner(Tuner):
     batch_size: int
     n_nodes: int
     has_cuda: bool
+    pick_n_layers_from_middle: int
 
     def __init__(
         self,
@@ -307,6 +315,7 @@ class DynamicEmbedding_Tuner(Tuner):
         n_nodes: int,
         has_cuda: bool,
         num_runs=1,
+        pick_n_layers_from_middle=0,
     ):
         super().__init__(graph, data, params_desc, num_runs)
         self.method = method
@@ -315,6 +324,7 @@ class DynamicEmbedding_Tuner(Tuner):
         self.batch_size = batch_size
         self.n_nodes = n_nodes
         self.has_cuda = has_cuda
+        self.pick_n_layers_from_middle = pick_n_layers_from_middle
 
     def create_configurations(self) -> typing.List:
         return list(ParameterGrid(self.param_grid))
@@ -330,7 +340,21 @@ class DynamicEmbedding_Tuner(Tuner):
             "learning_rate": 1e-3,
             "weight_decay": 1e-4,
         }
+
         n_units = n_nodes_to_ae_layers(self.n_nodes, conf["dim"])
+        if self.pick_n_layers_from_middle != 0:
+            if self.pick_n_layers_from_middle > len(n_units):
+                print(
+                    "[tuner] DynamicEmbedding_Tuner instance field 'pick_n_layers_from_middle' larger than length of 'n_units'"
+                )
+                raise Exception(
+                    "field 'pick_n_layers_from_middle' larger than length of 'n_units'"
+                )
+            padding = (len(n_units) - self.pick_n_layers_from_middle) / 2
+            padding_left = math.ceil(padding)
+            padding_right = math.floor(padding)
+            n_units = n_units[padding_left:padding_right]
+
         if self.method == "DynAE":
             return DynAE(
                 n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
