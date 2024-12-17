@@ -14,10 +14,12 @@ from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.evaluation.hubeval import HUBEval
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
 dn2v_fact = get_dn2v_factory("../dn2v_hub.conf")
+
 
 def hubeval(dataset):
     global dn2v_fact
@@ -30,9 +32,12 @@ def hubeval(dataset):
     hube = HUBEval(dn2v, dg)
     hube.eval()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
+    """
     for dataset in datasets:
         print("DATASET", dataset)
         hubeval(dataset)
         print("......................................................................")
+    """
+    hubeval("radoslaw-email")

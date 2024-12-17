@@ -39,22 +39,37 @@ class HUBEval:
         for n in range(nodes):
             total_degree = total_degree + len(graph_dg_copy.get_neighbours(n))
             degrees[n] = len(graph_dg_copy.get_neighbours(n))
-        
 
-        self.f1_hub_cumul.add_data(f1_vals, degrees) 
+        self.f1_hub_cumul.add_data(f1_vals, degrees)
         self.prec_hub_cumul.add_data(prec_vals, degrees)
         self.rec_hub_cumul.add_data(rec_vals, degrees)
 
-        degrees_sorted = dict(sorted(degrees.items(), key=lambda item: item[1]))
+        degrees_sorted = dict(
+            sorted(degrees.items(), reverse=True, key=lambda item: item[1])
+        )
 
         self.f1_hub_mwu.add_high_low_groups_distr(degrees_sorted, f1_vals)
 
+        s = str(index + 1) + ","
+        s += str(round(gre.getF1(), 4)) + ","
+        s += str(round(gre.get_avg_precision(), 4)) + ","
+        s += str(round(gre.get_avg_recall(), 4)) + ","
+        s += str(round(correlation(f1_vals, degrees), 4))
+
+        return s
+
     def eval(self):
         N = len(self.graph_sequence)
+        print("#snap, F1, prec, rec, correlation(F1, degree)")
         for i in range(N):
             s = self.eval_snapshot(i, self.embedding[i], self.graph_sequence[i])
             print(s)
-        print("-------------------\n")
-        print("F1\n", self.f1_hub_cumul.get_correlation())
-        print("\nPREC\n", self.prec_hub_cumul.get_correlation())
-        print("\nREC\n", self.rec_hub_cumul.get_correlation())
+        print("\n[cummulative correlations] -------------------")
+        print("F1", self.f1_hub_cumul.get_correlation())
+        print("PREC", self.prec_hub_cumul.get_correlation())
+        print("REC", self.rec_hub_cumul.get_correlation())
+        print("--- MWU")
+        print(
+            "AVG-F1(hubs), AVG-F1(non-hubs), #hubs, #non-hubs, U, p(U), ACC, PS(hubs), PS(non-hubs)"
+        )
+        print(self.f1_hub_mwu.mwu())

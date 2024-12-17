@@ -3,12 +3,44 @@ import sys
 sys.path.append("../..")
 
 from tigra.generators.der import DERGenerator
+from tigra.core.dgraph import DynamicGraph
+from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+from tigra.core.greval import GraphReconstructionEval
+
+# create synthetic event sequence for dynamic Erdos-Reny
+# random graph with 1000 nodes
+# each pair of nodes is connected by 0.01 probability
+derg = DERGenerator(1000, 0.01, time_resolution="hour")
+es = derg.generate()
+
+# initialize dynamic graph from synhetic event sequence
+dg = DynamicGraph()
+dg.init_from_event_sequence(
+    es, time_resolution="month", directed=False, cumulative=True
+)
+
+# create dynnode2vec embedding of dimension 25
+dn2v = Dynnode2vec(25)
+dn2v.make_embedding(dg)
+
+# evaluate the last embedding in the sequence
+last_embedding = dn2v.embeddings[-1]
+last_graph = dg.get_graph_sequence()[-1]
+gre = GraphReconstructionEval(last_graph, last_embedding)
+print("Precision", gre.get_avg_precision())
+print("Recall", gre.get_avg_recall())
+print("F1", gre.getF1())
+
+
+"""
+from tigra.generators.der import DERGenerator
 from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.dnea import EvolDynamics
 
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
 from tigra.core.greval import GraphReconstructionEval
+
 
 # derg = DERGenerator(1000, 0.01, time_resolution="hour")
 # derg.generate_and_save("der_1000_001.events")
@@ -46,7 +78,7 @@ print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
 
-"""
+
 print()
 print("Non-cumulative DER")
 dg = DynamicGraph()
