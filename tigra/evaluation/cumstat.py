@@ -76,9 +76,9 @@ class CumulativeStatistics:
             h = xdict[node]
             if node in ydict:
                 f1 = ydict[node]
-                if h > critic_point:
+                if h >= critic_point:
                     self.x.append(f1)
-                elif h < critic_point:
+                else:
                     self.y.append(f1)
 
 
