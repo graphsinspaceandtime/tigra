@@ -40,7 +40,7 @@ class CumulativeStatistics:
 
                 self.x.append(_x)
                 self.y.append(_y)
-    # xdict je mapa koja cvorove sliku u stepene, a ydict je mapa koja covore slika u f1 skorove u emb
+    
     def add_high_low_groups(self, xdict, ydict):
         avg = sum(xdict.values()) / len(xdict.values())
 
