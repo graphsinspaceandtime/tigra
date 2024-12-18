@@ -354,6 +354,13 @@ class DynamicEmbedding_Tuner(Tuner):
             padding_left = math.ceil(padding)
             padding_right = math.floor(padding)
             n_units = n_units[padding_left:padding_right]
+            if len(n_units) == 0:
+                print(
+                    "[tuner] DynamicEmbedding_Tuner config 'n_units' after removing padding resulted in no layers"
+                )
+                raise Exception(
+                    "config 'n_units' after removing padding resulted in no layers"
+                )
 
         if self.method == "DynAE":
             return DynAE(
