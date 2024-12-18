@@ -329,6 +329,31 @@ class DynamicEmbedding_Tuner(Tuner):
     def create_configurations(self) -> typing.List:
         return list(ParameterGrid(self.param_grid))
 
+    def __crop_n_units(self, n_units: typing.List[int]) -> typing.List[int]:
+        if self.pick_n_layers_from_middle > len(n_units):
+            print(
+                "[tuner] DynamicEmbedding_Tuner instance field 'pick_n_layers_from_middle' larger than length of 'n_units'"
+            )
+            raise Exception(
+                "field 'pick_n_layers_from_middle' larger than length of 'n_units'"
+            )
+        print("current config:", n_units)
+        print("selecting n layers:", self.pick_n_layers_from_middle)
+        padding_left = (len(n_units) - self.pick_n_layers_from_middle) / 2
+        padding_left = math.floor(padding_left)
+        print("left padding:", padding_left)
+        n_units = n_units[padding_left:]
+        n_units = n_units[: self.pick_n_layers_from_middle]
+        print("selected config:", n_units)
+        if len(n_units) == 0:
+            print(
+                "[tuner] DynamicEmbedding_Tuner config 'n_units' after removing padding resulted in no layers"
+            )
+            raise Exception(
+                "config 'n_units' after removing padding resulted in no layers"
+            )
+        return n_units
+
     def create_instance(self, conf_index) -> Embedding:
         conf = self.confs[conf_index]
         fixed_params = {
@@ -343,29 +368,7 @@ class DynamicEmbedding_Tuner(Tuner):
 
         n_units = n_nodes_to_ae_layers(self.n_nodes, conf["dim"])
         if self.pick_n_layers_from_middle != 0:
-            if self.pick_n_layers_from_middle > len(n_units):
-                print(
-                    "[tuner] DynamicEmbedding_Tuner instance field 'pick_n_layers_from_middle' larger than length of 'n_units'"
-                )
-                raise Exception(
-                    "field 'pick_n_layers_from_middle' larger than length of 'n_units'"
-                )
-            print("current config:", n_units)
-            print("selecting n layers:", self.pick_n_layers_from_middle)
-            padding = (len(n_units) - self.pick_n_layers_from_middle) / 2
-            padding_left = math.ceil(padding)
-            padding_right = math.ceil(padding)
-            print("left padding:", padding_left)
-            print("right padding:", padding_right)
-            n_units = n_units[padding_left:padding_right]
-            print("selected config:", n_units)
-            if len(n_units) == 0:
-                print(
-                    "[tuner] DynamicEmbedding_Tuner config 'n_units' after removing padding resulted in no layers"
-                )
-                raise Exception(
-                    "config 'n_units' after removing padding resulted in no layers"
-                )
+            n_units = self.__crop_n_units(n_units)
 
         if self.method == "DynAE":
             return DynAE(
