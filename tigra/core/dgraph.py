@@ -9,12 +9,12 @@ Module defining core classes for dynamic/temporal graphs
 import networkx as nx
 import numpy as np
 from scipy.sparse import lil_matrix
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from tigra.core.time import determine_time_resolution
 
 from random import sample
-from statistics import mean, stdev
+from statistics import median, mean, stdev
 
 
 class Graph:
@@ -212,6 +212,17 @@ class Graph:
 
     def remove_isolated_nodes(self):
         self.G.remove_nodes_from(list(nx.isolates(self.G)))
+
+    def _degree_stats(self) -> Tuple[float, float, float]:
+        """
+        get statistics of degrees (temporary utility function for the deliverable)
+        """
+        degrees = [self.G.degree(node) for node in self.G.nodes()]  # type: ignore
+        return (
+            mean(degrees),
+            median(degrees),
+            stdev(degrees) if len(degrees) >= 2 else 0.0,
+        )
 
 
 class Event:
