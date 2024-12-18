@@ -1,0 +1,40 @@
+#!/bin/bash
+
+print_use() {
+	echo -n "sview [-e] <NUM> [args for less...]"
+}
+
+print_help() {
+	echo "invalid use ($(print_use))"
+}
+
+if [ -z "${1}" ]
+then
+	print_help
+	exit 1
+fi
+
+if [ "${1}" = "-h" ]
+then
+	print_use
+	echo
+	exit 0
+fi
+
+SLURM_LOG_FILE_EXT="out"
+if [ "${1}" = "-e" ]
+then
+	SLURM_LOG_FILE_EXT="err"
+	shift
+fi
+
+if [ -z "${1}" ]
+then
+	print_help
+	exit 1
+fi
+
+SLURM_JOB_ID="${1}"
+shift
+
+less $@ "$HOME/Jobs/slurm.${SLURM_JOB_ID}.${SLURM_LOG_FILE_EXT}"

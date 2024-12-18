@@ -1,0 +1,3 @@
+#!/bin/bash
+
+squeue --format="%.7i %.5P %.32j %.8u %.2t %.10M %R"
