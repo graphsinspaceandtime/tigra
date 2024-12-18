@@ -354,7 +354,7 @@ class DynamicEmbedding_Tuner(Tuner):
             print("selecting n layers:", self.pick_n_layers_from_middle)
             padding = (len(n_units) - self.pick_n_layers_from_middle) / 2
             padding_left = math.ceil(padding)
-            padding_right = math.floor(padding)
+            padding_right = math.ceil(padding)
             print("left padding:", padding_left)
             print("right padding:", padding_right)
             n_units = n_units[padding_left:padding_right]
