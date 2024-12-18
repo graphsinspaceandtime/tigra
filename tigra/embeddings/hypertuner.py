@@ -350,10 +350,15 @@ class DynamicEmbedding_Tuner(Tuner):
                 raise Exception(
                     "field 'pick_n_layers_from_middle' larger than length of 'n_units'"
                 )
+            print("current config:", n_units)
+            print("selecting n layers:", self.pick_n_layers_from_middle)
             padding = (len(n_units) - self.pick_n_layers_from_middle) / 2
             padding_left = math.ceil(padding)
             padding_right = math.floor(padding)
+            print("left padding:", padding_left)
+            print("right padding:", padding_right)
             n_units = n_units[padding_left:padding_right]
+            print("selected config:", n_units)
             if len(n_units) == 0:
                 print(
                     "[tuner] DynamicEmbedding_Tuner config 'n_units' after removing padding resulted in no layers"
