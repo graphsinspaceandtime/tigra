@@ -96,14 +96,14 @@ class RWEmbBase(Embedding):
         dim -- embedding dimension
 
         delta_nodes -- if false random walks are sampled for all nodes, if true then
-            random walks are sampled for nodes whose neighboorhods changed w.r.t
-            the previous evolutionary snapshot
+            random walks are sampled for a subset of nodes returned by determine_delta_nodes
 
         num_workers -- the number of parallel processes when constructing embeddings
         """
         super().__init__(dim)
         self.delta_nodes = delta_nodes
         self.num_workers = num_workers
+        self.delta_fraction = []
 
     def construct(self, data) -> List[typing.Union[SingletonEmbedding, None]]:
         if not isinstance(data, DynamicGraph):
@@ -152,7 +152,9 @@ class RWEmbBase(Embedding):
 
     def update_model(self, graph: nx.Graph, prev_graph: nx.Graph):
         if self.delta_nodes:
-            nodes = self.get_delta_nodes(graph, prev_graph)
+            nodes = self.determine_delta_nodes(graph, prev_graph)
+            frac = len(nodes) / float(len(graph.nodes()))
+            self.delta_fraction.append(frac)
         else:
             nodes = list(graph.nodes())
 
@@ -162,15 +164,27 @@ class RWEmbBase(Embedding):
         self.model.build_vocab(walks, update=True)
         self.model.train(walks, total_examples=len(walks), epochs=self.model.epochs)
 
-    def get_delta_nodes(self, graph: nx.Graph, prev_graph: nx.Graph):
-        delta_edges = graph.edges ^ prev_graph.edges
-        nodes_with_modified_edges = set(chain(*delta_edges))
-        delta_nodes = list(graph.nodes & nodes_with_modified_edges)
-        return delta_nodes
+    def get_delta_fraction(self):
+        return self.delta_fraction
 
     @abstractmethod
     def create_random_walk_sampler(self, graph: nx.Graph, nodes) -> RandomWalkSampler:
         pass
+
+    @abstractmethod
+    def determine_delta_nodes(self, graph: nx.Graph, prev_graph: nx.Graph) -> List[int]:
+        pass
+
+
+class RWEmbEgoDelta(RWEmbBase):
+    def __init__(self, dim, delta_nodes=True, num_workers=1):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+
+    def determine_delta_nodes(self, graph: nx.Graph, prev_graph: nx.Graph) -> List[int]:
+        delta_edges = graph.edges ^ prev_graph.edges
+        nodes_with_modified_edges = set(chain(*delta_edges))
+        delta_nodes = list(graph.nodes & nodes_with_modified_edges)
+        return delta_nodes
 
 
 class UnbiasedRandomWalk(RandomWalkSampler):
@@ -192,7 +206,7 @@ class UnbiasedRandomWalk(RandomWalkSampler):
         return self.wl
 
 
-class DynDeepWalk(RWEmbBase):
+class DynDeepWalk(RWEmbEgoDelta):
     def __init__(
         self, dim, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
     ):

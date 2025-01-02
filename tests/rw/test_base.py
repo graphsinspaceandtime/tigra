@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     databank = Databank()
     # es = databank.get_data("radoslaw-email")
-    es, resol = load_event_sequence("ia-reality-call")
+    es, resol = load_event_sequence("radoslaw-email")
     print("num-events=", es.num_events())
     print("time-span =", es.get_timespan_in_days())
 
@@ -24,8 +24,10 @@ if __name__ == "__main__":
     from tigra.embeddings.rndw.rndwbase import DynDeepWalk
 
     start = time.time_ns()
-    ddw = DynDeepWalk(10)
+    ddw = DynDeepWalk(10, delta_nodes=True)
     ddw.make_embedding(dg)
+    df = ddw.get_delta_fraction()
+    print("Delta fraction: ", df)
 
     graph_sequence = dg.get_graph_sequence()
 
