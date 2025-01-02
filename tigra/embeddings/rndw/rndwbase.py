@@ -7,11 +7,17 @@ Base classes for dynamic graph embedding methods based on random walks
 """
 
 from abc import ABC, abstractmethod
+
 import typing
 import random
-from itertools import chain
+import bisect
+
 import networkx as nx
+import numpy as np
+
+from itertools import chain
 from typing import List
+
 from multiprocessing import Pool
 
 from gensim.models import Word2Vec
@@ -48,7 +54,7 @@ class RandomWalkSampler:
 
         while len(walk) < walk_length:
             current_node = walk[-1]
-            current_neis = [edge[1] for edge in self.G.edges(current_node)]
+            current_neis = list(self.G.neighbors(current_node))
             if len(current_neis) == 0:
                 break
 
@@ -177,6 +183,10 @@ class RWEmbBase(Embedding):
 
 
 class RWEmbEgoDelta(RWEmbBase):
+    """
+    Delta nodes = new nodes + nodes whose ego network changed
+    """
+
     def __init__(self, dim, delta_nodes=True, num_workers=1):
         super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
 
@@ -219,6 +229,82 @@ class DynDeepWalk(RWEmbEgoDelta):
         return UnbiasedRandomWalk(
             graph,
             nodes,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+        )
+
+
+class PQRandomWalk(RandomWalkSampler):
+    def __init__(
+        self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(graph, nodes)
+        self.p = p
+        self.q = q
+        self.nw = num_walks
+        self.wl = walk_length
+        self.num_workers = num_workers
+
+        self.compute_transition_probabilities()
+
+    def compute_transition_probabilities(self):
+        self.transition_weight = dict()
+        ip, iq = 1.0 / self.p, 1.0 / self.q
+
+        for node in self.G.nodes():
+            neis = list(self.G.neighbors(node))
+            neighbours = np.array(neis)
+
+            for previous_node in neis:
+                previous_node_neis = np.array(list(self.G.neighbors(previous_node)))
+                weights = np.ones(neighbours.shape)
+
+                mask = neighbours == previous_node
+                weights[mask] *= ip
+                mask |= np.isin(neighbours, previous_node_neis)
+                weights[~mask] *= iq
+
+                self.transition_weight[(node, previous_node)] = weights
+
+            # special case, start node in the walk (previous_node == None)
+            self.transition_weight[(node, None)] = np.ones(neighbours.shape)
+
+    def select_next_node(self, start_node, current_node, prev_node, neighbours):
+        weights = self.transition_weight[(current_node, prev_node)]
+        probs = np.cumsum(weights)
+        total = probs[-1]
+        index = bisect.bisect(probs, random.random() * total)
+        ret = neighbours[index]
+        if ret == None:
+            print("[PQRandomWalk], select next node error")
+
+        return ret
+
+    def num_walks(self, node):
+        return self.nw
+
+    def walk_length(self, node):
+        return self.wl
+
+
+class DynN2V(RWEmbEgoDelta):
+    def __init__(
+        self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.p = p
+        self.q = q
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return PQRandomWalk(
+            graph,
+            nodes,
+            self.p,
+            self.q,
             num_walks=self.num_walks,
             walk_length=self.walk_length,
             num_workers=self.num_workers,
