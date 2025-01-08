@@ -12,7 +12,6 @@ if __name__ == "__main__":
     from tigra.core.loaders import load_event_sequence
 
     databank = Databank()
-    # es = databank.get_data("radoslaw-email")
     es, resol = load_event_sequence("radoslaw-email")
     print("num-events=", es.num_events())
     print("time-span =", es.get_timespan_in_days())
