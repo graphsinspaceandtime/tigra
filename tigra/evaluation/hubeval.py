@@ -28,17 +28,18 @@ class HUBEval:
         prec_vals = gre.get_precision_per_node()
         rec_vals = gre.get_recall_per_node()
 
-        graph_copy = graph.G.to_undirected()
-        nodes = graph_copy.number_of_nodes()
-
-        graph_dg_copy = self.dg
+        # graph_copy = graph.G.to_undirected()
+        # nodes = graph_copy.number_of_nodes()
+        # graph_dg_copy = self.dg
 
         total_degree = 0
         degrees = dict()
 
-        for n in range(nodes):
-            total_degree = total_degree + len(graph_dg_copy.get_neighbours(n))
-            degrees[n] = len(graph_dg_copy.get_neighbours(n))
+        # for n in range(nodes):
+        for n in graph.G.nodes():
+            deg = graph.G.degree(n)
+            total_degree = total_degree + deg  # len(graph_dg_copy.get_neighbours(n))
+            degrees[n] = deg  # len(graph_dg_copy.get_neighbours(n))
 
         self.f1_hub_cumul.add_data(f1_vals, degrees)
         self.prec_hub_cumul.add_data(prec_vals, degrees)
@@ -47,6 +48,8 @@ class HUBEval:
         degrees_sorted = dict(
             sorted(degrees.items(), reverse=True, key=lambda item: item[1])
         )
+
+        # print(degrees_sorted)
 
         self.f1_hub_mwu.add_high_low_groups_distr(degrees_sorted, f1_vals)
 

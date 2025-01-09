@@ -1,7 +1,7 @@
 """
 TIGRA software library
 
-TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning#
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning
 in Complex Dynamical Systems
 
 Factory for SOTA dynamic graph embedding methods
@@ -13,7 +13,8 @@ import typing
 
 from data.bank import Databank
 
-from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+# from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+from tigra.embeddings.rndw.rndwbase import DynN2V
 from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.embedding import Embedding
@@ -59,6 +60,7 @@ class DN2V_Factory(Factory):
 
         conf = self.configs[dataset]
 
+        """
         dn2v = Dynnode2vec(
             conf[0],
             p=conf[1],
@@ -67,6 +69,8 @@ class DN2V_Factory(Factory):
             n_walks_per_node=conf[4],
             parallel_processes=16,
         )
+        """
+        dn2v = DynN2V(conf[0], conf[1], conf[2], num_walks=conf[4], walk_length=conf[3])
 
         es, time_resolution = load_event_sequence(dataset)  # type: ignore
 

@@ -14,10 +14,12 @@ from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.evaluation.lideval import LIDEval
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
-dn2v_fact = get_dn2v_factory("../dn2v.conf")
+dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
+
 
 def lideval(dataset):
     global dn2v_fact
@@ -30,10 +32,10 @@ def lideval(dataset):
     lide = LIDEval(dn2v, dg)
     lide.eval()
 
+
 if __name__ == "__main__":
 
     for dataset in datasets:
-        if "synt" in dataset:
-            print("DATASET", dataset)
-            lideval(dataset)
-            print("......................................................................")
+        print("DATASET", dataset)
+        lideval(dataset)
+        print("......................................................................")

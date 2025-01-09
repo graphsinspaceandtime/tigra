@@ -18,7 +18,7 @@ from data.bank import Databank
 databank = Databank()
 datasets = databank.get_keys()
 
-dn2v_fact = get_dn2v_factory("../dn2v_hub.conf")
+dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
 
 
 def hubeval(dataset):
@@ -34,10 +34,9 @@ def hubeval(dataset):
 
 
 if __name__ == "__main__":
-    """
     for dataset in datasets:
         print("DATASET", dataset)
         hubeval(dataset)
         print("......................................................................")
-    """
-    hubeval("radoslaw-email")
+    # hubeval("ia-hospital-ward-proximity-attr")
+    # hubeval("radoslaw-email")
