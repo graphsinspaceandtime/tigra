@@ -566,6 +566,8 @@ class DynamicAggregateGraph:
             else:
                 if self.weighted:
                     self.agg_graph.increase_weight(src, dst)
+                    
+        self.G = self.agg_graph.G
 
     def get_aggregate_graph(self):
         return self.agg_graph
