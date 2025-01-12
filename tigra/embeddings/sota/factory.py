@@ -123,7 +123,6 @@ class STWalk_Factory(Factory):
        
 
         stw.make_embedding(dg)
-        print("-----napravio ", len(stw.embeddings), " embedinga-----")
 
         return stw, dg  # type: ignore
 

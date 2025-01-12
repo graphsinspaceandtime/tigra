@@ -44,8 +44,8 @@ def lideval_stwalk(dataset):
 
     stw, dg = res
 
-    #lide = LIDEval(stw, dg)
-    #lide.eval()
+    lide = LIDEval(stw, dg)
+    lide.eval()
 
 def lideval_ctdne(dataset):
     global ctdne_fact
@@ -62,5 +62,6 @@ if __name__ == "__main__":
 
     for dataset in datasets:
         print("DATASET", dataset)
-        lideval_ctdne(dataset)
+        if dataset != "ia-contacts_hypertext2009":
+            lideval_ctdne(dataset)
         print("......................................................................")

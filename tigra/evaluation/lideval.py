@@ -418,6 +418,10 @@ class LIDEval:
         self.embedding = embedding
         if(isinstance(dg, DynamicAggregateGraph)):
             self.graph_sequence = [dg]
+        elif len(embedding.embeddings) < len(dg.get_graph_sequence()):
+            n = len(dg.get_graph_sequence())
+            k = len(embedding.embeddings)
+            self.graph_sequence = dg.get_graph_sequence()[n-k:n]  
         else:
             self.graph_sequence = dg.get_graph_sequence()
         self.f1_nclid_cumul = CumulativeCorrelation()
