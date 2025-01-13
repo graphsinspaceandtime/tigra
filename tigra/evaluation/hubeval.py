@@ -10,13 +10,20 @@ author: aleksandart@dmi.uns.ac.rs
 
 from tigra.core.greval import GraphReconstructionEval
 from tigra.evaluation.cumstat import CumulativeCorrelation, CumulativeMWU, correlation
+from tigra.core.dgraph import DynamicAggregateGraph
 
 
 class HUBEval:
     def __init__(self, embedding, dg):
         self.embedding = embedding
-        self.dg = dg
-        self.graph_sequence = dg.get_graph_sequence()
+        if(isinstance(dg, DynamicAggregateGraph)):
+            self.graph_sequence = [dg]
+        elif len(embedding.embeddings) < len(dg.get_graph_sequence()):
+            n = len(dg.get_graph_sequence())
+            k = len(embedding.embeddings)
+            self.graph_sequence = dg.get_graph_sequence()[n-k:n]  
+        else:
+            self.graph_sequence = dg.get_graph_sequence()
         self.f1_hub_cumul = CumulativeCorrelation()
         self.prec_hub_cumul = CumulativeCorrelation()
         self.rec_hub_cumul = CumulativeCorrelation()
