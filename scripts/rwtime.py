@@ -15,10 +15,12 @@ WORKERS = 16
 WALKLEN = 32
 NUMWALKS = 10
 
+
 def get_mem_usage_MB():
     process = psutil.Process()
-    memory_usage = process.memory_info()[0] / float(2 ** 20)
+    memory_usage = process.memory_info()[0] / float(2**20)
     return memory_usage
+
 
 sys.path.append(os.path.join(".."))
 sys.dont_write_bytecode = True
@@ -30,12 +32,15 @@ from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.embeddings.sota.stwalk import STWalk
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 print("DATASETS", datasets)
 
 from tigra.embeddings.hypertuner import EMBEDDING_DIMENSIONS
+
 print("EMBEDDING DIMENSIONS", EMBEDDING_DIMENSIONS)
+
 
 def load_dataset(dataset_name):
     print("\nDATASET:", dataset_name)
@@ -43,13 +48,13 @@ def load_dataset(dataset_name):
     ts_days = es.get_timespan_in_days()
     print("num-events=", es.num_events())
     print("time-span =", es.get_timespan_in_days())
-    
+
     resolution = "3-months"
     if ts_days < 10:
         resolution = "day"
     elif ts_days < 1000:
         resolution = "month"
-    
+
     print("resolution=", resolution)
     return es, resolution
 
@@ -73,12 +78,12 @@ def measure_dynnode2vec(dg, last_graph, dag):
         ok1 = True
         try:
             dn2v = Dynnode2vec(
-                d, 
+                d,
                 p=1.0,
                 q=1.0,
                 walk_length=WALKLEN,
                 n_walks_per_node=NUMWALKS,
-                parallel_processes=WORKERS
+                parallel_processes=WORKERS,
             )
             dn2v.make_embedding(dg)
         except:
@@ -98,7 +103,20 @@ def measure_dynnode2vec(dg, last_graph, dag):
 
         tot = round(t + rt, 2)
 
-        s = "DN2V," + str(d) + "," + str(t) + "," + str(rt) + "," + str(tot) + "," + str(ok1) + "," + str(ok2)
+        s = (
+            "DN2V,"
+            + str(d)
+            + ","
+            + str(t)
+            + ","
+            + str(rt)
+            + ","
+            + str(tot)
+            + ","
+            + str(ok1)
+            + ","
+            + str(ok2)
+        )
         print(s)
 
 
@@ -108,12 +126,13 @@ def measure_ctdne(dg, last_graph, dag):
         ok1 = True
         try:
             ctdne = Ctdne(
-                d, 
-                p=1.0, 
-                q=1.0, 
+                d,
+                p=1.0,
+                q=1.0,
                 walk_length=WALKLEN,
-                num_walks=NUMWALKS, 
-                workers=WORKERS)
+                num_walks=NUMWALKS,
+                workers=WORKERS,
+            )
             ctdne.make_embedding(dag)
         except:
             ok1 = False
@@ -123,7 +142,9 @@ def measure_ctdne(dg, last_graph, dag):
         start_time = time.time()
         ok2 = True
         try:
-            GraphReconstructionEval(dag.get_aggregate_graph(), ctdne.embeddings[0], report_warnings=False)
+            GraphReconstructionEval(
+                dag.get_aggregate_graph(), ctdne.embeddings[0], report_warnings=False
+            )
         except:
             ok2 = False
         end_time = time.time()
@@ -131,7 +152,20 @@ def measure_ctdne(dg, last_graph, dag):
 
         tot = round(t + rt, 2)
 
-        s = "CTDNE," + str(d) + "," + str(t) + "," + str(rt) + "," + str(tot) + "," + str(ok1) + "," + str(ok2)
+        s = (
+            "CTDNE,"
+            + str(d)
+            + ","
+            + str(t)
+            + ","
+            + str(rt)
+            + ","
+            + str(tot)
+            + ","
+            + str(ok1)
+            + ","
+            + str(ok2)
+        )
         print(s)
 
 
@@ -148,7 +182,7 @@ def measure_stwalk(dg, last_graph, dag):
                 time_step=ts,
                 time_window_size=5,
                 workers=WORKERS,
-                vocab_window_size=5
+                vocab_window_size=5,
             )
             st.make_embedding(dg)
         except:
@@ -168,7 +202,20 @@ def measure_stwalk(dg, last_graph, dag):
 
         tot = round(t + rt, 2)
 
-        s = "STWALK," + str(d) + "," + str(t) + "," + str(rt) + "," + str(tot) + "," + str(ok1) + "," + str(ok2)
+        s = (
+            "STWALK,"
+            + str(d)
+            + ","
+            + str(t)
+            + ","
+            + str(rt)
+            + ","
+            + str(tot)
+            + ","
+            + str(ok1)
+            + ","
+            + str(ok2)
+        )
         print(s)
 
 

@@ -53,6 +53,34 @@ class CumulativeStatistics:
                 elif l < avg:
                     self.y.append(mval)
 
+    def add_high_low_groups_distr(self, xdict, ydict):
+        critic_point = None
+
+        H = set()
+        NH = set(xdict.keys())
+        total_degree = sum(xdict.values())
+        total_hub = 0
+
+        for node, deg in xdict.items():
+            total_hub = total_hub + deg
+            total_degree = total_degree - deg
+            H.add(node)
+            NH.remove(node)
+            if total_hub > total_degree:
+                critic_point = deg
+                break
+
+        print("#HUBS", len(H), "#non-hubs", len(NH), "critic-point", critic_point)
+
+        for node in xdict:
+            h = xdict[node]
+            if node in ydict:
+                f1 = ydict[node]
+                if h >= critic_point:
+                    self.x.append(f1)
+                else:
+                    self.y.append(f1)
+
 
 class CumulativeCorrelation(CumulativeStatistics):
     def __init__(self):

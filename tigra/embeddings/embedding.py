@@ -14,6 +14,8 @@ from tigra.core.dgraph import Graph
 import numpy as np
 import heapq
 
+import os, shutil
+
 
 class SingletonEmbedding:
     """
@@ -104,10 +106,10 @@ class SingletonEmbedding:
         Saves embeddings to a csv file.
         """
         with open(file, "w", encoding="utf-8") as f:
-            for id, vector in self.embedding:
+            for id, vector in self.embedding.items():
                 f.write(str(id))
                 f.write(",")
-                f.write(",".join(vector))
+                f.write(",".join([str(v) for v in vector]))
                 f.write("\n")
 
     def load_from_file(self, file: str):
@@ -155,3 +157,43 @@ class Embedding(ABC):
 
     def make_embedding(self, data):
         self.embeddings = self.construct(data)
+
+    def save_embedding(self, folder_name: str):
+        if os.path.exists(folder_name):
+            shutil.rmtree(folder_name)
+
+        os.mkdir(folder_name)
+        for i in range(len(self.embeddings)):
+            fn = str(i) + ".emb"
+            path = os.path.join(folder_name, fn)
+            self.embeddings[i].save_to_file(path)
+
+
+class FSEmbedding(Embedding):
+    """
+    Embeddings loadead from file system
+    """
+
+    def __init__(self, folder_name: str):
+        super().__init__(0)
+
+        if not os.path.exists(folder_name):
+            raise Exception(folder_name + " does not exist")
+
+        onlyfiles = [
+            f
+            for f in os.listdir(folder_name)
+            if os.path.isfile(os.path.join(folder_name, f))
+        ]
+
+        embs = [f for f in onlyfiles if f.endswith(".emb")]
+        embs.sort()
+        # print(embs)
+        for emb in embs:
+            s = SingletonEmbedding()
+            path = os.path.join(folder_name, emb)
+            s.load_from_file(path)
+            self.embeddings.append(s)
+
+    def construct(self, data) -> List[typing.Union[SingletonEmbedding, None]]:
+        raise Exception("This method should not be called for FSEmbedding instances")

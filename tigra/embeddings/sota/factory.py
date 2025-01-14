@@ -1,7 +1,7 @@
 """
 TIGRA software library
 
-TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning#
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning
 in Complex Dynamical Systems
 
 Factory for SOTA dynamic graph embedding methods
@@ -13,9 +13,13 @@ import typing
 
 from data.bank import Databank
 
-from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+# from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+from tigra.embeddings.rndw.rndwbase import DynN2V
+from tigra.embeddings.sota.stwalk import STWalk
+from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph
+from tigra.core.dgraph import DynamicAggregateGraph
 from tigra.embeddings.embedding import Embedding
 
 
@@ -59,6 +63,7 @@ class DN2V_Factory(Factory):
 
         conf = self.configs[dataset]
 
+        """
         dn2v = Dynnode2vec(
             conf[0],
             p=conf[1],
@@ -67,6 +72,8 @@ class DN2V_Factory(Factory):
             n_walks_per_node=conf[4],
             parallel_processes=16,
         )
+        """
+        dn2v = DynN2V(conf[0], conf[1], conf[2], num_walks=conf[4], walk_length=conf[3])
 
         es, time_resolution = load_event_sequence(dataset)  # type: ignore
 
@@ -80,7 +87,92 @@ class DN2V_Factory(Factory):
         return dn2v, dg  # type: ignore
 
 
+class STWalk_Factory(Factory):
+    def __init__(self, stwalkconf, datapath=None):
+        super().__init__(datapath)
+
+        conf_f = open(stwalkconf, "r")
+        conf_f.readline()  # header
+
+        self.configs = dict()
+
+        for line in conf_f:
+            tokens = line.split(",")
+            dsname = tokens[0]
+            dim = int(tokens[1])
+            timewindow = int(tokens[2])
+            cumulative = True if tokens[3] == "True" else False
+
+            self.configs[dsname] = (dim, timewindow, cumulative)
+
+    def get_embedding(self, dataset: str) -> Embedding:
+        if not dataset in self.configs:
+            print("WARNING: dataset not in stwalk configuration")
+            return None  # type: ignore
+
+        conf = self.configs[dataset]
+
+        es, time_resolution = load_event_sequence(dataset)  # type: ignore
+
+        dg = DynamicGraph()
+        dg.init_from_event_sequence(
+            es, time_resolution=time_resolution, directed=False, cumulative=conf[2]
+        )
+        
+        stw = STWalk(number_restart=10, walk_length=32, dimension=conf[0], time_step=len(dg.get_graph_sequence()), time_window_size=conf[1],workers=16,vocab_window_size=5)
+       
+
+        stw.make_embedding(dg)
+
+        return stw, dg  # type: ignore
+
+
+class CTDNE_Factory(Factory):
+    def __init__(self, ctdneconf, datapath=None):
+        super().__init__(datapath)
+
+        conf_f = open(ctdneconf, "r")
+        conf_f.readline()  # header
+
+        self.configs = dict()
+
+        for line in conf_f:
+            tokens = line.split(",")
+            dsname = tokens[0]
+            dim = int(tokens[1])
+            p = float(tokens[2])
+            q = float(tokens[3])
+            cumulative = True if tokens[4] == "True" else False
+
+            self.configs[dsname] = (dim, p, q, cumulative)
+
+    def get_embedding(self, dataset: str) -> Embedding:
+        if not dataset in self.configs:
+            print("WARNING: dataset not in ctdne configuration")
+            return None  # type: ignore
+
+        conf = self.configs[dataset]
+
+        es, time_resolution = load_event_sequence(dataset)  # type: ignore
+
+        #dg = DynamicGraph()
+        #dg.init_from_event_sequence(
+        #    es, time_resolution=time_resolution, directed=False, cumulative=conf[3]
+        #)
+        
+        ctdne = Ctdne(dim=conf[0], p=conf[1], q=conf[2])
+        agg_dg = DynamicAggregateGraph(name=dataset, event_sequence=es, directed=False)
+
+        ctdne.make_embedding(agg_dg)
+
+        return ctdne, agg_dg  # type: ignore
+
+
+
+
 dn2v_factory = None
+stw_factory = None
+ctdne_factory = None
 
 
 def get_dn2v_factory(dn2vconf, datapath=None):
@@ -90,3 +182,19 @@ def get_dn2v_factory(dn2vconf, datapath=None):
         dn2v_factory = DN2V_Factory(dn2vconf, datapath=datapath)
 
     return dn2v_factory
+
+def get_stwalk_factory(stwalkconf, datapath=None):
+    global stw_factory
+
+    if stw_factory == None:
+        stw_factory = STWalk_Factory(stwalkconf, datapath=datapath)
+
+    return stw_factory
+
+def get_ctdne_factory(ctdneconf, datapath=None):
+    global ctdne_factory
+
+    if ctdne_factory == None:
+        ctdne_factory = CTDNE_Factory(ctdneconf, datapath=datapath)
+
+    return ctdne_factory

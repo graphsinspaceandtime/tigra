@@ -14,28 +14,33 @@ sys.path.append(os.path.join(".."))
 sys.dont_write_bytecode = True
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
 P = [0.5, 1.0, 2.0, 4.0]
-#P = [1.0]
+# P = [1.0]
 
 Q = [0.5, 1.0, 2.0, 4.0]
-#Q = [1.0]
+# Q = [1.0]
 
 TIMEWINDOW = [1, 3, 5]
 
-NUM_RUNS = 5
-#NUM_RUNS = 1
+# NUM_RUNS = 5
+NUM_RUNS = 10
 
-WORKERS = 16
+WORKERS = 4
 WALKLEN = 32
 NUMWALKS = 10
-#NUMWALKS = 1
 
 from tigra.core.loaders import load_event_sequence
 from tigra.core.dgraph import DynamicGraph, DynamicAggregateGraph
-from tigra.embeddings.hypertuner import Dynnode2vec_Tuner, CTDNE_Tuner, STWalk_Tuner
+from tigra.embeddings.hypertuner import (
+    Dynnode2vec_Tuner,
+    CTDNE_Tuner,
+    STWalk_Tuner,
+    DN2V_Tuner,
+)
 
 """
 # TODO refactoring, see load_dataset from rwtime.py
@@ -48,17 +53,34 @@ def get_resolution(dataset_name):
         return "3-months"
 """
 
+
+def tune_dn2v(last_graph, dg):
+    print("\nTUNING DN2v")
+    tuner = DN2V_Tuner(
+        last_graph,
+        dg,
+        P,
+        Q,
+        [WALKLEN],  # walk length
+        [NUMWALKS],  # num walks
+        num_runs=NUM_RUNS,
+        parallel_processes=WORKERS,
+    )
+    tuner.tune()
+    tuner.print_report()
+
+
 def tune_dynnode2vec(last_graph, dg):
     print("\nTUNING dynnode2vec")
     tuner = Dynnode2vec_Tuner(
-        last_graph, 
-        dg, 
-        P, 
+        last_graph,
+        dg,
+        P,
         Q,
-        [WALKLEN],                  # walk length
-        [NUMWALKS],                  # num walks
-        num_runs=NUM_RUNS, 
-        parallel_processes=WORKERS
+        [WALKLEN],  # walk length
+        [NUMWALKS],  # num walks
+        num_runs=NUM_RUNS,
+        parallel_processes=WORKERS,
     )
     tuner.tune()
     tuner.print_report()
@@ -71,10 +93,10 @@ def tune_ctdne(last_graph, dag):
         dag,
         P,
         Q,
-        [WALKLEN],                              # walk length
-        [NUMWALKS],                           # num walks
+        [WALKLEN],  # walk length
+        [NUMWALKS],  # num walks
         num_runs=NUM_RUNS,
-        parallel_processes=WORKERS
+        parallel_processes=WORKERS,
     )
     tuner.tune()
     tuner.print_report()
@@ -82,19 +104,19 @@ def tune_ctdne(last_graph, dag):
 
 def tune_stwalk(last_graph, dg):
     print("\nTUNING STWALK")
-    
+
     ns = len(dg.get_graph_sequence())
     timewindow = list(range(1, ns))
     print(timewindow)
-    
+
     tuner = STWalk_Tuner(
-        last_graph, 
-        dg, 
+        last_graph,
+        dg,
         timewindow,
         num_runs=NUM_RUNS,
-        parallel_processes=WORKERS, 
-        walk_length=WALKLEN, 
-        n_walks_per_node=NUMWALKS
+        parallel_processes=WORKERS,
+        walk_length=WALKLEN,
+        n_walks_per_node=NUMWALKS,
     )
     tuner.tune()
     tuner.print_report()
@@ -110,7 +132,7 @@ def load_dataset(dataset_name):
 """
 
 if __name__ == "__main__":
-    if (len(sys.argv) != 2):
+    if len(sys.argv) != 2:
         print("USAGE: rwtuner dataset-index")
         sys.exit()
 
@@ -127,9 +149,9 @@ if __name__ == "__main__":
     dataset_name = datasets[dataset_index]
     print("\nTunning", dataset_name)
 
-    #es = load_dataset(dataset_name)
-    #time_resolution = get_resolution(dataset_name)
-    #print("TIME-RESOLUTION", time_resolution)
+    # es = load_dataset(dataset_name)
+    # time_resolution = get_resolution(dataset_name)
+    # print("TIME-RESOLUTION", time_resolution)
 
     es, time_resolution = load_event_sequence(dataset_name)
 
@@ -141,23 +163,29 @@ if __name__ == "__main__":
     last_graph = org_graphs[-1]
 
     dag = DynamicAggregateGraph(dataset_name, es, directed=False)
-    '''
+
+    start_time = time.time()
+    tune_dn2v(last_graph, dg)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("DN2V TIME [sec]", elapsed_time)
+
+    """
     start_time = time.time()
     tune_dynnode2vec(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DYNNODE2VEC TIME [sec]", elapsed_time)
-    '''
+  
     start_time = time.time()
     tune_ctdne(last_graph, dag)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("CTDNE TIME [sec]", elapsed_time)
-    
-    '''
+
     start_time = time.time()
     tune_stwalk(last_graph, dg)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("STWALK TIME [sec]", elapsed_time)
-    '''
+    """
