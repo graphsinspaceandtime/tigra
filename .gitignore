@@ -2,3 +2,4 @@
 __pycache__/
 /tigra.egg-info/
 .vscode/
+emb/

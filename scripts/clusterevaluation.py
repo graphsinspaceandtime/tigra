@@ -18,7 +18,7 @@ from data.bank import Databank
 databank = Databank()
 datasets = databank.get_keys()
 
-dn2v_fact = get_dn2v_factory("/mnt/c/Users/babic/sources/tigra/dn2v.conf")
+dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
 
 
 def lideval(dataset):
