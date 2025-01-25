@@ -3,7 +3,7 @@ TIGRA software library
 
 TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
 
-Script to perform similarity search evaluation
+Script to perform clustering
 """
 
 import sys
