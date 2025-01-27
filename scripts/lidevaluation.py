@@ -62,6 +62,6 @@ if __name__ == "__main__":
 
     for dataset in datasets:
         print("DATASET", dataset)
-        if dataset != "ia-contacts_hypertext2009":
+        if dataset == "ia-contacts_hypertext2009":
             lideval_ctdne(dataset)
         print("......................................................................")
