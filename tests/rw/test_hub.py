@@ -20,12 +20,12 @@ if __name__ == "__main__":
     dg.init_from_event_sequence(es, time_resolution=resol, directed=False)
     dg.info()
 
-    from tigra.embeddings.rndw.rndwbase import HubRandomWalk
+    from tigra.embeddings.rndw.hubbasedrw import HubRandomWalk, HubChangedRandomWalk
 
     start = time.time_ns()
  
 
-    dn2v = HubRandomWalk(200, 1, 1)
+    dn2v = HubChangedRandomWalk(200, 1, 1)
     dn2v.make_embedding(dg)
 
     graph_sequence = dg.get_graph_sequence()
