@@ -321,15 +321,21 @@ class HubSampler(RandomWalkSampler):
         self.num_workers = num_workers
 
     def select_next_node(self, start_node, current_node, prev_node, neighbours):
-        hub = 0
-        index = -1
-        
+        probabilities = []
+        total_hub = 0
+
         for n in neighbours:
-            if self.G.degree[n] > hub:
-                hub = self.G.degree[n]
-                index = n 
-               
-        return index
+            total_hub += self.G.degree[n]
+
+        for n in neighbours:
+            probabilities.append(self.G.degree[n] / total_hub)
+
+
+        probabilities = np.asarray(probabilities).astype('float64')
+        probabilities = probabilities / np.sum(probabilities)
+
+        return np.random.choice(neighbours, 1, p = probabilities)[0]       
+        
 
     def num_walks(self, node):
         return self.nw
