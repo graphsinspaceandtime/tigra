@@ -7,7 +7,7 @@ HUB-based classes for dynamic graph embedding methods based on random walks
 """
 
 
-from tigra.embeddings.rndw.rndwbase import RWEmbBase, RandomWalkSampler, RWEmbEgoDelta
+from tigra.embeddings.rndw.rndwbase import RWEmbBase, RandomWalkSampler, RWEmbEgoDelta, PQRandomWalk
 
 import networkx as nx
 import numpy as np
@@ -103,6 +103,29 @@ class HubChangedRandomWalk(HubAwareEmbedding):
         return HubSampler(
             graph,
             nodes,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+        )
+
+
+class DynN2V_HubDelta(HubAwareEmbedding):
+    def __init__(
+        self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.p = p
+        self.q = q
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return PQRandomWalk(
+            graph,
+            nodes,
+            self.p,
+            self.q,
             num_walks=self.num_walks,
             walk_length=self.walk_length,
             num_workers=self.num_workers,
