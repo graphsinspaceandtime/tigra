@@ -40,6 +40,8 @@ from tigra.embeddings.hypertuner import (
     CTDNE_Tuner,
     STWalk_Tuner,
     DN2V_Tuner,
+    DynN2V_HubDelta_Tuner,
+    HubChangedRandomWalk_Tuner
 )
 
 """
@@ -85,6 +87,37 @@ def tune_dynnode2vec(last_graph, dg):
     tuner.tune()
     tuner.print_report()
 
+
+def tune_dynnode2vec_hub_delta(last_graph, dg):
+    print("\nTUNING dynnode2vec_hub_delta")
+    tuner = DynN2V_HubDelta_Tuner(
+        last_graph,
+        dg,
+        P,
+        Q,
+        [WALKLEN],
+        [NUMWALKS],
+        num_runs=NUM_RUNS,
+        parallel_processes=WORKERS
+    )
+    tuner.tune()
+    tuner.print_report()
+
+
+def tune_hub_changed_prop(last_graph, dg):
+    print("\nTUNING HubChangedRandomWalk_Tuner")
+    tuner = HubChangedRandomWalk_Tuner(
+        last_graph,
+        dg,
+        [WALKLEN],
+        [NUMWALKS],
+        num_runs=NUM_RUNS,
+        parallel_processes=WORKERS
+    )
+    tuner.tune()
+    tuner.print_report()
+
+    
 
 def tune_ctdne(last_graph, dag):
     print("\nTUNING CTDNE")
