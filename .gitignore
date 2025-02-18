@@ -4,3 +4,4 @@ __pycache__/
 .vscode/
 emb/
 clustering_eval/
+anomalies_eval/
