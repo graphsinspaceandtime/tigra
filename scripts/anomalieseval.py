@@ -24,9 +24,9 @@ datasets = databank.get_keys()
 methods = ["dn2v_", "stwalk_", "ctdne_"]
 
 factories = {
-    "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
+    # "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
     "stwalk": get_stwalk_factory("stwalk.conf"),
-    "ctdne": get_ctdne_factory("ctdne.conf"),
+    # "ctdne": get_ctdne_factory("ctdne.conf"),
 }
 
 
@@ -43,7 +43,7 @@ def anomalieseval(dataset):
 
         path = os.path.join("anomalies_eval", f"lof_{name}_{dataset}.txt")
         with open(path, "w", encoding="utf-8") as f:
-            f.write("SNAPSHOT_NUM,CORR,PEARSON\n")
+            f.write("SNAPSHOT_NUM,CORR_lof,P_lof,CORR_iso,P_iso\n")
         lide = AnomaliesEval(emb, dg, dataset, path)
         lide.eval()
 

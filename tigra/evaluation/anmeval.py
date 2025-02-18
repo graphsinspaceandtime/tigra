@@ -3,6 +3,7 @@ import networkx as nx
 
 from tigra.core.dgraph import DynamicAggregateGraph
 from sklearn.neighbors import LocalOutlierFactor
+from sklearn.ensemble import IsolationForest
 from scipy.stats import pearsonr
 
 
@@ -25,12 +26,17 @@ class AnomaliesEval:
         lof.fit(X)
         lof_score = lof.decision_function(X)
 
+        iforest = IsolationForest(contamination=0.1, random_state=42)
+        iforest.fit(X)
+        iforest_score = iforest.decision_function(X)
+
         centrality = nx.degree_centrality(lightcopyg)
         centrality_scores = np.array([centrality[node] for node in nodes_list])
 
         corr_lof, p_lof = pearsonr(lof_score, centrality_scores)
+        corr_iso, p_iso = pearsonr(iforest_score, centrality_scores)
 
-        rez = f"{corr_lof}, {p_lof}"
+        rez = f"{corr_lof},{p_lof},{corr_iso},{p_iso}"
         return rez
 
     def eval(
