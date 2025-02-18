@@ -44,10 +44,10 @@ def clustereval(dataset):
         path = os.path.join("clustering_eval", f"{name}_{dataset}.txt")
         with open(path, "w", encoding="utf-8") as f:
             f.write(
-                "SNAPSHOT_NUM,NUM_COMMUNITIES,NUM_REC_COMMUNITIES,MODULARITY,SIL1_GT,SIL2_COMMS,RG_MODULARITY,NUM_REC_LABELS,NMI_GT_RG,NMI_GT_ALGLBL,NMI_COMM_LBL_ALGLBL,NMI_COMM_LBL_ALGCOMM\n"
+                "SNAPSHOT_NUM,GRAPH_ALG,GRAPH_NUM_COMMUNITIES,GRAPH_MODULARITY,GRAPH_SILHOUETTE,EMBEDDING_ALG,EMBEDDING_NUM_CLUSTERS,EMBEDDING_PARAMS,EMBEDDING_SILHOUETTE,NMI_GRAPH_EMBEDDING\n"
             )
-            lide = ClusteringEval(emb, dg, dataset, f)
-            lide.eval()
+        lide = ClusteringEval(emb, dg, dataset, path)
+        lide.eval()
 
 
 if __name__ == "__main__":
