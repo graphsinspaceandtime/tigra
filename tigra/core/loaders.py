@@ -113,7 +113,15 @@ def load_snap_dataset(path, has_weight=False) -> EventSequence:
             tgt = int(tokens[1])
             time = int(tokens[2])
 
-            events.append(Event(src=src, dst=tgt, timestamp=time))
+            event_data = None
+            if len(tokens) == 5:
+                src_class = tokens[3]
+                tgt_class = tokens[4]
+                event_data = {"src_class": src_class, "dst_class": tgt_class}
+
+            events.append(
+                Event(src=src, dst=tgt, timestamp=time, event_data=event_data)
+            )
 
     events_sequence = EventSequence(list_of_events=events)
 
