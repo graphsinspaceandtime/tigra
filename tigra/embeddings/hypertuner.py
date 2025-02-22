@@ -69,15 +69,18 @@ class Tuner(ABC):
             iterator = tqdm.tqdm(iterator)
 
         for i in iterator:
+            # test creating an instance
+            try:
+                self.create_instance(i)
+            except:
+                print("[tuner] failed to create instance")
+                print("[tuner] configuration: " + str(self.confs[i]))
+                print("[tuner] this configuration will not be accounted during tuning")
+                continue
+
             prec_values, rec_values, f1_values = [], [], []
             for run_num in range(self.num_runs):
-                try:
-                    current_instance = self.create_instance(i)
-                except:
-                    print("[tuner] failed to create instance")
-                    print("[tuner] configuration: " + str(self.confs[i]))
-                    print("[tuner] run_num: " + str(run_num))
-                    continue
+                current_instance = self.create_instance(i)
                 current_instance.make_embedding(self.data)
                 last_embedding = current_instance.embeddings[-1]
                 if last_embedding == None:
