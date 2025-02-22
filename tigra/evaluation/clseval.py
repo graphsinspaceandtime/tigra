@@ -237,7 +237,7 @@ class ClusteringEval:
                 embc["communities"],
                 grc["modularity"],
                 grc["silhouette_score"],
-                grc["silhouette_score"],
+                embc["silhouette_score"],
                 nmi,
             ]
             output = ", ".join(map(str, row))

@@ -53,7 +53,8 @@ def clustereval(dataset):
 if __name__ == "__main__":
     os.mkdir("clustering_eval")
     for dataset in datasets:
-        if "synt" not in dataset:
+        # if "synt" not in dataset:
+        if "radoslaw" in dataset:
             print("DATASET", dataset)
             clustereval(dataset)
             print(
