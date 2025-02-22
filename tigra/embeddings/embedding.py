@@ -25,6 +25,7 @@ class SingletonEmbedding:
     def __init__(self):
         self.embedding = dict()
         self.dists = dict()
+        self.label = dict()
 
     def add_embedding_vector(self, id, vector: List[float]):
         self.embedding[id] = vector
@@ -124,6 +125,23 @@ class SingletonEmbedding:
                     int(line[0]), [float(point) for point in line[1:]]
                 )
 
+    def load_labels_from_file(self, file: str):
+        with open(file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.split(",")
+                node_id = int(line[0])
+                label = line[1].strip()
+                self.label[node_id] = label
+
+    def get_labels(self):
+        return self.label
+
+    def get_node_ids(self):
+        return list(self.embedding.keys())
+
+    def get_label(self, node):
+        return self.label[node]
+
 
 class Embedding(ABC):
     """
@@ -194,6 +212,17 @@ class FSEmbedding(Embedding):
             path = os.path.join(folder_name, emb)
             s.load_from_file(path)
             self.embeddings.append(s)
+
+        labs = [f for f in onlyfiles if f.endswith(".labels")]
+        if len(labs) == 0:
+            return
+
+        labs.sort()
+        for i in range(len(labs)):
+            lab = labs[i]
+            emb = self.embeddings[i]
+            path = os.path.join(folder_name, lab)
+            emb.load_labels_from_file(path)
 
     def construct(self, data) -> List[typing.Union[SingletonEmbedding, None]]:
         raise Exception("This method should not be called for FSEmbedding instances")

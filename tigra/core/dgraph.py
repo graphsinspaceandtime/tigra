@@ -37,6 +37,8 @@ class Graph:
         else:
             self.G = nx.DiGraph() if directed else nx.Graph()
 
+        self.labeled = False
+
     def is_directed(self):
         """
         Returns boolean flag indicating wheather the graph is directed (if false then the graph is undirected)
@@ -51,6 +53,7 @@ class Graph:
             self.G.add_node(node_id, node_label=node_label, node_data=node_data)
         elif node_label != None:
             self.G.add_node(node_id, node_label=node_label)
+            self.labeled = True
         elif node_data != None:
             self.G.add_node(node_id, node_data=node_data)
         else:
@@ -61,6 +64,7 @@ class Graph:
         Updates the label of the node, use this method if nodes are created via calling add_edge
         """
         self.G.nodes[node_id]["node_label"] = node_label
+        self.labeled = True
 
     def update_node_data(self, node_id, node_vector):
         """
@@ -223,6 +227,18 @@ class Graph:
             median(degrees),
             stdev(degrees) if len(degrees) >= 2 else 0.0,
         )
+
+    def export_labels(self, file_path: str):
+        if not self.labeled:
+            print("Trying to export labels for unlabelled graph, aborting")
+            return
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            for node in self.G.nodes():
+                f.write(str(node))
+                f.write(",")
+                f.write(str(self.get_node_label(node)))
+                f.write("\n")
 
 
 class Event:
@@ -566,7 +582,7 @@ class DynamicAggregateGraph:
             else:
                 if self.weighted:
                     self.agg_graph.increase_weight(src, dst)
-                    
+
         self.G = self.agg_graph.G
 
     def get_aggregate_graph(self):

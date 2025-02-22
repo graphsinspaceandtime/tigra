@@ -1,4 +1,5 @@
 import sys
+import os
 import random
 import numpy as np
 import networkx as nx
@@ -8,9 +9,11 @@ sys.path.append("../..")
 from tigra.generators.dsbm import DSBMGenerator, DPPGenerator
 from tigra.core.loaders import load_snap_dataset
 from tigra.core.dgraph import DynamicGraph
-from tigra.core.dnea import EvolDynamics
 
-from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+# from tigra.core.dnea import EvolDynamics
+
+# from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
+
 from tigra.core.greval import GraphReconstructionEval
 
 """
@@ -99,6 +102,68 @@ def examine_partition(G, partition):
 
 
 # dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
+# dppg.generate_and_save("dpp_1000_4.events")
+
+es = load_snap_dataset("dpp_1000_4.events")
+
+print("Cumulative DPP")
+dg = DynamicGraph()
+dg.init_from_event_sequence(
+    es, time_resolution="month", directed=False, cumulative=True
+)
+dg.info()
+
+"""
+from tigra.embeddings.rndw.rndwbase import DynN2V
+
+dn2v = DynN2V(100, 0.5, 4)
+dn2v.make_embedding(dg)
+
+folder_name = "dpp_labeled"
+dn2v.save_embedding(folder_name)
+
+graph_sequence = dg.get_graph_sequence()
+for i in range(len(graph_sequence)):
+    print("SNAPSHOT", i)
+    emb = dn2v.embeddings[i]
+    graph = graph_sequence[i]
+
+    gre = GraphReconstructionEval(graph, emb)
+
+    print("Precision", gre.get_avg_precision())
+    print("Recall", gre.get_avg_recall())
+    print("F1", gre.getF1())
+
+    fn = str(i) + ".labels"
+    path = os.path.join(folder_name, fn)
+    graph.export_labels(path)
+"""
+
+from tigra.embeddings.embedding import FSEmbedding
+
+folder_name = "dpp_labeled"
+emb = FSEmbedding(folder_name)
+print("#embeddings", len(emb.embeddings))
+for e in emb:
+    nodes = e.get_node_ids()
+    node_0 = nodes[0]
+    emb_0 = e[node_0]
+    label_0 = e.get_label(node_0)
+    print(node_0, "label", label_0)
+    print(emb_0)
+    print()
+
+
+"""
+for i, g in enumerate(dg.get_graph_sequence()):
+    for node in g.G.nodes:
+        # print(f"G[{i}] N[{node}] Label[{g.get_node_label(node)}]")
+        lab = g.get_node_label(node)
+        print(node, lab)
+"""
+
+"""
+# dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
 # dppg.generate_and_save('dpp_1000_4.events')
 
 es = load_snap_dataset("dpp_1000_4.events")
@@ -144,3 +209,4 @@ gre = GraphReconstructionEval(last_graph, last_embedding, report_warnings=False)
 print("Precision", gre.get_avg_precision())
 print("Recall", gre.get_avg_recall())
 print("F1", gre.getF1())
+"""

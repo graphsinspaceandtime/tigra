@@ -442,6 +442,12 @@ class LIDEval:
         lidestimator = NCLIDEstimator(graph.G)
         lidestimator.estimate_lids()
         lid_vals = lidestimator.get_lid_values()
+        
+        print(lid_vals)
+        print(deg)
+        for nde in lightcopyg.nodes:
+            print(nde, ":", lidestimator.nc_len(nde), ", ")
+            
 
         gre = GraphReconstructionEval(graph, emb, report_warnings=False)
         f1_vals = gre.get_F1_per_node()
