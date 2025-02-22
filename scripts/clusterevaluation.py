@@ -14,7 +14,7 @@ from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.embeddings.sota.factory import get_stwalk_factory
 from tigra.embeddings.sota.factory import get_ctdne_factory
 from tigra.embeddings.embedding import FSEmbedding
-from tigra.evaluation.clseval import ClusteringEval
+from tigra.evaluation.clustering_eval import ClusteringEval
 
 from data.bank import Databank
 import os
