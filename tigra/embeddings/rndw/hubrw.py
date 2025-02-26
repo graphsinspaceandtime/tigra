@@ -11,11 +11,12 @@ from tigra.embeddings.rndw.rndwbase import RWEmbBase, RandomWalkSampler, RWEmbEg
 
 import networkx as nx
 import numpy as np
+import math
 
 from typing import List
 
 
-class HubAwareEmbedding(RWEmbBase):
+class HubChangedEmbedding(RWEmbBase):
     def __init__(self, dim, delta_nodes=True, num_workers=1):
         super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
 
@@ -67,6 +68,26 @@ class HubSampler(RandomWalkSampler):
 
     def walk_length(self, node):
         return self.wl
+        
+
+"""
+ Base class when num_walks and/or walk_length changed
+ Change num_walks and/or walk_length as you prefer
+"""
+class HubnessRandomWalk(PQRandomWalk):
+    def __init__(
+        self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+
+    def num_walks(self, node):
+        nw = math.ceil((1 + self.G.degree[node]) * self.nw)
+        return nw
+
+    def walk_length(self, node):
+        wl = math.ceil(self.wl / (1 + self.G.degree[node]))
+        return wl
+
 
 
 class HubRandomWalk(RWEmbEgoDelta):
@@ -89,7 +110,7 @@ class HubRandomWalk(RWEmbEgoDelta):
         )
 
 
-class HubChangedRandomWalk(HubAwareEmbedding):
+class HubChangedRandomWalk(HubChangedEmbedding):
     def __init__(
         self, dim, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
     ):
@@ -109,7 +130,7 @@ class HubChangedRandomWalk(HubAwareEmbedding):
         )
 
 
-class DynN2V_HubDelta(HubAwareEmbedding):
+class DynN2V_HubDelta(HubChangedEmbedding):
     def __init__(
         self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
     ):
@@ -122,6 +143,30 @@ class DynN2V_HubDelta(HubAwareEmbedding):
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return PQRandomWalk(
+            graph,
+            nodes,
+            self.p,
+            self.q,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+        )
+
+
+
+class DynN2V_HubDeltaNWWL(HubChangedEmbedding):
+    def __init__(
+        self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.p = p
+        self.q = q
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return HubnessRandomWalk(
             graph,
             nodes,
             self.p,

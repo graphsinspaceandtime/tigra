@@ -20,12 +20,12 @@ if __name__ == "__main__":
     dg.init_from_event_sequence(es, time_resolution=resol, directed=False)
     dg.info()
 
-    from tigra.embeddings.rndw.hubrw import HubRandomWalk, HubChangedRandomWalk, DynN2V_HubDelta
+    from tigra.embeddings.rndw.hubrw import HubRandomWalk, HubChangedRandomWalk, DynN2V_HubDelta, DynN2V_HubDeltaNWWL
 
     start = time.time_ns()
  
 
-    dn2v = DynN2V_HubDelta(25, 0.5, 2)
+    dn2v = DynN2V_HubDeltaNWWL(100, 0.5, 4)
     dn2v.make_embedding(dg)
 
     graph_sequence = dg.get_graph_sequence()
