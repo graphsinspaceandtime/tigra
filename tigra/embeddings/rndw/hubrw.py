@@ -71,7 +71,7 @@ class HubSampler(RandomWalkSampler):
         
 
 """
- Base class when num_walks and/or walk_length changed
+ Base class when num_walks and/or walk_length change
  Change num_walks and/or walk_length as you prefer
 """
 class HubnessRandomWalk(PQRandomWalk):
@@ -86,6 +86,38 @@ class HubnessRandomWalk(PQRandomWalk):
 
     def walk_length(self, node):
         wl = math.ceil(self.wl / (1 + self.G.degree[node]))
+        return wl
+
+
+
+class HubnessRandomWalkInverseDegree(PQRandomWalk):
+    def __init__(
+        self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+
+    def num_walks(self, node):
+        nw = math.ceil(((1 / self.G.degree[node])) * self.nw)
+        return nw
+
+    def walk_length(self, node):
+        wl = math.ceil(self.wl / (1 / self.G.degree[node]))
+        return wl
+
+
+
+class HubnessRandomWalkLogDegree(PQRandomWalk):
+    def __init__(
+        self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+
+    def num_walks(self, node):
+        nw = math.ceil((1 + math.log(self.G.degree[node])) * self.nw)
+        return nw
+
+    def walk_length(self, node):
+        wl = math.ceil(1 + math.log(self.G.degree[node]))
         return wl
 
 
@@ -167,6 +199,54 @@ class DynN2V_HubDeltaNWWL(HubChangedEmbedding):
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return HubnessRandomWalk(
+            graph,
+            nodes,
+            self.p,
+            self.q,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+        )
+
+
+
+class DynN2V_HubDeltaInverseDegree(HubChangedEmbedding):
+    def __init__(
+        self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.p = p
+        self.q = q
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return HubnessRandomWalkInverseDegree(
+            graph,
+            nodes,
+            self.p,
+            self.q,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+        )
+
+
+
+class DynN2V_HubDeltaLogDegree(HubChangedEmbedding):
+    def __init__(
+        self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.p = p
+        self.q = q
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return HubnessRandomWalkLogDegree(
             graph,
             nodes,
             self.p,
