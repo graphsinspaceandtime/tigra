@@ -19,24 +19,47 @@ from sklearn.metrics.cluster import normalized_mutual_info_score
 
 from networkx.algorithms.community.modularity_max import greedy_modularity_communities
 from networkx.algorithms.community.quality import modularity, coverage
-from networkx.algorithms.community import girvan_newman, louvain_communities
+from networkx.algorithms.community import (
+    girvan_newman,
+    louvain_communities,
+    asyn_lpa_communities,
+)
 
 from tigra.core.dgraph import DynamicAggregateGraph
 
 
 class EmbClusterer:
-    def __init__(self, graph, embedding):
+    def __init__(self, graph, embedding, num_com=None):
 
         self.graph = graph
         self.embedding = embedding
         self.nodes_list = list(self.graph.nodes())
         self.X = np.array([embedding[node] for node in self.nodes_list])
+        self.num_coms = num_com
+
+        print(num_com)
+
+        n_clusters = []
+        if num_com != None:
+            ts = set(num_com)
+            for n in ts:
+                n_clusters.append(n)
+
+        # default_k = [2, 3, 4, 5, 10]
+        # for n in default_k:
+        #     if n not in n_clusters:
+        #        n_clusters.append(n)
+
+        print(n_clusters)
 
         self.grid_parms = {
-            KMeans: {"n_clusters": [2, 3, 4, 5, 10]},
-            DBSCAN: {"eps": [0.1, 0.2, 0.3, 0.4, 0.5], "min_samples": [3, 5, 7, 10]},
+            KMeans: {"n_clusters": n_clusters},
+            DBSCAN: {
+                "eps": [0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 3, 5, 10, 50, 100, 200, 500],
+                "min_samples": [3, 5, 7, 10],
+            },
             AgglomerativeClustering: {
-                "n_clusters": [2, 3, 4, 5, 10],
+                "n_clusters": n_clusters,
                 "linkage": ["ward", "complete", "average"],
             },
         }
@@ -63,11 +86,27 @@ class EmbClusterer:
             grid_search.fit(self.X)
 
             best_alg = grid_search.best_estimator_
+            # k = grid_search.best_params_["n_clusters"]
 
             labels = getattr(best_alg, "labels_", None)
             if labels is None and hasattr(best_alg, "fit_predict"):
                 labels = best_alg.fit_predict(self.X)
 
+            # print(labels)
+            lab = set(labels)
+            num_labs = len(lab)
+            part = []
+            for _ in range(num_labs):
+                part.append([])
+
+            for i in range(len(self.nodes_list)):
+                node = self.nodes_list[i]
+                cl = labels[i]
+                part[cl].append(node)
+
+            print(part)
+
+            mod = modularity(self.graph, part)
             if labels is not None:
                 if alg_name == "DBSCAN":
                     num_clusters = len(set(labels)) - (1 if -1 in labels else 0)
@@ -76,6 +115,8 @@ class EmbClusterer:
             else:
                 num_clusters = "N/A"
 
+            # modularnost
+
             self.results.append(
                 {
                     "alg": alg_name,
@@ -83,6 +124,7 @@ class EmbClusterer:
                     "params": grid_search.best_params_,
                     "silhouette_score": grid_search.best_score_,
                     "labels": labels,
+                    "mod": mod,
                 }
             )
 
@@ -118,16 +160,31 @@ class GraphClusterer:
 
     def get_gnc(self, graph):
         communities_generator = girvan_newman(graph)
-        first_level_communities = next(communities_generator)
-        communities_list = [list(c) for c in first_level_communities]
+        communities_list = []
+        for com in communities_generator:
+            communities_list.append(com)
+
+        # print(communities_generator)
+        # first_level_communities = next(communities_generator)
+        # communities_list = [list(c) for c in first_level_communities]
         return communities_list
+
+    def get_lp(self, graph):
+        iter = asyn_lpa_communities(graph, seed=0)
+        part = []
+        for c in iter:
+            part.append(c)
+
+        print(part)
+
+        return part
 
     def get_gmc(self, graph):
         return np.asarray(greedy_modularity_communities(graph))
 
     def detect_communities(self):
         algorithms = [
-            ("Girvan-Newman", self.get_gnc),
+            ("lp", self.get_lp),
             ("Louvain", louvain_communities),
             ("GMO", self.get_gmc),
         ]
@@ -135,16 +192,16 @@ class GraphClusterer:
         for name, method in algorithms:
             communities = method(self.G)
             mod = modularity(self.G, communities)
-            silhouette, labels = self.silhouette(communities)
-            print("Silhouette Score:", silhouette)
+            # silhouette, labels = self.silhouette(communities)
+            # print("Silhouette Score:", silhouette)
 
             self.results.append(
                 {
                     "alg": name,
                     "communities": communities,
                     "modularity": mod,
-                    "silhouette_score": silhouette,
-                    "labels": labels,
+                    # "silhouette_score": silhouette,
+                    # "labels": labels,
                 }
             )
 
@@ -200,7 +257,12 @@ class ClusteringEval:
         grc = GraphClusterer(lightcopyg)
         grc.detect_communities()
 
-        embc = EmbClusterer(lightcopyg, emb)
+        nc = []
+        for ginfo in grc.results:
+            k = ginfo["communities"]
+            nc.append(len(k))
+
+        embc = EmbClusterer(lightcopyg, emb, num_com=nc)
         embc.detect_clusters()
 
         return grc.results, embc.results
@@ -216,29 +278,29 @@ class ClusteringEval:
                     i, self.embedding[i], self.graph_sequence[i]
                 )
                 for ginfo in grc:
-                    grc_labels = ginfo["labels"]
+                    # grc_labels = ginfo["labels"]
                     for einfo in embc:
-                        emb_labels = einfo["labels"]
-                        nmi_gt_community_rg = normalized_mutual_info_score(
-                            grc_labels, emb_labels
-                        )
-                        self.save_results_to_csv(i, ginfo, einfo, nmi_gt_community_rg)
+                        # emb_labels = einfo["labels"]
+                        # nmi_gt_community_rg = normalized_mutual_info_score(
+                        #     grc_labels, emb_labels
+                        # )
+                        self.save_results_to_csv(i, ginfo, einfo)
             except Exception as e:
                 print(f"An error occurred: {e}")
         print("-------------------\n")
 
-    def save_results_to_csv(self, snapshot_num, grc, embc, nmi):
+    def save_results_to_csv(self, snapshot_num, grc, embc, nmi=None):
         with open(self.path, "a", encoding="utf-8") as f:
+            # "SNAPSHOT_NUM,GRAPH_ALG,GRAPH_MODULARITY, GRAPH_NUM_COMMUNITIES,EMBEDDING_ALG,EMBEDDING_NUM_CLUSTERS,EMBEDDING_SILHOUETTE,EMBEDDING_MOD,NMI_GRAPH_EMBEDDING\n"
             row = [
                 snapshot_num,
                 grc["alg"],
-                embc["alg"],
-                len(grc["communities"]),
-                embc["communities"],
                 grc["modularity"],
-                grc["silhouette_score"],
+                len(grc["communities"]),
+                embc["alg"],
+                embc["communities"],
                 embc["silhouette_score"],
-                nmi,
+                embc["mod"],
             ]
             output = ", ".join(map(str, row))
 

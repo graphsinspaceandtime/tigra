@@ -25,8 +25,8 @@ methods = ["dn2v_", "stwalk_", "ctdne_"]
 
 factories = {
     "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
-    "stwalk": get_stwalk_factory("stwalk.conf"),
-    "ctdne": get_ctdne_factory("ctdne.conf"),
+    # "stwalk": get_stwalk_factory("stwalk.conf"),
+    # "ctdne": get_ctdne_factory("ctdne.conf"),
 }
 
 
@@ -44,7 +44,7 @@ def anomalieseval(dataset):
         path = os.path.join("anomalies_eval", f"lof_{name}_{dataset}.txt")
         with open(path, "w", encoding="utf-8") as f:
             f.write(
-                "SNAPSHOT_NUM,corr_lof_cen,p_lof_cen,corr_iso_cen,p_iso_cen,corr_aen_cen,p_aen_cen,corr_lof_btw,p_lof_btw,corr_iso_btw,p_iso_btw,corr_aen_btw,p_aen_btw,corr_lof_egn,p_lof_egn,corr_iso_egn,p_iso_egn,corr_aen_egn,p_aen_egn,\n"
+                "SNAPSHOT_NUM,corr_lof_cen,corr_iso_cen,corr_lof_btw,corr_iso_btw,corr_lof_egn,corr_iso_egn\n"
             )
         lide = AnomaliesEval(emb, dg, dataset, path)
         lide.eval()
@@ -53,7 +53,8 @@ def anomalieseval(dataset):
 if __name__ == "__main__":
     os.mkdir("anomalies_eval")
     for dataset in datasets:
-        if "synt" not in dataset:
+        # if "synt" not in dataset:
+        if "radoslaw" in dataset:
             print("DATASET", dataset)
             anomalieseval(dataset)
             print(

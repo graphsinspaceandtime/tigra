@@ -5,7 +5,8 @@ from tigra.core.dgraph import DynamicAggregateGraph
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.ensemble import IsolationForest
 from scipy.stats import spearmanr
-from pyod.models.auto_encoder import AutoEncoder
+
+# from pyod.models.auto_encoder import AutoEncoder
 
 
 class AnomaliesEval:
@@ -31,9 +32,9 @@ class AnomaliesEval:
         iforest.fit(X)
         iforest_score = iforest.decision_function(X)
 
-        aencoder = AutoEncoder()
-        aencoder.fit(X)
-        aencoder_score = aencoder.decision_scores_
+        # aencoder = AutoEncoder()
+        # aencoder.fit(X)
+        # aencoder_score = aencoder.decision_scores_
 
         degree = nx.degree_centrality(lightcopyg)
         betweenes = nx.betweenness_centrality(lightcopyg)
@@ -43,19 +44,19 @@ class AnomaliesEval:
 
         corr_lof_cen, p_lof_cen = spearmanr(lof_score, centrality_scores)
         corr_iso_cen, p_iso_cen = spearmanr(iforest_score, centrality_scores)
-        corr_aen_cen, p_aen_cen = spearmanr(aencoder_score, centrality_scores)
+        # corr_aen_cen, p_aen_cen = spearmanr(aencoder_score, centrality_scores)
 
         betweenes_scores = np.array([betweenes[node] for node in nodes_list])
         corr_lof_btw, p_lof_btw = spearmanr(lof_score, betweenes_scores)
         corr_iso_btw, p_iso_btw = spearmanr(iforest_score, betweenes_scores)
-        corr_aen_btw, p_aen_btw = spearmanr(aencoder_score, betweenes_scores)
+        # corr_aen_btw, p_aen_btw = spearmanr(aencoder_score, betweenes_scores)
 
         eigenvector_scores = np.array([eigenvector[node] for node in nodes_list])
         corr_lof_egn, p_lof_egn = spearmanr(lof_score, eigenvector_scores)
         corr_iso_egn, p_iso_egn = spearmanr(iforest_score, eigenvector_scores)
-        corr_aen_egn, p_aen_egn = spearmanr(aencoder_score, eigenvector_scores)
+        # corr_aen_egn, p_aen_egn = spearmanr(aencoder_score, eigenvector_scores)
 
-        rez = f"{corr_lof_cen},{p_lof_cen},{corr_iso_cen},{p_iso_cen},{corr_aen_cen},{p_aen_cen},{corr_lof_btw},{p_lof_btw},{corr_iso_btw},{p_iso_btw},{corr_aen_btw},{p_aen_btw},{corr_lof_egn},{p_lof_egn},{corr_iso_egn},{p_iso_egn},{corr_aen_egn},{p_aen_egn}"
+        rez = f"{corr_lof_cen},{corr_iso_cen},{corr_lof_btw},{corr_iso_btw},{corr_lof_egn},{corr_iso_egn}"
 
         return rez
 
