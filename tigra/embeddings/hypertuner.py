@@ -27,6 +27,10 @@ from tigra.embeddings.sota.dynrnn_wrapper import DynRNN
 from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
 from tigra.embeddings.sota.dyngem_wrapper import DynGEM
 
+from tigra.embeddings.rndw.rndwbase import DynN2V
+
+from tigra.embeddings.rndw.lidrw import DynN2V_LIDDelta, DynN2V_LIDRW, DynN2V_LIDRWDelta
+
 
 class Tuner(ABC):
     """
@@ -394,3 +398,178 @@ class DynamicEmbedding_Tuner(Tuner):
                 n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
             )
         raise Exception(f"method '{self.method}' is incorrect")
+
+
+class DynamicEmbedding2_Tuner(Tuner):
+    """
+    Tuner for DynamicEmbedding methods (DynGem, DynAE, DynRNN, DynAERNN)
+
+    Variant without automatic parameter grid generation
+    This is a workaround for easier tuning of Dynamic Embedding methods
+    """
+
+    Method = typing.Literal["DynAE", "DynRNN", "DynAERNN", "DynGEM"]
+
+    method: Method
+    configs: typing.List
+    epochs: int
+    batch_size: int
+    n_nodes: int
+    has_cuda: bool
+    pick_n_layers_from_middle: int
+
+    def __init__(
+        self,
+        graph,
+        data,
+        params_desc,
+        method: Method,
+        configs: typing.List,
+        epochs: int,
+        batch_size: int,
+        n_nodes: int,
+        has_cuda: bool,
+        num_runs=1,
+        pick_n_layers_from_middle=0,
+    ):
+        super().__init__(graph, data, params_desc, num_runs)
+        self.method = method
+        self.configs = configs
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.n_nodes = n_nodes
+        self.has_cuda = has_cuda
+        self.pick_n_layers_from_middle = pick_n_layers_from_middle
+
+    def create_configurations(self) -> typing.List:
+        return self.configs
+
+    def create_instance(self, conf_index) -> Embedding:
+        conf = self.confs[conf_index]
+
+        if self.method == "DynAE":
+            return DynAE(has_cuda=self.has_cuda, **conf)
+        if self.method == "DynRNN":
+            return DynRNN(has_cuda=self.has_cuda, **conf)
+        if self.method == "DynAERNN":
+            return DynAERNN(
+                has_cuda=self.has_cuda,
+                **conf,
+            )
+        if self.method == "DynGEM":
+            return DynGEM(has_cuda=self.has_cuda, **conf)
+        raise Exception(f"method '{self.method}' is incorrect")
+
+
+class DynN2V_LIDDelta_Tuner(N2VMethods_Tuner):
+    """
+    Tuner for DynN2V_LIDDelta
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        walk_length_values,
+        num_walk_values,
+        num_runs=1,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            walk_length_values,
+            num_walk_values,
+            num_runs=num_runs,
+            parallel_processes=parallel_processes,
+        )
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        p = self.confs[conf_index][1]
+        q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
+        return DynN2V_LIDDelta(
+            dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
+class DynN2V_LIDRW_Tuner(N2VMethods_Tuner):
+    """
+    Tuner for DynN2V_LIDRW
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        walk_length_values,
+        num_walk_values,
+        num_runs=1,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            walk_length_values,
+            num_walk_values,
+            num_runs=num_runs,
+            parallel_processes=parallel_processes,
+        )
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        p = self.confs[conf_index][1]
+        q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
+        return DynN2V_LIDRW(
+            dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
+class DynN2V_LIDRWDelta_Tuner(N2VMethods_Tuner):
+    """
+    Tuner for DynN2V_LIDRWDelta
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        walk_length_values,
+        num_walk_values,
+        num_runs=1,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            walk_length_values,
+            num_walk_values,
+            num_runs=num_runs,
+            parallel_processes=parallel_processes,
+        )
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        p = self.confs[conf_index][1]
+        q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
+        return DynN2V_LIDRWDelta(
+            dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
