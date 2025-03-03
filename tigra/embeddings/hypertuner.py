@@ -207,6 +207,44 @@ class Dynnode2vec_Tuner(N2VMethods_Tuner):
         )
 
 
+class DN2V_Tuner(N2VMethods_Tuner):
+    """
+    Tuner for Dynnode2vec (alternative implementation)
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        walk_length_values,
+        num_walk_values,
+        num_runs=1,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            walk_length_values,
+            num_walk_values,
+            num_runs=num_runs,
+            parallel_processes=parallel_processes,
+        )
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        p = self.confs[conf_index][1]
+        q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
+        return DynN2V(
+            dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
 class CTDNE_Tuner(N2VMethods_Tuner):
     """
     Tuner for CTDNE

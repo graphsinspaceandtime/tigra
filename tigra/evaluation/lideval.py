@@ -19,6 +19,7 @@ import torch
 
 from tigra.core.greval import GraphReconstructionEval
 from tigra.evaluation.cumstat import CumulativeCorrelation, CumulativeMWU, correlation
+from tigra.core.dgraph import DynamicAggregateGraph
 
 
 class LIDEstimator(ABC):
@@ -415,7 +416,14 @@ class NCLIDEstimator(LIDEstimator):
 class LIDEval:
     def __init__(self, embedding, dg):
         self.embedding = embedding
-        self.graph_sequence = dg.get_graph_sequence()
+        if(isinstance(dg, DynamicAggregateGraph)):
+            self.graph_sequence = [dg]
+        elif len(embedding.embeddings) < len(dg.get_graph_sequence()):
+            n = len(dg.get_graph_sequence())
+            k = len(embedding.embeddings)
+            self.graph_sequence = dg.get_graph_sequence()[n-k:n]  
+        else:
+            self.graph_sequence = dg.get_graph_sequence()
         self.f1_nclid_cumul = CumulativeCorrelation()
         self.prec_nclid_cumul = CumulativeCorrelation()
         self.rec_nclid_cumul = CumulativeCorrelation()
@@ -434,6 +442,12 @@ class LIDEval:
         lidestimator = NCLIDEstimator(graph.G)
         lidestimator.estimate_lids()
         lid_vals = lidestimator.get_lid_values()
+        
+        print(lid_vals)
+        print(deg)
+        for nde in lightcopyg.nodes:
+            print(nde, ":", lidestimator.nc_len(nde), ", ")
+            
 
         gre = GraphReconstructionEval(graph, emb, report_warnings=False)
         f1_vals = gre.get_F1_per_node()

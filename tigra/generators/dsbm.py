@@ -81,9 +81,11 @@ class DPPGenerator(Generator):
             same_community = src_c == dst_c
             cp = self.p if same_community else self.q
             if self.rng.random() <= cp:
-                event_data_str = str(src_c) + "," + str(dst_c)
+                event_data = {}
+                event_data["src_class"] = str(src_c)
+                event_data["dst_class"] = str(dst_c)
                 events.append(
-                    Event(pair[0], pair[1], self.current_t, event_data=event_data_str)
+                    Event(pair[0], pair[1], self.current_t, event_data=event_data)
                 )
                 self.current_t += self.delta_t
 

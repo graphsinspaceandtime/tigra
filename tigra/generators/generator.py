@@ -33,7 +33,9 @@ class Generator(ABC):
             s = str(e.src) + "," + str(e.dst) + "," + str(e.timestamp)
             ed = e.event_data
             if ed != None:
-                s += "," + str(ed)
+                src_class = ed["src_class"]
+                dst_class = ed["dst_class"]
+                s += "," + str(src_class) + "," + str(dst_class)
             s += "\n"
 
             f.write(s)
