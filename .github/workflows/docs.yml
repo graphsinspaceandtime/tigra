@@ -9,7 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  CONDA_ENV: tigranew
+  CONDA_ENV_NAME: tigranew
+  CONDA_ENV_FILE: environment.tigranew.yml
   LOGO_URL: https://tigraphs.pmf.uns.ac.rs/wp-content/uploads/2023/12/cropped-tigar-logo-final-3.png
 
 jobs:
@@ -22,25 +23,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
-        name: Setup mamba
+        name: Setup miniconda
         with:
-          miniforge-variant: Mambaforge
-          activate-environment: ${{ env.CONDA_ENV }}
-          use-mamba: true
+          auto-activate-base: false
       - uses: actions/cache@v4
-        name: Cache / mamba
+        name: Cache environment
         env:
           CACHE_NUMBER: 0
         with:
-          path: ~/miniconda3/envs/${{ env.CONDA_ENV }}
-          key: ${{ runner.os }}-mamba-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
-        id: cache-mamba
-      - name: Update environment
-        run: mamba env update -n ${{ env.CONDA_ENV }} -f environment.yml
-        if: steps.cache-mamba.outputs.cache-hit != 'true'
+          path: ~/miniconda3/envs/${{ env.CONDA_ENV_NAME }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_ENV_FILE) }}
+        id: cache-conda
+      - name: Create conda environment
+        shell: bash -el {0}
+        run: |
+          if ! conda env list | grep -q ${{ env.CONDA_ENV_NAME }}
+          then
+            conda env create --name ${{ env.CONDA_ENV_NAME }} --file ${{ env.CONDA_ENV_FILE }}
+          fi
       - name: Build docs
         working-directory: data
-        run: pdoc --logo "${{ env.LOGO_URL }}" --output-directory bank bank.py
+        shell: bash -el {0}
+        run: |
+          conda activate tigranew
+          pdoc --logo "${{ env.LOGO_URL }}" --output-directory bank bank.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
