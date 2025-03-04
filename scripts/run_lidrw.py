@@ -20,9 +20,9 @@ db = Databank()
 datasets = db.get_keys()
 print(datasets)
 
-NUM_RUNS = 1
+NUM_RUNS = 5
 
-DATASET = "radoslaw-email"
+DATASET = "email-Eu-core-temporal"
 dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
 params = dn2v_fact.configs[DATASET]
 print("DATASET", DATASET)
@@ -80,7 +80,6 @@ def run_lidrw():
             q=params[2],
             walk_length=params[3],
             num_walks=params[4],
-            boost=True,
         )
         elid.make_embedding(dg)
         eval_res = eval(elid, graph_sequence)
@@ -272,7 +271,7 @@ if __name__ == "__main__":
 
     # run_baseline2()
 
-    run_lidrw()
+    # run_lidrw()
 
     # run_PQLID()
-    # run_baseline3()
+    run_baseline3()
