@@ -28,6 +28,7 @@ from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
 from tigra.embeddings.sota.dyngem_wrapper import DynGEM
 
 from tigra.embeddings.rndw.rndwbase import DynN2V
+from tigra.embeddings.rndw.hubrw import HubChangedRandomWalk, DynN2V_HubDelta
 
 from tigra.embeddings.rndw.lidrw import (
     DynN2V_LIDDelta,
@@ -246,6 +247,82 @@ class DN2V_Tuner(N2VMethods_Tuner):
         )
 
 
+class DynN2V_HubDelta_Tuner(N2VMethods_Tuner):
+    """
+    Tuner for Dynnode2vec hub changed 
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        p_values,
+        q_values,
+        walk_length_values,
+        num_walk_values,
+        num_runs=1,
+        parallel_processes=4,
+    ):
+        super().__init__(
+            graph,
+            data,
+            p_values,
+            q_values,
+            walk_length_values,
+            num_walk_values,
+            num_runs=num_runs,
+            parallel_processes=parallel_processes,
+        )
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        p = self.confs[conf_index][1]
+        q = self.confs[conf_index][2]
+        wl = self.confs[conf_index][3]
+        nw = self.confs[conf_index][4]
+        return DynN2V_HubDelta(
+            dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
+class HubChangedRandomWalk_Tuner(Tuner):
+    """
+    Tuner for HubChangedRandomWalk (probabilities)
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
+        super().__init__(graph, data, num_runs=num_runs)
+        self.walk_length = walk_length
+        self.n_walks_per_node = n_walks_per_node
+        self.parallel_processes = parallel_processes
+
+    def create_configurations(self):
+        confs = []
+        for d in EMBEDDING_DIMENSIONS:
+            for wl in self.walk_length_values:
+                    for nw in self.num_walks_values:
+                        confs.append((d, wl, nw))
+
+        return confs
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        nw = self.confs[conf_index][2]
+        wl = self.confs[conf_index][1]
+        
+        return HubChangedRandomWalk(
+            dim, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
 class CTDNE_Tuner(N2VMethods_Tuner):
     """
     Tuner for CTDNE
@@ -255,8 +332,6 @@ class CTDNE_Tuner(N2VMethods_Tuner):
         self,
         graph,
         data,
-        p_values,
-        q_values,
         walk_length_values,
         num_walks_values,
         num_runs=1,
