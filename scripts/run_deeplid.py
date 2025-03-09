@@ -15,9 +15,9 @@ db = Databank()
 datasets = db.get_keys()
 print(datasets)
 
-NUM_RUNS = 1
+NUM_RUNS = 5
 
-DATASET = "radoslaw-email"
+DATASET = "email-Eu-core-temporal"
 dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
 params = dn2v_fact.configs[DATASET]
 print("DATASET", DATASET)
@@ -55,7 +55,7 @@ def get_graph_sequence():
     return graph_sequence, dg
 
 
-def run_deeplid(inverse, log_scaling):
+def run_deeplid(inverse, log_scaling, p, u):
     print("DYNLIDDEEP")
     graph_sequence, dg = get_graph_sequence()
     num_snaps = len(graph_sequence)
@@ -69,7 +69,9 @@ def run_deeplid(inverse, log_scaling):
             walk_length=params[3],
             num_walks=params[4],
             inverse=inverse,
-            log_scaling=log_scaling
+            log_scaling=log_scaling,
+            p=p,
+            u=u
         )
         elid.make_embedding(dg)
         eval_res = eval(elid, graph_sequence)
@@ -87,14 +89,24 @@ def run_deeplid(inverse, log_scaling):
 
 
 if __name__ == "__main__":
-    print("DEFAULT, no inverse, no log-scaling")
-    run_deeplid(False, False)
+    datasets = ['radoslaw-email', 'fb-forum', 'fb-messages', 'ia-contacts_hypertext2009', 'ia-enron-employees', 'ia-hospital-ward-proximity-attr', 'ia-primary-school-proximity-attr', 'ia-reality-call', 'CollegeMsg', 'email-Eu-core-temporal']
+    for d in datasets:
+        DATASET = d
+        NUM_RUNS = 5
+        params = dn2v_fact.configs[DATASET]
+        print("DATASET", DATASET)
+        print("PARAMS", params)
+        print()
 
-    print("log-scaling only")
-    run_deeplid(False, True)
+        print("DEFAULT, no inverse, no log-scaling")
+        run_deeplid(False, False, 0.5, 0.25)
 
-    print("inverse only")
-    run_deeplid(True, False)
+        print("log-scaling only")
+        run_deeplid(False, True, 0.5, 0.25)
 
-    print("inverse + log-scaling")
-    run_deeplid(True, True)
+        print("inverse only")
+        run_deeplid(True, False, 0.5, 0.25)
+
+        print("inverse + log-scaling")
+        run_deeplid(True, True, 0.5, 0.25)
+

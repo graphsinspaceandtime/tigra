@@ -445,7 +445,7 @@ class DynN2V_PQLID(RWEmbEgoDelta):
 
 
 class LIDDeepSampler(RandomWalkSampler):
-    def __init__(self, graph, nodes, walk_length=32, num_walks=10, num_workers=1, inverse=False, log_scaling=False):
+    def __init__(self, graph, nodes, walk_length=32, num_walks=10, num_workers=1, inverse=False, log_scaling=False, p=0, u=0):
         super().__init__(graph, nodes, num_workers)
         self.graph = graph
         self.nodes = nodes
@@ -454,39 +454,22 @@ class LIDDeepSampler(RandomWalkSampler):
         self.num_workers = num_workers
         self.inverse = inverse
         self.log_scaling = log_scaling
+        self.p = p # probability to return back in walk
+        self.u = u # probability to select node uniformly from its neighborhood
 
         self.lidestimator = NCLIDEstimator(graph)
         self.lidestimator.estimate_lids()
         self.lids = self.lidestimator.get_lid_values()
 
     def select_next_node(self, start_node, current_node, prev_node, neighbours):
-        '''
-        probabilities = []
-        total_lid, max_lid = 0, 0
-
-        for n in neighbours:
-            lid = self.lids[n]
-            total_lid += lid
-            if lid > max_lid:
-                max_lid = lid
-
-        if self.inverse:
-            total_lid = 0
-            for n in neighbours:
-                total_lid += max_lid - self.lids[n]
-
-        if total_lid == 0:
-            return np.random.choice(neighbours, 1)[0]
-
-        if self.log_scaling:
-
-
-        for n in neighbours:
-            if not self.inverse:
-                probabilities.append(self.lids[n]/total_lid)
-            else:
-                probabilities.append((max_lid - self.lids[n])/total_lid)
-        '''
+        
+        r = random.random()
+        if r < self.p:
+            return prev_node
+        
+        r = random.random()
+        if r < self.u:
+            return random.sample(neighbours, 1)[0]
 
         probabilities = [0.0] * len(neighbours)
         
@@ -532,7 +515,7 @@ class LIDDeepSampler(RandomWalkSampler):
 
 class DynDeepLIDWalk(RWEmbEgoDelta):
     def __init__(
-        self, dim, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1, inverse=False, log_scaling=False
+        self, dim, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1, inverse=False, log_scaling=False, p=0, u=0
     ):
         super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
         self.num_walks = num_walks
@@ -540,6 +523,8 @@ class DynDeepLIDWalk(RWEmbEgoDelta):
         self.num_workers = num_workers
         self.inverse = inverse
         self.log_scaling = log_scaling
+        self.p = p
+        self.u = u
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return LIDDeepSampler(
@@ -549,7 +534,10 @@ class DynDeepLIDWalk(RWEmbEgoDelta):
             walk_length=self.walk_length,
             num_workers=self.num_workers,
             inverse=self.inverse,
-            log_scaling=self.log_scaling
+            log_scaling=self.log_scaling,
+            p=self.p,
+            u=self.u
+
         )
 
 """
@@ -590,3 +578,30 @@ class LIDAwareRandomWalk(RandomWalkSampler):
         self.wl = math.ceil(self.W / (1 + self.lids_curr[node]))
         return self.wl
 """
+'''
+        probabilities = []
+        total_lid, max_lid = 0, 0
+
+        for n in neighbours:
+            lid = self.lids[n]
+            total_lid += lid
+            if lid > max_lid:
+                max_lid = lid
+
+        if self.inverse:
+            total_lid = 0
+            for n in neighbours:
+                total_lid += max_lid - self.lids[n]
+
+        if total_lid == 0:
+            return np.random.choice(neighbours, 1)[0]
+
+        if self.log_scaling:
+
+
+        for n in neighbours:
+            if not self.inverse:
+                probabilities.append(self.lids[n]/total_lid)
+            else:
+                probabilities.append((max_lid - self.lids[n])/total_lid)
+        '''
