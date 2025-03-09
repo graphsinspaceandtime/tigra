@@ -17,6 +17,8 @@ Data = get_dataset_by_id(dataset_id)
 
 data = Data(base_path=dataset_base_path)
 
+data.download()
+
 dsmg = DynamicSparseMatrixGraph(
     data.name,
     data.get_event_sequence(),
