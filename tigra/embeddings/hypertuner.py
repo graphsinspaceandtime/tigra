@@ -76,10 +76,11 @@ class Tuner(ABC):
             # test creating an instance
             try:
                 self.create_instance(i)
-            except:
+            except Exception as e:
                 print("[tuner] failed to create instance")
                 print("[tuner] configuration: " + str(self.confs[i]))
                 print("[tuner] this configuration will not be accounted during tuning")
+                print(e)
                 continue
 
             prec_values, rec_values, f1_values = [], [], []
@@ -450,11 +451,8 @@ class DynamicEmbedding2_Tuner(Tuner):
 
     method: Method
     configs: typing.List
-    epochs: int
-    batch_size: int
     n_nodes: int
     has_cuda: bool
-    pick_n_layers_from_middle: int
 
     def __init__(
         self,
@@ -463,21 +461,13 @@ class DynamicEmbedding2_Tuner(Tuner):
         params_desc,
         method: Method,
         configs: typing.List,
-        epochs: int,
-        batch_size: int,
-        n_nodes: int,
         has_cuda: bool,
         num_runs=1,
-        pick_n_layers_from_middle=0,
     ):
         super().__init__(graph, data, params_desc, num_runs)
         self.method = method
         self.configs = configs
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.n_nodes = n_nodes
         self.has_cuda = has_cuda
-        self.pick_n_layers_from_middle = pick_n_layers_from_middle
 
     def create_configurations(self) -> typing.List:
         return self.configs
