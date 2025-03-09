@@ -13,6 +13,7 @@ import shutil
 
 
 class _BaseDataset(ABC):
+    _id: str
     _name: str
     _dataset_base_path = "../data"
     _dataset_subpath: str
@@ -35,6 +36,7 @@ class _BaseDataset(ABC):
 
     def __init__(
         self,
+        id: str,
         name: str,
         source: Union[
             Literal["network repository"], Literal["snap"], Literal["synthetic"]
@@ -56,6 +58,7 @@ class _BaseDataset(ABC):
         cumulative: bool,
         dataset_base_path: Union[str, None] = None,
     ):
+        self._id = id
         self._name = name
         self._source = source
         self._dataset_dir = dataset_dir
@@ -76,6 +79,10 @@ class _BaseDataset(ABC):
         }
 
         self._dataset_subpath = dataset_subpaths_map[source]
+
+    @property
+    def id(self):
+        return self._id
 
     @property
     def name(self):
@@ -240,6 +247,7 @@ class _BaseDataset(ABC):
 class RadoslawEmail(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="radoslaw_email",
             name="Radoslaw Email",
             source="network repository",
             dataset_base_path=base_path,
@@ -272,6 +280,7 @@ class RadoslawEmail(_BaseDataset):
 class FbForum(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="fb_forum",
             name="FB Forum",
             source="network repository",
             dataset_base_path=base_path,
@@ -301,6 +310,7 @@ class FbForum(_BaseDataset):
 class FbMessages(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="fb_messages",
             name="FB Messages",
             source="network repository",
             dataset_base_path=base_path,
@@ -330,6 +340,7 @@ class FbMessages(_BaseDataset):
 class IaContactsHypertext2009(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="ia_contacts_hypertext_2009",
             name="IA Contacts Hypertext 2009",
             source="network repository",
             dataset_base_path=base_path,
@@ -359,6 +370,7 @@ class IaContactsHypertext2009(_BaseDataset):
 class IaEnronEmployees(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="ia_enron_employees",
             name="IA Enron Employees",
             source="network repository",
             dataset_base_path=base_path,
@@ -391,6 +403,7 @@ class IaEnronEmployees(_BaseDataset):
 class IaHospitalWardProximityAttr(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="ia_hospital_ward_proximity_attr",
             name="IA Hospital Ward Proximity Attributes",
             source="network repository",
             dataset_base_path=base_path,
@@ -428,6 +441,7 @@ class IaHospitalWardProximityAttr(_BaseDataset):
 class IaPrimarySchoolProximityAttr(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="ia_primary_school_proximity_attr",
             name="IA Primary School Proximity Attributes",
             source="network repository",
             dataset_base_path=base_path,
@@ -465,6 +479,7 @@ class IaPrimarySchoolProximityAttr(_BaseDataset):
 class IaRealityCall(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="ia_reality_call",
             name="IA Reality Call",
             source="network repository",
             dataset_base_path=base_path,
@@ -496,6 +511,7 @@ class IaRealityCall(_BaseDataset):
 class CollegeMsg(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="college_msg",
             name="College Msg",
             source="snap",
             dataset_base_path=base_path,
@@ -525,6 +541,7 @@ class CollegeMsg(_BaseDataset):
 class EmailEuCoreTemporal(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="email_eu_core_temporal",
             name="Email EU Core Temporal",
             source="snap",
             dataset_base_path=base_path,
@@ -554,6 +571,7 @@ class EmailEuCoreTemporal(_BaseDataset):
 class SxAskUbuntu(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="sx_askubuntu",
             name="StackExchange AskUbuntu",
             source="snap",
             dataset_base_path=base_path,
@@ -583,6 +601,7 @@ class SxAskUbuntu(_BaseDataset):
 class SxMathOverflow(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="sx_mathoverflow",
             name="StackExchange MathOverflow",
             source="snap",
             dataset_base_path=base_path,
@@ -612,6 +631,7 @@ class SxMathOverflow(_BaseDataset):
 class SxSuperUser(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="sx_superuser",
             name="StackExchange SuperUser",
             source="snap",
             dataset_base_path=base_path,
@@ -641,6 +661,7 @@ class SxSuperUser(_BaseDataset):
 class WikiTalkTemporal(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="wiki_talk_temporal",
             name="Wiki Talk Temporal",
             source="snap",
             dataset_base_path=base_path,
@@ -670,6 +691,7 @@ class WikiTalkTemporal(_BaseDataset):
 class SyntheticDBAC(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="synthetic_dbac",
             name="Synthetic Dynamic Barabasi-Albert with Communities",
             source="synthetic",
             dataset_base_path=base_path,
@@ -699,6 +721,7 @@ class SyntheticDBAC(_BaseDataset):
 class SyntheticDBA(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="synthetic_dba",
             name="Synthetic Dynamic Barabasi-Albert",
             source="synthetic",
             dataset_base_path=base_path,
@@ -728,6 +751,7 @@ class SyntheticDBA(_BaseDataset):
 class SyntheticDER(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="synthetic_der",
             name="Synthetic Dynamic Erdos-Renyi",
             source="synthetic",
             dataset_base_path=base_path,
@@ -757,6 +781,7 @@ class SyntheticDER(_BaseDataset):
 class SyntheticDPP(_BaseDataset):
     def __init__(self, base_path: Union[str, None] = None):
         super().__init__(
+            id="synthetic_dpp",
             name="Synthetic Dynamic Planted Partition",
             source="synthetic",
             dataset_base_path=base_path,
@@ -781,3 +806,53 @@ class SyntheticDPP(_BaseDataset):
             raise Exception("Shrinking is not defined for this dataset!")
 
         return event_sequence
+
+
+Datasets = Union[
+    type(RadoslawEmail),
+    type(FbForum),
+    type(FbMessages),
+    type(IaContactsHypertext2009),
+    type(IaEnronEmployees),
+    type(IaHospitalWardProximityAttr),
+    type(IaPrimarySchoolProximityAttr),
+    type(IaRealityCall),
+    type(CollegeMsg),
+    type(EmailEuCoreTemporal),
+    type(SxAskUbuntu),
+    type(SxMathOverflow),
+    type(SxSuperUser),
+    type(WikiTalkTemporal),
+    type(SyntheticDBAC),
+    type(SyntheticDBA),
+    type(SyntheticDER),
+    type(SyntheticDPP),
+]
+
+
+def get_dataset_by_id(id: str) -> Datasets:
+    datasets: List[Datasets] = [
+        RadoslawEmail,
+        FbForum,
+        FbMessages,
+        IaContactsHypertext2009,
+        IaEnronEmployees,
+        IaHospitalWardProximityAttr,
+        IaPrimarySchoolProximityAttr,
+        IaRealityCall,
+        CollegeMsg,
+        EmailEuCoreTemporal,
+        SxAskUbuntu,
+        SxMathOverflow,
+        SxSuperUser,
+        WikiTalkTemporal,
+        SyntheticDBAC,
+        SyntheticDBA,
+        SyntheticDER,
+        SyntheticDPP,
+    ]
+
+    for dataset in datasets:
+        if dataset.id == id:
+            return dataset
+    raise Exception("Dataset with specified ")
