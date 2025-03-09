@@ -852,7 +852,7 @@ def get_dataset_by_id(id: str) -> Datasets:
         SyntheticDPP,
     ]
 
-    for dataset in datasets:
-        if dataset.id == id:
-            return dataset
-    raise Exception("Dataset with specified ")
+    for Dataset in datasets:
+        if Dataset().id == id:
+            return Dataset
+    raise Exception("Dataset with specified id does not exist")
