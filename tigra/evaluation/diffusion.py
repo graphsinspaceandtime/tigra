@@ -1,0 +1,292 @@
+"""
+TIGRA software library
+
+TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems
+
+Diffusion prediction evaluation
+
+author: svc@dmi.uns.ac.rs
+"""
+
+from abc import ABC, abstractmethod
+import random
+import numpy as np
+
+from tigra.core.dgraph import DynamicAggregateGraph
+
+### classifiers
+
+from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn import tree, svm, neighbors, naive_bayes, ensemble
+
+
+class SKLCModel:
+    def __init__(self, modelName, classifierMethod):
+        self.modelName = modelName
+        self.classifierMethod = classifierMethod
+
+    def train(self, predictors, target, classes=[]):
+        self.predictors = predictors
+        self.target = target
+        self.classifierMethod.fit(predictors, target)
+
+    def evaluate(self, predictors, target):
+        predictions = self.classifierMethod.predict(predictors)
+        acc = accuracy_score(target, predictions)
+        prec = precision_score(target, predictions, average="macro", zero_division=0)
+        rec = recall_score(target, predictions, average="macro", zero_division=0)
+        pos_prec = precision_score(
+            target, predictions, average="binary", pos_label=1, zero_division=0
+        )
+        pos_rec = recall_score(
+            target, predictions, average="binary", pos_label=1, zero_division=0
+        )
+        neg_prec = precision_score(
+            target, predictions, average="binary", pos_label=0, zero_division=0
+        )
+        neg_rec = recall_score(
+            target, predictions, average="binary", pos_label=0, zero_division=0
+        )
+        return acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec
+
+    def trainingScores(self):
+        return self.evaluate(self.predictors, self.target)
+
+    def trainingScoresStr(self):
+        ev = self.evaluate(self.predictors, self.target)
+        return "ACC=" + str(ev[0]) + ", P=" + str(ev[1]) + ", R=" + str(ev[2])
+
+    def predict(self, predictors):
+        return self.classifierMethod.predict(predictors)
+
+
+class SVM_SKLC(SKLCModel):
+    def __init__(self):
+        super().__init__("SVM", svm.SVC())
+
+
+class RF_SKLC(SKLCModel):
+    def __init__(self, numEstimators=5):
+        cm = ensemble.RandomForestClassifier(n_estimators=numEstimators)
+        super().__init__("RF", cm)
+
+
+class NB_SKLC(SKLCModel):
+    def __init__(self):
+        super().__init__("NB", naive_bayes.GaussianNB())
+
+
+class KNN_SKLC(SKLCModel):
+    def __init__(self, numNeighbors=5):
+        cm = neighbors.KNeighborsClassifier(n_neighbors=numNeighbors)
+        super().__init__("KNN", cm)
+
+
+class DT_SKLC(SKLCModel):
+    def __init__(self):
+        super().__init__("DT", tree.DecisionTreeClassifier())
+
+
+### END-OF-classifiers
+
+
+class DiffusionProcess:
+    def __init__(self):
+        self.initially_active = set()
+        self.activations = []
+
+    @abstractmethod
+    def simulate_diffusion(self, graph_sequence):
+        pass
+
+    def get_activations(self):
+        return self.activations
+
+    def get_initially_active(self):
+        return self.initially_active
+
+
+class SI(DiffusionProcess):
+    def __init__(self, fraction_activated=0.05, beta=0.02):
+        super().__init__()
+        self.fraction_activated = fraction_activated
+        self.beta = beta
+
+    def simulate_diffusion(self, graph_sequence):
+        G0 = graph_sequence[0]
+        for n in G0.G.nodes():
+            if random.random() < self.fraction_activated:
+                self.initially_active.add(n)
+
+        self.active = set(self.initially_active)
+        self.activations = []
+        for graph in graph_sequence:
+            nodes = graph.G.nodes()
+            newly_activated = set()
+
+            for node in nodes:
+                if node not in self.active:
+                    continue
+
+                for nei in graph.G.neighbors(node):
+                    if nei not in self.active and random.random() < self.beta:
+                        newly_activated.add(nei)
+
+            for n in newly_activated:
+                self.active.add(n)
+
+            self.activations.append(set(self.active))
+
+
+class DiffusionPrediction:
+    def __init__(
+        self,
+        embedding,
+        dg,
+        diffusion_process: DiffusionProcess,
+        negative_sampling=True,
+        inbalance_factor=1,
+        verbose=False,
+    ):
+        self.embedding = embedding
+        self.dg = dg
+        self.diffusion_process = diffusion_process
+        self.verbose = verbose
+        self.negative_sampling = negative_sampling
+        self.inbalance_factor = inbalance_factor
+
+        # reproducibility
+        random.seed(0)
+        np.random.seed(0)
+
+        if isinstance(dg, DynamicAggregateGraph):
+            raise Exception(
+                "Diffusion cannot be simulated for DynamicAggregateGraph objects"
+            )
+        elif len(embedding.embeddings) < len(dg.get_graph_sequence()):
+            n = len(dg.get_graph_sequence())
+            k = len(embedding.embeddings)
+            self.graph_sequence = dg.get_graph_sequence()[n - k : n]
+        else:
+            self.graph_sequence = dg.get_graph_sequence()
+
+        # simulate diffusion
+        self.diffusion_process.simulate_diffusion(self.graph_sequence)
+        self.initially_active = self.diffusion_process.get_initially_active()
+        self.activations = self.diffusion_process.get_activations()
+
+        if self.verbose:
+            print("Activations")
+            print(
+                "Initial active nodes",
+                # sorted(self.initially_active),
+                # "#",
+                len(self.initially_active),
+            )
+            for i in range(len(self.activations)):
+                print(
+                    "Activated at ",
+                    i,
+                    " -- ",
+                    # sorted(self.activations[i]),
+                    # "#",
+                    len(self.activations[i]),
+                )
+
+    def make_ML_data(self):
+        self.training_X, self.training_y = [], []
+        self.test_X, self.test_y = [], []
+
+        for i in range(1, len(self.graph_sequence)):
+            positive_samples, negative_samples = [], []
+            negative_samples_selected = []
+
+            prev_activations = self.activations[i - 1]
+            curr_activations = self.activations[i]
+            new_activations = curr_activations - prev_activations
+
+            prev_emb = self.embedding[i - 1]
+            curr_emb = self.embedding[i]
+
+            prev_graph = self.graph_sequence[i - 1].G
+            curr_graph = self.graph_sequence[i].G
+            for n in prev_graph:
+                if n not in curr_graph:
+                    continue
+
+                if n in prev_activations:
+                    continue
+
+                p_emb, c_emb = prev_emb[n], curr_emb[n]
+                x_vector = p_emb + c_emb
+
+                if n in new_activations:
+                    positive_samples.append(x_vector)
+                else:
+                    negative_samples.append(x_vector)
+
+                if self.negative_sampling:
+                    negative_samples_selected = random.sample(
+                        negative_samples,
+                        int(len(positive_samples) * self.inbalance_factor),
+                    )
+
+            if i < len(self.graph_sequence) - 1:
+                self.training_X.extend(positive_samples)
+                self.training_y.extend([1] * len(positive_samples))
+                if self.negative_sampling:
+                    self.training_X.extend(negative_samples_selected)
+                    self.training_y.extend([0] * len(negative_samples_selected))
+                else:
+                    self.training_X.extend(negative_samples)
+                    self.training_y.extend([0] * len(negative_samples))
+            else:
+                self.test_X.extend(positive_samples)
+                self.test_y.extend([1] * len(positive_samples))
+                self.test_X.extend(negative_samples)
+                self.test_y.extend([0] * len(negative_samples))
+
+        if self.verbose:
+            print("Training -- ", len(self.training_X), len(self.training_y))
+            num_positive = len([x for x in self.training_y if x == 1])
+            print("Positive training samples", num_positive)
+            print("Test     -- ", len(self.test_X), len(self.test_y))
+            num_positive = len([x for x in self.test_y if x == 1])
+            print("Positive test samples", num_positive)
+
+    def train_and_evaluate_classifiers(self):
+        models = [
+            (SVM_SKLC(), "SVM"),
+            (RF_SKLC(), "RF"),
+            (NB_SKLC(), "NB"),
+            (KNN_SKLC(), "KNN"),
+            (DT_SKLC(), "DT"),
+        ]
+
+        print("MODEL, ACC, F1, PREC, REC, POS-PREC, POS-REC, NEG-PREC, NEG-REC")
+
+        for model in models:
+            sk_model = model[0]
+            model_name = model[1]
+
+            sk_model.train(self.training_X, self.training_y)
+            acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec = sk_model.evaluate(
+                self.test_X, self.test_y
+            )
+            f1 = 2 * prec * rec / (prec + rec)
+
+            s = model_name + ","
+            s += str(round(acc, 4)) + ","
+            s += str(round(f1, 4)) + ","
+            s += str(round(prec, 4)) + ","
+            s += str(round(rec, 4)) + ","
+            s += str(round(pos_prec, 4)) + ","
+            s += str(round(pos_rec, 4)) + ","
+            s += str(round(neg_prec, 4)) + ","
+            s += str(round(neg_rec, 4))
+
+            print(s)
+
+    def evaluate(self):
+        self.make_ML_data()
+        self.train_and_evaluate_classifiers()
