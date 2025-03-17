@@ -37,7 +37,7 @@ class EmbClusterer:
         self.X = np.array([embedding[node] for node in self.nodes_list])
         self.num_coms = num_com
 
-        print(num_com)
+        # print(num_com)
 
         n_clusters = []
         if num_com != None:
@@ -50,7 +50,7 @@ class EmbClusterer:
         #     if n not in n_clusters:
         #        n_clusters.append(n)
 
-        print(n_clusters)
+        # print(n_clusters)
 
         self.grid_parms = {
             KMeans: {"n_clusters": n_clusters},
@@ -65,7 +65,7 @@ class EmbClusterer:
         }
 
         self.clustering_algorithms = [
-            (KMeans(random_state=42), self.grid_parms[KMeans]),
+            (KMeans(random_state=42, n_init=10), self.grid_parms[KMeans]),
             (DBSCAN(), self.grid_parms[DBSCAN]),
             (
                 AgglomerativeClustering(),
@@ -104,7 +104,7 @@ class EmbClusterer:
                 cl = labels[i]
                 part[cl].append(node)
 
-            print(part)
+            # print(part)
 
             mod = modularity(self.graph, part)
             if labels is not None:
@@ -124,13 +124,13 @@ class EmbClusterer:
                     "params": grid_search.best_params_,
                     "silhouette_score": grid_search.best_score_,
                     "labels": labels,
-                    "mod": mod,
+                    "modularity": mod,
                 }
             )
 
     def score_fn(self, estimator, X):
         labels = estimator.fit_predict(X)
-        print(f"sil score labels no:{len(set(labels))}, {len(set(estimator.labels_))}")
+        # print(f"sil score labels no:{len(set(labels))}, {len(set(estimator.labels_))}")
         if len(set(labels)) <= 1:
             return -1
         return silhouette_score(X, labels)
@@ -175,7 +175,7 @@ class GraphClusterer:
         for c in iter:
             part.append(c)
 
-        print(part)
+        # print(part)
 
         return part
 
@@ -231,7 +231,7 @@ class GraphClusterer:
             s += f"  Modularity: {info['modularity']}"
             s += f"  Silhouette Score: {info['silhouette_score']:.3f} \n"
 
-            print(s)
+            # print(s)
 
             results += s
 
@@ -271,37 +271,44 @@ class ClusteringEval:
         self,
     ):
         N = len(self.graph_sequence)
+        algorithms = ["lp", "Louvain", "GMO", "KMeans", "DBSCAN", "AgglomerativeClustering"]
+
         for i in range(N):
             try:
                 print(f"snapshot number: {i}")
                 grc, embc = self.eval_snapshot(
                     i, self.embedding[i], self.graph_sequence[i]
                 )
-                for ginfo in grc:
-                    # grc_labels = ginfo["labels"]
-                    for einfo in embc:
-                        # emb_labels = einfo["labels"]
-                        # nmi_gt_community_rg = normalized_mutual_info_score(
-                        #     grc_labels, emb_labels
-                        # )
-                        self.save_results_to_csv(i, ginfo, einfo)
+                ginfo_dict = {}
+                einfo_dict = {}
+                for g in grc:
+                    ginfo_dict[g["alg"]] = g
+                    
+                for e in embc:
+                    einfo_dict[e["alg"]] = e
+
+                row = [i]
+                for alg in algorithms:
+                    ginfo = ginfo_dict.get(alg, None)
+                    einfo = einfo_dict.get(alg, None)
+
+                    if ginfo:
+                        row.extend([ginfo["modularity"], len(ginfo["communities"])])
+                        
+                    if einfo:
+                        row.extend([einfo["modularity"], einfo["communities"]])
+
+                    if alg in ["KMeans", "DBSCAN", "AgglomerativeClustering"]:
+                        row.append(einfo["silhouette_score"])
+
+                self.save_results_to_csv( row)
             except Exception as e:
                 print(f"An error occurred: {e}")
         print("-------------------\n")
 
-    def save_results_to_csv(self, snapshot_num, grc, embc, nmi=None):
+    def save_results_to_csv(self, row):
         with open(self.path, "a", encoding="utf-8") as f:
-            # "SNAPSHOT_NUM,GRAPH_ALG,GRAPH_MODULARITY, GRAPH_NUM_COMMUNITIES,EMBEDDING_ALG,EMBEDDING_NUM_CLUSTERS,EMBEDDING_SILHOUETTE,EMBEDDING_MOD,NMI_GRAPH_EMBEDDING\n"
-            row = [
-                snapshot_num,
-                grc["alg"],
-                grc["modularity"],
-                len(grc["communities"]),
-                embc["alg"],
-                embc["communities"],
-                embc["silhouette_score"],
-                embc["mod"],
-            ]
+
             output = ", ".join(map(str, row))
 
             f.write(f"{output}\n")
