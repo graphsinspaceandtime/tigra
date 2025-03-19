@@ -106,26 +106,40 @@ class SingletonEmbedding:
         """
         Saves embeddings to a csv file.
         """
+        num_emb_vectors = 0
         with open(file, "w", encoding="utf-8") as f:
             for id, vector in self.embedding.items():
                 f.write(str(id))
                 f.write(",")
                 f.write(",".join([str(v) for v in vector]))
                 f.write("\n")
+                num_emb_vectors += 1
+
+        print("Saved to file", file, num_emb_vectors, "node emb vectors")
 
     def load_from_file(self, file: str):
         """
         Loads embeddings from a csv file. It needs to be formatted in the same
         way as saved file.
         """
+
+        self.embedding = dict()
+        self.dists = dict()
+        self.label = dict()
+        num_emb_vectors = 0
+
         with open(file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.split(",")
                 self.add_embedding_vector(
                     int(line[0]), [float(point) for point in line[1:]]
                 )
+                num_emb_vectors += 1
+
+        print("Loaded from file", file, num_emb_vectors, " node embedding vectors")
 
     def load_labels_from_file(self, file: str):
+        self.label = dict()
         with open(file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.split(",")
@@ -187,6 +201,12 @@ class Embedding(ABC):
             self.embeddings[i].save_to_file(path)
 
 
+def sorting_criteria(f):
+    ind = f.find(".")
+    num = int(f[:ind])
+    return num
+
+
 class FSEmbedding(Embedding):
     """
     Embeddings loadead from file system
@@ -205,8 +225,8 @@ class FSEmbedding(Embedding):
         ]
 
         embs = [f for f in onlyfiles if f.endswith(".emb")]
-        embs.sort()
-        # print(embs)
+        embs.sort(key=sorting_criteria)
+        print(embs)
         for emb in embs:
             s = SingletonEmbedding()
             path = os.path.join(folder_name, emb)
