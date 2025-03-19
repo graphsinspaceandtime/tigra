@@ -22,9 +22,9 @@ databank = Databank()
 datasets = databank.get_keys()
 
 factories = {
-    "dn2v": get_dn2v_factory("../DN2V_SVC.conf"),
-    "stwalk": get_stwalk_factory("../stwalk.conf"),
-    "ctdne": get_ctdne_factory("../ctdne.conf"),
+    "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
+    # "stwalk": get_stwalk_factory("../stwalk.conf"),
+    # "ctdne": get_ctdne_factory("../ctdne.conf"),
 }
 
 
@@ -35,11 +35,11 @@ def save_to_file(dataset):
             return
 
         emb, dg = res
-        emb.save_embedding(f"emb/{name}_{dataset}")
+        emb.save_embedding(f"emb2/{name}_{dataset}")
 
 
 if __name__ == "__main__":
-    os.mkdir("emb")
+    os.mkdir("emb2")
 
     for dataset in datasets:
         if "synt" not in dataset:

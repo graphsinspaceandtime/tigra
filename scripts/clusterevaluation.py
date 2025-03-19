@@ -23,12 +23,11 @@ import os
 
 databank = Databank()
 datasets = databank.get_keys()
-methods = ["dn2v_", "stwalk_", "ctdne_"]
 
 factories = {
-    # "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
+    "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
     # "stwalk": get_stwalk_factory("stwalk.conf"),
-    "ctdne": get_ctdne_factory("ctdne.conf"),
+    # "ctdne": get_ctdne_factory("ctdne.conf"),
 }
 
 
@@ -39,7 +38,7 @@ def clustereval(dataset):
         if res == None:
             return
         dn2v, dg = res
-        emb = FSEmbedding(f"emb/{name}_{dataset}")
+        emb = FSEmbedding(f"emb2/{name}_{dataset}")
         
         if isinstance(dg, DynamicAggregateGraph): #ctdne
             graph = dg.get_aggregate_graph()
@@ -75,25 +74,25 @@ def clustereval(dataset):
                 print("Precision", gre.get_avg_precision())
                 print("Recall", gre.get_avg_recall())
                 print("F1", gre.getF1())
+                print(f"Number of nodes:{gre.graph.number_of_nodes()}")
             
-            path = os.path.join("clustering_eval_dn2vec", f"{name}_{dataset}.txt")
+            path = os.path.join("clustering_eval_dn2vec_2", f"{name}_{dataset}.txt")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(
-                    "METHOD,LP,,Louvain,,GMO,,KMEANS,,,DBSCAN,,,AGG,,\n"
+                    "METHOD,LP,,Louvain,,GMO,,KMEANS,,,AGG,,\n"
                 )
                 f.write(
-                    "SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL,Q,NC,SIL\n"
+                    "SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL\n"
                 )
             lide = ClusteringEval(emb, dg, dataset, path)
             lide.eval()
 
 
 if __name__ == "__main__":
-    os.mkdir("clustering_eval_ctdne")
+    os.mkdir("clustering_eval_dn2vec_2")
     for dataset in datasets:
         if "synt" not in dataset:
-        # if "radoslaw-email" in dataset:
-            
+        # if "ia-enron-employees" in dataset:
             print("DATASET", dataset)
             clustereval(dataset)
             print(
