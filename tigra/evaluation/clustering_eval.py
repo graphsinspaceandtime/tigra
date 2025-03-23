@@ -10,10 +10,9 @@ author: jelab@dmi.uns.ac.rs
 
 import numpy as np
 import networkx as nx
+import os
 
-
-from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
-from sklearn.model_selection import GridSearchCV
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
@@ -67,13 +66,17 @@ class EmbClusterer:
                     num_clusters = len(set(labels))
             else:
                 num_clusters = "N/A"
-
+                
+            labels_dictionary = {}
+            for i in labels:
+                labels_dictionary[i] = labels[i]
+                
             self.results.append(
                 {
                     "alg": alg_name,
                     "communities": num_clusters,
                     "silhouette_score": self.silhouette_score(self.X, labels),
-                    "labels": labels,
+                    "labels": labels_dictionary,
                     "modularity": mod,
                 }
             )
@@ -138,7 +141,7 @@ class GraphClusterer:
         return self.results
 
     def com_labels (self, communities):
-        labels = np.zeros(self.G.number_of_nodes(), dtype=int)
+        labels = {}
         for community_id, community in enumerate(communities):
             for node in community:
                 labels[self.node_to_index[node]] = community_id
@@ -157,7 +160,7 @@ class ClusteringEval:
         self.dataset = dataset
         self.path = f
 
-    def eval_snapshot(self, index, emb, graph):
+    def eval_snapshot(self, emb, graph):
 
         lightcopyg = graph.G
 
@@ -177,12 +180,13 @@ class ClusteringEval:
     ):
         N = len(self.graph_sequence)
         algorithms = ["lp", "Louvain", "GMO", "KMeans", "AgglomerativeClustering"]
+        labels_by_alg = {alg: [] for alg in algorithms}
 
         for i in range(N):
             try:
                 print(f"snapshot number: {i}")
                 grc, embc = self.eval_snapshot(
-                    i, self.embedding[i], self.graph_sequence[i]
+                    self.embedding[i], self.graph_sequence[i]
                 )
                 ginfo_dict = {}
                 einfo_dict = {}
@@ -199,12 +203,13 @@ class ClusteringEval:
                     
                     if ginfo:
                         row.extend([ginfo["modularity"], len(ginfo["communities"])])
-                        print(f"{alg}: {len(ginfo['labels'])}")
-
+                        current_labels = ginfo_dict[alg]["labels"]
+                        labels_by_alg[alg].append(current_labels)
                         
                     if einfo:
                         row.extend([einfo["modularity"], einfo["communities"]])
-                        print(f"{alg}: {len(einfo['labels'])}")
+                        current_labels = einfo_dict[alg]["labels"]
+                        labels_by_alg[alg].append( current_labels)
 
                     if alg in ["KMeans", "AgglomerativeClustering"]:
                         row.append(einfo["silhouette_score"])
@@ -213,6 +218,8 @@ class ClusteringEval:
             except Exception as e:
                 print(f"An error occurred: {e}")
         print("-------------------\n")
+        
+        self.nmi_calc(labels_by_alg)
 
     def save_results_to_csv(self, row):
         with open(self.path, "a", encoding="utf-8") as f:
@@ -222,3 +229,23 @@ class ClusteringEval:
             f.write(f"{output}\n")
             print(f"{output}")
             print(f"Results saved to file")
+            
+    def nmi_calc(self, labels_by_alg):
+        path = os.path.join("clustering_eval_dn2vec_nmi", f"{self.dataset}.csv")
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(
+                "ALG,SNP1,SNP2,NMI,\n"
+            )
+            for alg, label_dict_list in labels_by_alg.items():
+                for i in range(1, len(label_dict_list)):
+                    prev_dict = label_dict_list[i - 1]
+                    curr_dict = label_dict_list[i]
+                    common_keys = set(prev_dict.keys()) & set(curr_dict.keys())
+                    if common_keys:
+                        prev_labels = [prev_dict[node] for node in common_keys]
+                        curr_labels = [curr_dict[node] for node in common_keys]
+                        nmi = normalized_mutual_info_score(prev_labels, curr_labels)
+                        f.write(f"{alg},{i-1},{i},{nmi:.4f}\n")
+                    else:
+                        print(f"Snapshot {i-1} ili {i} nemaju zajednicke cvorove, NMI se ne moze izracunati.")
+                    print("-------------------")

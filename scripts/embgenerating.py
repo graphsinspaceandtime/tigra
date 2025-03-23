@@ -61,15 +61,14 @@ def gen_dn2v_emb(dataset):
 
 
 if __name__ == "__main__":
-    dg = gen_dn2v_emb("ia-enron-employees")
+    # dg = gen_dn2v_emb("ia-enron-employees")
 
-    emb = FSEmbedding(f"emb/dn2v_ia-enron-employees")
-    graph_sequence = dg.get_graph_sequence()
-    print("\n\n\nEVAL-FROM-LOAD")
-    gre_eval(graph_sequence, emb)
+    # emb = FSEmbedding(f"emb/dn2v_ia-enron-employees")
+    # graph_sequence = dg.get_graph_sequence()
+    # print("\n\n\nEVAL-FROM-LOAD")
+    # gre_eval(graph_sequence, emb)
 
-    """
-    os.mkdir("emb")
+    os.mkdir("emb2")
 
     for dataset in datasets:
         if "synt" not in dataset:
@@ -78,4 +77,3 @@ if __name__ == "__main__":
             print(
                 "......................................................................"
             )
-    """

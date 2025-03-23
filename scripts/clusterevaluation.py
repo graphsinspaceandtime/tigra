@@ -76,7 +76,7 @@ def clustereval(dataset):
                 print("F1", gre.getF1())
                 print(f"Number of nodes:{gre.graph.number_of_nodes()}")
             
-            path = os.path.join("clustering_eval_dn2vec_2", f"{name}_{dataset}.txt")
+            path = os.path.join("clustering_eval_dn2vec_n", f"{name}_{dataset}.txt")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(
                     "METHOD,LP,,Louvain,,GMO,,KMEANS,,,AGG,,\n"
@@ -89,10 +89,12 @@ def clustereval(dataset):
 
 
 if __name__ == "__main__":
-    os.mkdir("clustering_eval_dn2vec_2")
+    os.mkdir("clustering_eval_dn2vec_n")
+    os.mkdir("clustering_eval_dn2vec_nmi")
+
     for dataset in datasets:
         if "synt" not in dataset:
-        # if "ia-enron-employees" in dataset:
+        # if "radoslaw" in dataset:
             print("DATASET", dataset)
             clustereval(dataset)
             print(
