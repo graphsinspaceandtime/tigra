@@ -53,14 +53,17 @@ for dim in dims:
     for look_back in look_backs:
         n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, dim)
         for n_unit in n_units:
-            configs.append(
-                {
-                    "dim": dim,
-                    "look_back": look_back,
-                    "n_units": [n_unit],
-                    **default_parameters,
-                }
-            )
+            config = {
+                "dim": dim,
+                "look_back": look_back,
+                **default_parameters,
+            }
+            if method == "DynAERNN":
+                config["ae_units"] = [n_unit]
+                config["rnn_units"] = [n_unit]
+            else:
+                config["n_units"] = [n_unit]
+            configs.append(config)
 
 
 tuner = DynamicEmbedding2_Tuner(
