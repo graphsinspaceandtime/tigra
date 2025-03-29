@@ -27,16 +27,16 @@ if __name__ == "__main__":
         DynN2V_HubDeltaNWWL,
         DynN2V_HubDeltaInverseDegree,
         DynN2V_HubDeltaLogDegree,
-        HubChangedRandomWalkReverse, 
+        HubChangedRandomWalkReverse,
         DynN2V_HubDeltaMaxDegree,
         DynN2V_HubDeltaMaxLogDegree,
-        DynN2V_HubDeltaInverseLogDegree
+        DynN2V_HubDeltaInverseLogDegree,
+        DynN2V_HubDeltaSqrtDegree
     )
 
     start = time.time_ns()
- 
 
-    dn2v = DynN2V_HubDeltaMaxDegree(25, 0.5, 4)
+    dn2v = DynN2V_HubDeltaSqrtDegree(25, 0.5, 4)
     dn2v.make_embedding(dg)
 
     graph_sequence = dg.get_graph_sequence()

@@ -27,10 +27,14 @@ class GraphReconstructionEval:
         k = self.graph.number_of_edges()
         reconstructed_graph = self.embedding.reconstruct(k, "REC").G
 
+        # print(self.graph.number_of_nodes(), reconstructed_graph.number_of_nodes())
+
         if self.report_warnings:
             if self.graph.number_of_nodes() != reconstructed_graph.number_of_nodes():
                 print(
-                    "[WARNING, greval] original and reconstructed graph have different number of nodes"
+                    "[WARNING, greval] original and reconstructed graph have different number of nodes",
+                    self.graph.number_of_nodes(),
+                    reconstructed_graph.number_of_nodes(),
                 )
 
             if self.graph.number_of_edges() != reconstructed_graph.number_of_edges():

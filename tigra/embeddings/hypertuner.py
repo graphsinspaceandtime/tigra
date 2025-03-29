@@ -20,7 +20,11 @@ from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.embeddings.sota.stwalk import STWalk
 
 from tigra.embeddings.rndw.rndwbase import DynN2V
-from tigra.embeddings.rndw.hubrw import HubChangedRandomWalk, DynN2V_HubDelta
+from tigra.embeddings.rndw.hubrw import (
+    HubChangedRandomWalk,
+    HubChangedRandomWalkReverse,
+    DynN2V_HubDelta,
+)
 
 from tigra.embeddings.rndw.lidrw import DynN2V_LIDDelta, DynN2V_LIDRW, DynN2V_LIDRWDelta
 
@@ -311,6 +315,44 @@ class HubChangedRandomWalk_Tuner(Tuner):
         wl = self.confs[conf_index][1]
 
         return HubChangedRandomWalk(
+            dim, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
+        )
+
+
+class HubChangedRandomWalkReverse_Tuner(Tuner):
+    """
+    Tuner for HubChangedRandomWalk (probabilities)
+    """
+
+    def __init__(
+        self,
+        graph,
+        data,
+        num_runs=1,
+        walk_length=10,
+        n_walks_per_node=10,
+        parallel_processes=4,
+    ):
+        super().__init__(graph, data, num_runs=num_runs)
+        self.walk_length = walk_length
+        self.n_walks_per_node = n_walks_per_node
+        self.parallel_processes = parallel_processes
+
+    def create_configurations(self):
+        confs = []
+        for d in EMBEDDING_DIMENSIONS:
+            for wl in self.walk_length_values:
+                for nw in self.num_walks_values:
+                    confs.append((d, wl, nw))
+
+        return confs
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        nw = self.confs[conf_index][2]
+        wl = self.confs[conf_index][1]
+
+        return HubChangedRandomWalkReverse(
             dim, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
 
