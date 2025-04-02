@@ -119,7 +119,7 @@ def tune_hub_changed_prop(last_graph, dg):
     tuner.print_report()
 
 
-def tune_hub_changed_prop(last_graph, dg):
+def tune_hub_changed_reverse_prop(last_graph, dg):
     print("\nTUNING HubChangedRandomWalk_Tuner")
     tuner = HubChangedRandomWalkReverse_Tuner(
         last_graph,

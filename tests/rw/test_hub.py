@@ -12,7 +12,7 @@ if __name__ == "__main__":
     from tigra.core.loaders import load_event_sequence
 
     databank = Databank()
-    es, resol = load_event_sequence("radoslaw-email")
+    es, resol = load_event_sequence("fb-forum")
     print("num-events=", es.num_events())
     print("time-span =", es.get_timespan_in_days())
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     start = time.time_ns()
 
-    dn2v = DynN2V_HubDeltaSqrtDegree(25, 0.5, 4)
+    dn2v = DynN2V_HubDeltaNWWL(200, 1, 1)
     dn2v.make_embedding(dg)
 
     graph_sequence = dg.get_graph_sequence()
