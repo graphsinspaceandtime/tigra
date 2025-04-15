@@ -416,12 +416,12 @@ class NCLIDEstimator(LIDEstimator):
 class LIDEval:
     def __init__(self, embedding, dg):
         self.embedding = embedding
-        if(isinstance(dg, DynamicAggregateGraph)):
+        if isinstance(dg, DynamicAggregateGraph):
             self.graph_sequence = [dg]
         elif len(embedding.embeddings) < len(dg.get_graph_sequence()):
             n = len(dg.get_graph_sequence())
             k = len(embedding.embeddings)
-            self.graph_sequence = dg.get_graph_sequence()[n-k:n]  
+            self.graph_sequence = dg.get_graph_sequence()[n - k : n]
         else:
             self.graph_sequence = dg.get_graph_sequence()
         self.f1_nclid_cumul = CumulativeCorrelation()
@@ -442,6 +442,11 @@ class LIDEval:
         lidestimator = NCLIDEstimator(graph.G)
         lidestimator.estimate_lids()
         lid_vals = lidestimator.get_lid_values()
+
+        # print(lid_vals)
+        # print(deg)
+        # for nde in lightcopyg.nodes:
+        #    print(nde, ":", lidestimator.nc_len(nde), ", ")
 
         gre = GraphReconstructionEval(graph, emb, report_warnings=False)
         f1_vals = gre.get_F1_per_node()
@@ -473,7 +478,7 @@ class LIDEval:
         N = len(self.graph_sequence)
         for i in range(N):
             s = self.eval_snapshot(i, self.embedding[i], self.graph_sequence[i])
-            print(s)
+            # print(s)
         print("-------------------\n")
         print("F1\n", self.f1_nclid_cumul.get_correlation())
         print("\nPREC\n", self.prec_nclid_cumul.get_correlation())
