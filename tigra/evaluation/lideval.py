@@ -14,7 +14,7 @@ from statistics import mean, stdev
 
 import networkx as nx
 import numpy as np
-import torch
+# import torch
 
 
 from tigra.core.greval import GraphReconstructionEval
@@ -122,50 +122,50 @@ class EmbLIDMLEEstimator(LIDMLEEstimator):
         )
 
 
-class EmbLIDMLEEstimatorTorch(LIDMLEEstimator):
-    """
-    MLE estimator for node LIDs in the embedded space
+# class EmbLIDMLEEstimatorTorch(LIDMLEEstimator):
+#     """
+#     MLE estimator for node LIDs in the embedded space
 
-    PyTorch gradient enabled
-    """
+#     PyTorch gradient enabled
+#     """
 
-    def __init__(self, graph, embedding, k):
-        self.node_vectors = {}  # [embedding[n[0]] for n in graph.nodes()]
-        for n in graph.nodes():
-            self.node_vectors[n] = torch.tensor(embedding.embedding[n])
+#     def __init__(self, graph, embedding, k):
+#         self.node_vectors = {}  # [embedding[n[0]] for n in graph.nodes()]
+#         for n in graph.nodes():
+#             self.node_vectors[n] = torch.tensor(embedding.embedding[n])
 
-        super().__init__("EMB-LID", graph, k)
+#         super().__init__("EMB-LID", graph, k)
 
-    def compute_distance(self, src, dst):
-        return torch.linalg.norm(self.node_vectors[src] - self.node_vectors[dst])
+#     def compute_distance(self, src, dst):
+#         return torch.linalg.norm(self.node_vectors[src] - self.node_vectors[dst])
 
-    def estimate_lid(self, distances):
-        heapq.heapify(distances)
-        k_smallest = heapq.nsmallest(self.k, distances)
-        kss = len(k_smallest)
+#     def estimate_lid(self, distances):
+#         heapq.heapify(distances)
+#         k_smallest = heapq.nsmallest(self.k, distances)
+#         kss = len(k_smallest)
 
-        s = torch.tensor(0.0)
-        for j in range(0, kss):
-            s += torch.log(k_smallest[j] / k_smallest[kss - 1])
+#         s = torch.tensor(0.0)
+#         for j in range(0, kss):
+#             s += torch.log(k_smallest[j] / k_smallest[kss - 1])
 
-        s /= kss
-        lid = -1.0 / s if s < 0 else torch.tensor(1.0)
-        return lid
+#         s /= kss
+#         lid = -1.0 / s if s < 0 else torch.tensor(1.0)
+#         return lid
 
-    def get_total_lid(self):
-        return torch.sum(torch.tensor(list(self.lid_values.values())))
+#     def get_total_lid(self):
+#         return torch.sum(torch.tensor(list(self.lid_values.values())))
 
-    def get_avg_lid(self):
-        return torch.mean(torch.tensor(list(self.lid_values.values())))
+#     def get_avg_lid(self):
+#         return torch.mean(torch.tensor(list(self.lid_values.values())))
 
-    def get_stdev_lid(self):
-        return torch.std(torch.tensor(list(self.lid_values.values())))
+#     def get_stdev_lid(self):
+#         return torch.std(torch.tensor(list(self.lid_values.values())))
 
-    def get_max_lid(self):
-        return torch.max(torch.tensor(list(self.lid_values.values())))
+#     def get_max_lid(self):
+#         return torch.max(torch.tensor(list(self.lid_values.values())))
 
-    def get_min_lid(self):
-        return torch.min(torch.tensor(list(self.lid_values.values())))
+#     def get_min_lid(self):
+#         return torch.min(torch.tensor(list(self.lid_values.values())))
 
 
 def shortest_path_distance(nx_graph, src, dst):

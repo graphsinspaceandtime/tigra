@@ -110,8 +110,8 @@ def tune_hub_changed_prop(last_graph, dg):
     tuner = HubChangedRandomWalk_Tuner(
         last_graph,
         dg,
-        [WALKLEN],
-        [NUMWALKS],
+        walk_length=[WALKLEN],
+        n_walks_per_node=[NUMWALKS],
         num_runs=NUM_RUNS,
         parallel_processes=WORKERS,
     )
@@ -124,8 +124,8 @@ def tune_hub_changed_reverse_prop(last_graph, dg):
     tuner = HubChangedRandomWalkReverse_Tuner(
         last_graph,
         dg,
-        [WALKLEN],
-        [NUMWALKS],
+        walk_length=[WALKLEN],
+        n_walks_per_node=[NUMWALKS],
         num_runs=NUM_RUNS,
         parallel_processes=WORKERS,
     )

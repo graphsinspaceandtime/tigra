@@ -32,12 +32,6 @@ from tigra.embeddings.rndw.lidrw import (
     DynN2V_LIDRWDelta
 )
 
-from tigra.embeddings.rndw.lidrw import (
-    DynN2V_LIDDelta,
-    DynN2V_LIDRW,
-    DynN2V_LIDRWDelta
-)
-
 
 class Tuner(ABC):
     """
@@ -301,7 +295,7 @@ class HubChangedRandomWalk_Tuner(Tuner):
         n_walks_per_node=10,
         parallel_processes=4,
     ):
-        super().__init__(graph, data, num_runs=num_runs)
+        super().__init__(graph, data, num_runs=num_runs, params_desc="")
         self.walk_length = walk_length
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
@@ -309,8 +303,8 @@ class HubChangedRandomWalk_Tuner(Tuner):
     def create_configurations(self):
         confs = []
         for d in EMBEDDING_DIMENSIONS:
-            for wl in self.walk_length_values:
-                for nw in self.num_walks_values:
+            for wl in self.walk_length:
+                for nw in self.n_walks_per_node:
                     confs.append((d, wl, nw))
 
         return confs
@@ -339,7 +333,7 @@ class HubChangedRandomWalkReverse_Tuner(Tuner):
         n_walks_per_node=10,
         parallel_processes=4,
     ):
-        super().__init__(graph, data, num_runs=num_runs)
+        super().__init__(graph, data, num_runs=num_runs, params_desc="")
         self.walk_length = walk_length
         self.n_walks_per_node = n_walks_per_node
         self.parallel_processes = parallel_processes
@@ -347,8 +341,8 @@ class HubChangedRandomWalkReverse_Tuner(Tuner):
     def create_configurations(self):
         confs = []
         for d in EMBEDDING_DIMENSIONS:
-            for wl in self.walk_length_values:
-                for nw in self.num_walks_values:
+            for wl in self.walk_length:
+                for nw in self.n_walks_per_node:
                     confs.append((d, wl, nw))
 
         return confs
