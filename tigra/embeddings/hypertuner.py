@@ -40,6 +40,12 @@ from tigra.embeddings.rndw.lidrw import (
     DynN2V_LIDRWDelta
 )
 
+from tigra.embeddings.rndw.lidrw import (
+    DynN2V_LIDDelta,
+    DynN2V_LIDRW,
+    DynN2V_LIDRWDelta
+)
+
 
 class Tuner(ABC):
     """
