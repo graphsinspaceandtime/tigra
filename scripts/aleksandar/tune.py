@@ -26,7 +26,12 @@ if __name__ == "__main__":
     """
     dataset_name = sys.argv[1].strip()
 
-    es, time_resolution = load_event_sequence(dataset_name)
+    loaded_event = load_event_sequence(dataset_name)
+
+    if loaded_event == None:
+        raise Exception("event not loaded")
+
+    es, time_resolution = loaded_event
 
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, time_resolution=time_resolution, directed=False)
