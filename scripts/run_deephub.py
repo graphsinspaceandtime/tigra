@@ -101,7 +101,7 @@ if __name__ == "__main__":
         "email-Eu-core-temporal",
     ]
 
-    if len(sys.argv) == 4:
+    if len(sys.argv) == 3:
         _P = int(sys.argv[1])
         _U = int(sys.argv[2])
     else:
