@@ -101,8 +101,12 @@ if __name__ == "__main__":
         "email-Eu-core-temporal",
     ]
 
-    _P = 0.15
-    _U = 0.15
+    if len(sys.argv) == 3:
+        _P = int(sys.argv[1])
+        _U = int(sys.argv[2])
+    else:
+        _P = 0.15
+        _U = 0.15
 
     for d in datasets:
         DATASET = d
