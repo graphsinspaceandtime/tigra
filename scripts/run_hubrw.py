@@ -309,7 +309,7 @@ if __name__ == "__main__":
     # run_hubdeltamaxlogdegree()
     # run_hubdeltanwwl()
     # run_hubdeltasqrtdegree()
-    
+
 
     datasets = [
         "radoslaw-email",
@@ -324,11 +324,29 @@ if __name__ == "__main__":
         "email-Eu-core-temporal",
     ]
 
-    for d in datasets:
-        DATASET = d
-        NUM_RUNS = 10
-        params = dn2v_fact.configs[DATASET]
-        print()
-        print("DATASET", DATASET)
-        print(params)
-        run_hubdeltanwwl()
+    # for d in datasets:
+    #     DATASET = d
+    #     NUM_RUNS = 10
+    #     params = dn2v_fact.configs[DATASET]
+    #     print()
+    #     print("DATASET", DATASET)
+    #     print(params)
+    #     run_hubdeltanwwl()
+
+    d = int(sys.argv[1].strip())
+
+    DATASET = datasets[d]
+    NUM_RUNS = 10
+    params = dn2v_fact.configs[DATASET]
+    print()
+    print("DATASET", DATASET)
+    print(params)
+
+    run_hubdelta()
+    run_hubdeltainversedegree()
+    run_hubdeltainverselogdegree()
+    run_hubdeltalogdegree()
+    run_hubdeltamaxdegree()
+    run_hubdeltamaxlogdegree()
+    run_hubdeltanwwl()
+    run_hubdeltasqrtdegree()
