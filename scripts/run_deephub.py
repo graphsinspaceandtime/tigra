@@ -102,8 +102,8 @@ if __name__ == "__main__":
     ]
 
     if len(sys.argv) == 3:
-        _P = int(sys.argv[1])
-        _U = int(sys.argv[2])
+        _P = float(sys.argv[1])
+        _U = float(sys.argv[2])
     else:
         _P = 0.0
         _U = 0.0
