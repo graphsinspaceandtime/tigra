@@ -14,6 +14,7 @@ import typing
 from statistics import mean
 import tqdm
 import math
+import json
 
 from sklearn.model_selection import ParameterGrid
 
@@ -119,6 +120,39 @@ class Tuner(ABC):
         print("Best conf: ", self.best, " [f1, prec, rec]")
         if self.best != None:
             print("Best conf params: ", self.confs[self.best[0]])
+
+    def save_report(self, filename: str):
+        reports = []
+        for i, conf in enumerate(self.confs):
+            report = {
+                "config": conf,
+                "scores": {
+                    "f1": self.eval_res[i][1],
+                    "prec": self.eval_res[i][2],
+                    "rec": self.eval_res[i][3],
+                },
+            }
+            reports.append(report)
+
+        if self.best == None:
+            best_report = None
+        else:
+            best_report = {
+                "config": self.confs[self.best[0]],
+                "scores": {
+                    "f1": self.best[1],
+                    "prec": self.best[2],
+                    "rec": self.best[3],
+                },
+            }
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "all": reports,
+                    "best": best_report,
+                },
+                f
+            )
 
 
 class DynamicEmbedding_Tuner(Tuner):
