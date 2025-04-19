@@ -49,6 +49,9 @@ default_parameters = {
     "epochs": 1000,
 }
 
+if method == "DynGEM":
+    default_parameters["alpha"] = 1e-6
+
 for dim in dims:
     for look_back in look_backs:
         n_units = n_nodes_to_ae_layers(dsmg.number_of_nodes, dim)
@@ -64,6 +67,25 @@ for dim in dims:
             else:
                 config["n_units"] = [n_unit]
             configs.append(config)
+        if len(n_units) > 1:
+            if method == "DynAERNN":
+                configs.append({
+                    "dim": dim,
+                    "look_back": look_back,
+                    "ae_units": n_units,
+                    "rnn_units": n_units,
+                    **default_parameters,
+                })
+            else:
+                configs.append({
+                    "dim": dim,
+                    "look_back": look_back,
+                    "n_units": n_units,
+                    **default_parameters,
+                })
+
+
+print(f"NUM OF CONFIGS: {len(configs)}")
 
 
 tuner = DynamicEmbedding2_Tuner(
@@ -76,7 +98,7 @@ tuner = DynamicEmbedding2_Tuner(
     has_cuda=False,
 )
 
-print("Started tuning")
+print("STARTED TUNING")
 
 tuner.tune()
 tuner.print_report()
