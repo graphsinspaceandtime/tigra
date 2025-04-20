@@ -1,6 +1,8 @@
 import sys
 import typing
 
+import torch
+
 from tigra.embeddings.de_hypertuner import DynamicEmbedding2_Tuner
 from tigra.embeddings.utils import n_nodes_to_ae_layers
 from tigra.data.loaders import get_dataset_by_id
@@ -95,7 +97,7 @@ tuner = DynamicEmbedding2_Tuner(
     params_desc="",
     method=method,
     configs=configs,
-    has_cuda=False,
+    has_cuda=torch.cuda.is_available(),
 )
 
 print("STARTED TUNING")
