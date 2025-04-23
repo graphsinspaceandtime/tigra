@@ -271,7 +271,7 @@ class RadoslawEmail(_BaseDataset):
                 )
         event_sequence = EventSequence(list_of_events=events)
 
-        if shrink:
+        if shrink and self._shrink_amount != 0:
             self._shrink_sequence(event_sequence)
 
         return event_sequence

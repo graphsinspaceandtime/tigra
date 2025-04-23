@@ -23,7 +23,7 @@ data.download()
 
 dsmg = DynamicSparseMatrixGraph(
     data.name,
-    data.get_event_sequence(),
+    data.get_event_sequence(shrink=True),
     time_resolution=data.resolution,
     directed=False,
     cumulative=data.cumulative,
