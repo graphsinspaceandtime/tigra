@@ -683,7 +683,7 @@ class WikiTalkTemporal(_BaseDataset):
         event_sequence = EventSequence(list_of_events=events)
 
         if shrink:
-            raise Exception("Shrinking is not defined for this dataset!")
+            print("WARNING: Shrinking is not defined for this dataset!")
 
         return event_sequence
 
@@ -713,7 +713,7 @@ class SyntheticDBAC(_BaseDataset):
         event_sequence = EventSequence(list_of_events=events)
 
         if shrink:
-            raise Exception("Shrinking is not defined for this dataset!")
+            print("WARNING: Shrinking is not defined for this dataset!")
 
         return event_sequence
 
@@ -743,7 +743,7 @@ class SyntheticDBA(_BaseDataset):
         event_sequence = EventSequence(list_of_events=events)
 
         if shrink:
-            raise Exception("Shrinking is not defined for this dataset!")
+            print("WARNING: Shrinking is not defined for this dataset!")
 
         return event_sequence
 
@@ -773,7 +773,7 @@ class SyntheticDER(_BaseDataset):
         event_sequence = EventSequence(list_of_events=events)
 
         if shrink:
-            raise Exception("Shrinking is not defined for this dataset!")
+            print("WARNING: Shrinking is not defined for this dataset!")
 
         return event_sequence
 
@@ -803,7 +803,7 @@ class SyntheticDPP(_BaseDataset):
         event_sequence = EventSequence(list_of_events=events)
 
         if shrink:
-            raise Exception("Shrinking is not defined for this dataset!")
+            print("WARNING: Shrinking is not defined for this dataset!")
 
         return event_sequence
 
