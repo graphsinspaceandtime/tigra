@@ -104,3 +104,4 @@ print("STARTED TUNING")
 
 tuner.tune()
 tuner.print_report()
+tuner.save_report(f"report_{dataset_id}_{method}.json")
