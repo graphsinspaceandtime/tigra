@@ -13,6 +13,35 @@ from sklearn.metrics import f1_score
 
 # TODO: Implement link prediction for multiple embeddings
 
+class LinkPrediction(ABC):
+    embedding: Embedding
+    dg: DynamicGraph
+
+    def __init__(self, embedding: Embedding, dg: DynamicGraph):
+        self.embedding = embedding
+        self.dg = dg
+
+    def _sample_links(self, embedding: SingletonEmbedding, graph: Graph):
+        positive_links = []
+        negative_links = []
+
+        for u in embedding.embedding.keys():
+            for v in embedding.embedding.keys():
+                if u >= v:
+                    continue
+
+                if graph.has_edge(u, v):
+                    positive_links.append((u, v))
+                else:
+                    negative_links.append((u, v))
+
+        return positive_links, negative_links
+
+    def _stratified_sample_links(self, embedding: SingletonEmbedding, graph: Graph):
+        positive_links, negative_links = self._sample_links(embedding, graph)
+
+        return positive_links, random.sample(negative_links, len(positive_links))
+
 class Distance(ABC):
     positive_distances: list
     negative_distances: list
@@ -66,35 +95,9 @@ class L1_Distance(Distance):
     def _measure(self, u_hat, v_hat):
         return np.sum(np.abs(u_hat - v_hat))
 
-class UnsupervisedLinkPrediction:
-    embedding: Embedding
-    dg: DynamicGraph
-
-    def __init__(self, embedding: Embedding, dg: DynamicGraph):
-        self.embedding = embedding
-        self.dg = dg
-
-    def _sample_links(self, embedding: SingletonEmbedding, graph: Graph):
-        positive_links = []
-        negative_links = []
-
-        for u in embedding.embedding.keys():
-            for v in embedding.embedding.keys():
-                if u >= v:
-                    continue
-
-                if graph.has_edge(u, v):
-                    positive_links.append((u, v))
-                else:
-                    negative_links.append((u, v))
-
-        return positive_links, negative_links
-
-    # TODO: No significant improvement. Remove?
-    # def _stratified_sample_links(self, embedding: SingletonEmbedding, graph: Graph):
-    #     positive_links, negative_links = self._sample_links(embedding, graph)
-
-        return positive_links, random.sample(negative_links, len(positive_links))
+class UnsupervisedLinkPrediction(LinkPrediction):
+    def __init__(self, embedding, dg):
+        super().__init__(embedding, dg)
 
     def predict(self, distance: Distance):
         embedding = self.embedding.embeddings[-1]
@@ -118,8 +121,7 @@ class UnsupervisedLinkPrediction:
 class CombinePairOperation(ABC):
     positive_embeddings: list
     negative_embeddings: list
-    
-    
+
     @abstractmethod
     def _combine(self, u_hat, v_hat) -> np.ndarray:
         pass
@@ -137,14 +139,14 @@ class CombinePairOperation(ABC):
             u_hat = embedding.embedding[u]
             v_hat = embedding.embedding[v]
             negative_embeddings.append(self._combine(u_hat, v_hat))
-        
+
         self.positive_embeddings = positive_embeddings
         self.negative_embeddings = negative_embeddings
-    
+
     @property
     def embeddings(self):
         return [*self.positive_embeddings, *self.negative_embeddings]
-    
+
     @property
     def labels(self):
         return [1] * len(self.positive_embeddings) + [0] * len(self.negative_embeddings)
@@ -163,34 +165,9 @@ class HadamardCombiner(CombinePairOperation):
         return u_hat * v_hat
 
 
-class SupervisedLinkPrediction:
-    embedding: Embedding
-    dg: DynamicGraph
-
-    def __init__(self, embedding: Embedding, dg: DynamicGraph):
-        self.embedding = embedding
-        self.dg = dg
-
-    def _sample_links(self, embedding: SingletonEmbedding, graph: Graph):
-        positive_links = []
-        negative_links = []
-
-        for u in embedding.embedding.keys():
-            for v in embedding.embedding.keys():
-                if u >= v:
-                    continue
-
-                if graph.has_edge(u, v):
-                    positive_links.append((u, v))
-                else:
-                    negative_links.append((u, v))
-
-        return positive_links, negative_links
-
-    def _stratified_sample_links(self, embedding: SingletonEmbedding, graph: Graph):
-        positive_links, negative_links = self._sample_links(embedding, graph)
-
-        return positive_links, random.sample(negative_links, len(positive_links))
+class SupervisedLinkPrediction(LinkPrediction):
+    def __init__(self, embedding, dg):
+        super().__init__(embedding, dg)
 
     def predict(self, combiner: CombinePairOperation):
         embedding = self.embedding.embeddings[-1]
