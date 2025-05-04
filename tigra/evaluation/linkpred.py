@@ -13,6 +13,7 @@ from sklearn.metrics import f1_score
 
 # TODO: Implement link prediction for multiple embeddings
 
+
 class LinkPrediction(ABC):
     embedding: Embedding
     dg: DynamicGraph
@@ -42,6 +43,7 @@ class LinkPrediction(ABC):
 
         return positive_links, random.sample(negative_links, len(positive_links))
 
+
 class Distance(ABC):
     positive_distances: list
     negative_distances: list
@@ -50,7 +52,9 @@ class Distance(ABC):
     def _measure(self, u_hat, v_hat) -> float:
         pass
 
-    def score(self, positive_links: list, negative_links: list, embedding: SingletonEmbedding):
+    def score(
+        self, positive_links: list, negative_links: list, embedding: SingletonEmbedding
+    ):
         self.positive_distances = []
         self.negative_distances = []
 
@@ -73,27 +77,30 @@ class Distance(ABC):
         return [1] * len(self.positive_distances) + [0] * len(self.negative_distances)
 
 
-
-
 class DotProduct(Distance):
     def _measure(self, u_hat, v_hat):
         return np.dot(u_hat, v_hat)
+
 
 class CosineSimilarity(Distance):
     def _measure(self, u_hat, v_hat):
         return np.dot(u_hat, v_hat) / (np.linalg.norm(u_hat) * np.linalg.norm(v_hat))
 
+
 class EuclideanDistance(Distance):
     def measure(self, u_hat, v_hat):
         return -np.linalg.norm(u_hat - v_hat)
+
 
 class HadamardProduct(Distance):
     def _measure(self, u_hat, v_hat):
         return np.sum(u_hat * v_hat)
 
+
 class L1_Distance(Distance):
     def _measure(self, u_hat, v_hat):
         return np.sum(np.abs(u_hat - v_hat))
+
 
 class UnsupervisedLinkPrediction(LinkPrediction):
     def __init__(self, embedding, dg):
@@ -118,6 +125,7 @@ class UnsupervisedLinkPrediction(LinkPrediction):
         print(f"Average precision: {ap}")
         print()
 
+
 class CombinePairOperation(ABC):
     positive_embeddings: list
     negative_embeddings: list
@@ -126,7 +134,9 @@ class CombinePairOperation(ABC):
     def _combine(self, u_hat, v_hat) -> np.ndarray:
         pass
 
-    def combine(self, positive_links: list, negative_links: list, embedding: SingletonEmbedding):
+    def combine(
+        self, positive_links: list, negative_links: list, embedding: SingletonEmbedding
+    ):
         positive_embeddings = []
         negative_embeddings = []
 
@@ -151,6 +161,7 @@ class CombinePairOperation(ABC):
     def labels(self):
         return [1] * len(self.positive_embeddings) + [0] * len(self.negative_embeddings)
 
+
 class ConcatinationCombiner(CombinePairOperation):
     def _combine(self, u_hat, v_hat):
         return u_hat + v_hat
@@ -159,6 +170,7 @@ class ConcatinationCombiner(CombinePairOperation):
 class AbsoluteDifferenceCombiner(CombinePairOperation):
     def _combine(self, u_hat, v_hat):
         return np.abs(u_hat - v_hat)
+
 
 class HadamardCombiner(CombinePairOperation):
     def _combine(self, u_hat, v_hat):
@@ -182,7 +194,9 @@ class SupervisedLinkPrediction(LinkPrediction):
 
         X, y = combiner.embeddings, combiner.labels
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # model = LogisticRegression()
         model = DecisionTreeClassifier()
@@ -197,14 +211,13 @@ class SupervisedLinkPrediction(LinkPrediction):
         print()
 
 
-
-
-
 if __name__ == "__main__":
     from tigra.embeddings.embedding import FSEmbedding
     from tigra.data.loaders import RadoslawEmail
 
-    embed = FSEmbedding(folder_name="../../scripts/dusan/make_embed/embs_ae/radoslaw_email")
+    embed = FSEmbedding(
+        folder_name="../../scripts/dusan/make_embed/embs_ae/radoslaw_email"
+    )
     radoslaw = RadoslawEmail("../../data")
 
     es = radoslaw.get_event_sequence(shrink=True)
@@ -225,4 +238,3 @@ if __name__ == "__main__":
 
     sup_linkpred = SupervisedLinkPrediction(embed, dg)
     sup_linkpred.predict(ConcatinationCombiner())
-
