@@ -11,6 +11,8 @@ from sklearn.metrics import f1_score
 from tigra.evaluation.classification.classifier import Classifier
 from tigra.evaluation.classification.skl import skl_classifiers_factory
 
+from typing import Sequence
+
 # TODO: Implement link prediction for multiple embeddings
 
 
@@ -52,14 +54,18 @@ class LinkPrediction(ABC):
 
 
 class Distance(ABC):
+    name: str
     positive_distances: list
     negative_distances: list
+
+    def __init__(self, name: str):
+        self.name = name
 
     @abstractmethod
     def _measure(self, u_hat, v_hat) -> float:
         pass
 
-    def score(
+    def measure(
         self, positive_links: list, negative_links: list, embedding: SingletonEmbedding
     ):
         self.positive_distances = []
@@ -85,28 +91,53 @@ class Distance(ABC):
 
 
 class DotProduct(Distance):
+    def __init__(self):
+        super().__init__("DotProduct")
+
     def _measure(self, u_hat, v_hat):
         return np.dot(u_hat, v_hat)
 
 
 class CosineSimilarity(Distance):
+    def __init__(self):
+        super().__init__("CosineSimilarity")
+
     def _measure(self, u_hat, v_hat):
         return np.dot(u_hat, v_hat) / (np.linalg.norm(u_hat) * np.linalg.norm(v_hat))
 
 
 class EuclideanDistance(Distance):
-    def measure(self, u_hat, v_hat):
-        return -np.linalg.norm(u_hat - v_hat)
+    def __init__(self):
+        super().__init__("EuclideanDistance")
+
+    def _measure(self, u_hat, v_hat):
+        return float(-np.linalg.norm(np.array(u_hat) - np.array(v_hat)))
 
 
 class HadamardProduct(Distance):
+    def __init__(self):
+        super().__init__("hadamardProduct")
+
     def _measure(self, u_hat, v_hat):
-        return np.sum(u_hat * v_hat)
+        return float(np.sum(np.array(u_hat) * np.array(v_hat)))
 
 
 class L1_Distance(Distance):
+    def __init__(self):
+        super().__init__("L1_Distance")
+
     def _measure(self, u_hat, v_hat):
-        return np.sum(np.abs(u_hat - v_hat))
+        return np.sum(np.abs(np.array(u_hat) - np.array(v_hat)))
+
+
+def distance_measure_factory() -> Sequence[Distance]:
+    return [
+        DotProduct(),
+        CosineSimilarity(),
+        EuclideanDistance(),
+        HadamardProduct(),
+        L1_Distance(),
+    ]
 
 
 class UnsupervisedLinkPrediction(LinkPrediction):
@@ -122,20 +153,22 @@ class UnsupervisedLinkPrediction(LinkPrediction):
 
         positive_links, negative_links = self._stratified_sample_links(embedding, graph)
 
-        distance.score(positive_links, negative_links, embedding)
+        distance.measure(positive_links, negative_links, embedding)
 
         roc_auc = roc_auc_score(distance.labels, distance.scores)
         ap = average_precision_score(distance.labels, distance.scores)
 
-        print("UNSUPERVISED LINK PREDICTION")
         print(f"ROC AUC: {roc_auc}")
         print(f"Average precision: {ap}")
-        print()
 
 
 class CombinePairOperation(ABC):
+    name: str
     positive_embeddings: list
     negative_embeddings: list
+
+    def __init__(self, name: str):
+        self.name = name
 
     @abstractmethod
     def _combine(self, u_hat, v_hat) -> np.ndarray:
@@ -170,18 +203,35 @@ class CombinePairOperation(ABC):
 
 
 class ConcatinationCombiner(CombinePairOperation):
+    def __init__(self):
+        super().__init__("ConcatinationCombiner")
+
     def _combine(self, u_hat, v_hat):
         return u_hat + v_hat
 
 
 class AbsoluteDifferenceCombiner(CombinePairOperation):
+    def __init__(self):
+        super().__init__("AbsoluteDifferenceCombiner")
+
     def _combine(self, u_hat, v_hat):
-        return np.abs(u_hat - v_hat)
+        return np.abs(np.array(u_hat) - np.array(v_hat))
 
 
 class HadamardCombiner(CombinePairOperation):
+    def __init__(self):
+        super().__init__("HadamardCombiner")
+
     def _combine(self, u_hat, v_hat):
-        return u_hat * v_hat
+        return np.array(u_hat) * np.array(v_hat)
+
+
+def combine_pair_operation_factory() -> Sequence[CombinePairOperation]:
+    return [
+        ConcatinationCombiner(),
+        AbsoluteDifferenceCombiner(),
+        HadamardCombiner(),
+    ]
 
 
 class SupervisedLinkPrediction(LinkPrediction):
@@ -208,10 +258,6 @@ class SupervisedLinkPrediction(LinkPrediction):
         y_pred = classifier.fit_predict(X_train, y_train, X_test)
         classifier.score(y_test, y_pred)
 
-        # # print(f"ROC AUC: {roc_auc_score(y_test, y_proba)}")
-        # print(f"F1 score: {f1_score(y_test, y_pred)}")
-        print()
-
 
 if __name__ == "__main__":
     from tigra.embeddings.embedding import FSEmbedding
@@ -236,10 +282,18 @@ if __name__ == "__main__":
     print(f"Number of graphs: {len(dg.get_graph_sequence())}")
     print()
 
-    unsup_linkpred = UnsupervisedLinkPrediction(embed, dg)
-    unsup_linkpred.predict(CosineSimilarity())
+    for distance_measure in distance_measure_factory():
+        print("Distance measure: " + distance_measure.name)
+        unsup_linkpred = UnsupervisedLinkPrediction(embed, dg)
+        unsup_linkpred.predict(distance_measure)
+        print()
 
     sup_linkpred = SupervisedLinkPrediction(embed, dg)
     for classifier in skl_classifiers_factory():
+        print("==================")
         print("Classifier: " + classifier.name)
-        sup_linkpred.predict(ConcatinationCombiner(), classifier)
+        print("==================")
+        for combine_pair_operation in combine_pair_operation_factory():
+            print("Combine pair operation: " + combine_pair_operation.name)
+            sup_linkpred.predict(combine_pair_operation, classifier)
+            print()
