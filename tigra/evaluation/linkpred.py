@@ -18,10 +18,12 @@ from typing import Sequence
 
 class LinkPrediction(ABC):
     @abstractmethod
-    def predict(self, embedding: SingletonEmbedding, graph: Graph):
+    def predict(self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph):
         pass
 
-    def _sample_links(self, embedding: SingletonEmbedding, graph: Graph):
+    def _sample_links(
+        self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph
+    ):
         positive_links = []
         negative_links = []
 
@@ -30,15 +32,19 @@ class LinkPrediction(ABC):
                 if u >= v:
                     continue
 
-                if graph.has_edge(u, v):
+                if graph_tp1.has_edge(u, v) and not graph_t.has_edge(u, v):
                     positive_links.append((u, v))
-                else:
+                elif not graph_tp1.has_edge(u, v) and not graph_t.has_edge(u, v):
                     negative_links.append((u, v))
 
         return positive_links, negative_links
 
-    def _stratified_sample_links(self, embedding: SingletonEmbedding, graph: Graph):
-        positive_links, negative_links = self._sample_links(embedding, graph)
+    def _stratified_sample_links(
+        self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph
+    ):
+        positive_links, negative_links = self._sample_links(
+            embedding, graph_t, graph_tp1
+        )
         if len(positive_links) < len(negative_links):
             negative_links = random.sample(negative_links, len(positive_links))
         elif len(positive_links) > len(negative_links):
@@ -144,8 +150,10 @@ class UnsupervisedLinkPrediction(LinkPrediction):
         super().__init__()
         self.distance = distance
 
-    def predict(self, embedding, graph):
-        positive_links, negative_links = self._stratified_sample_links(embedding, graph)
+    def predict(self, embedding, graph_t, graph_tp1):
+        positive_links, negative_links = self._stratified_sample_links(
+            embedding, graph_t, graph_tp1
+        )
 
         self.distance.measure(positive_links, negative_links, embedding)
 
@@ -236,8 +244,10 @@ class SupervisedLinkPrediction(LinkPrediction):
         self.combiner = combiner
         self.classifier = classifier
 
-    def predict(self, embedding, graph):
-        positive_links, negative_links = self._stratified_sample_links(embedding, graph)
+    def predict(self, embedding, graph_t, graph_tp1):
+        positive_links, negative_links = self._stratified_sample_links(
+            embedding, graph_t, graph_tp1
+        )
 
         self.combiner.combine(positive_links, negative_links, embedding)
 
@@ -271,10 +281,11 @@ class Predicter:
         for i, singleton_embedding in enumerate(self.embedding.embeddings):
             if singleton_embedding == None:
                 raise Exception("Embedding is None")
-            graph = graph_sequence[num_graphs - num_embeddings - i]
+            graph_tp1 = graph_sequence[num_graphs - num_embeddings - i]
+            graph_t = graph_sequence[num_graphs - num_embeddings - i - 1]
 
             print(f"Snapshot {i}")
-            self.linkpred.predict(singleton_embedding, graph)
+            self.linkpred.predict(singleton_embedding, graph_t, graph_tp1)
             print()
 
 
