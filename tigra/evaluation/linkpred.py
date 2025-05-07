@@ -17,12 +17,9 @@ from typing import Sequence
 
 
 class LinkPrediction(ABC):
-    embedding: Embedding
-    dg: DynamicGraph
-
-    def __init__(self, embedding: Embedding, dg: DynamicGraph):
-        self.embedding = embedding
-        self.dg = dg
+    @abstractmethod
+    def predict(self, embedding: SingletonEmbedding, graph: Graph):
+        pass
 
     def _sample_links(self, embedding: SingletonEmbedding, graph: Graph):
         positive_links = []
@@ -141,22 +138,19 @@ def distance_measure_factory() -> Sequence[Distance]:
 
 
 class UnsupervisedLinkPrediction(LinkPrediction):
-    def __init__(self, embedding, dg):
-        super().__init__(embedding, dg)
+    distance: Distance
 
-    def predict(self, distance: Distance):
-        embedding = self.embedding.embeddings[-1]
-        if embedding == None:
-            raise Exception("Embedding is None")
+    def __init__(self, distance: Distance):
+        super().__init__()
+        self.distance = distance
 
-        graph = self.dg.get_graph_sequence()[-self.embedding.num_embeddings()]
-
+    def predict(self, embedding, graph):
         positive_links, negative_links = self._stratified_sample_links(embedding, graph)
 
-        distance.measure(positive_links, negative_links, embedding)
+        self.distance.measure(positive_links, negative_links, embedding)
 
-        roc_auc = roc_auc_score(distance.labels, distance.scores)
-        ap = average_precision_score(distance.labels, distance.scores)
+        roc_auc = roc_auc_score(self.distance.labels, self.distance.scores)
+        ap = average_precision_score(self.distance.labels, self.distance.scores)
 
         print(f"ROC AUC: {roc_auc}")
         print(f"Average precision: {ap}")
@@ -235,28 +229,53 @@ def combine_pair_operation_factory() -> Sequence[CombinePairOperation]:
 
 
 class SupervisedLinkPrediction(LinkPrediction):
-    def __init__(self, embedding, dg):
-        super().__init__(embedding, dg)
+    combiner: CombinePairOperation
+    classifier: Classifier
 
-    def predict(self, combiner: CombinePairOperation, classifier: Classifier):
-        embedding = self.embedding.embeddings[-1]
-        if embedding == None:
-            raise Exception("Embedding is None")
+    def __init__(self, combiner: CombinePairOperation, classifier: Classifier):
+        self.combiner = combiner
+        self.classifier = classifier
 
-        graph = self.dg.get_graph_sequence()[-self.embedding.num_embeddings()]
-
+    def predict(self, embedding, graph):
         positive_links, negative_links = self._stratified_sample_links(embedding, graph)
 
-        combiner.combine(positive_links, negative_links, embedding)
+        self.combiner.combine(positive_links, negative_links, embedding)
 
-        X, y = combiner.embeddings, combiner.labels
+        X, y = self.combiner.embeddings, self.combiner.labels
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42
         )
 
-        y_pred = classifier.fit_predict(X_train, y_train, X_test)
-        classifier.score(y_test, y_pred)
+        y_pred = self.classifier.fit_predict(X_train, y_train, X_test)
+        self.classifier.score(y_test, y_pred)
+
+
+class Predicter:
+    linkpred: LinkPrediction
+    embedding: Embedding
+    dg: DynamicGraph
+
+    def __init__(
+        self, linkpred: LinkPrediction, embedding: Embedding, dg: DynamicGraph
+    ):
+        self.linkpred = linkpred
+        self.embedding = embedding
+        self.dg = dg
+
+    def predict(self):
+        graph_sequence = dg.get_graph_sequence()
+        num_graphs = len(graph_sequence)
+        num_embeddings = self.embedding.num_embeddings()
+
+        for i, singleton_embedding in enumerate(self.embedding.embeddings):
+            if singleton_embedding == None:
+                raise Exception("Embedding is None")
+            graph = graph_sequence[num_graphs - num_embeddings - i]
+
+            print(f"Snapshot {i}")
+            self.linkpred.predict(singleton_embedding, graph)
+            print()
 
 
 if __name__ == "__main__":
@@ -284,16 +303,18 @@ if __name__ == "__main__":
 
     for distance_measure in distance_measure_factory():
         print("Distance measure: " + distance_measure.name)
-        unsup_linkpred = UnsupervisedLinkPrediction(embed, dg)
-        unsup_linkpred.predict(distance_measure)
+        unsup_linkpred = UnsupervisedLinkPrediction(distance_measure)
+        predicter = Predicter(unsup_linkpred, embed, dg)
+        predicter.predict()
         print()
 
-    sup_linkpred = SupervisedLinkPrediction(embed, dg)
     for classifier in skl_classifiers_factory():
         print("==================")
         print("Classifier: " + classifier.name)
         print("==================")
         for combine_pair_operation in combine_pair_operation_factory():
+            sup_linkpred = SupervisedLinkPrediction(combine_pair_operation, classifier)
             print("Combine pair operation: " + combine_pair_operation.name)
-            sup_linkpred.predict(combine_pair_operation, classifier)
+            predicter = Predicter(sup_linkpred, embed, dg)
+            predicter.predict()
             print()
