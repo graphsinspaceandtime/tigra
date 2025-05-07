@@ -6,10 +6,10 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 import random
 
 # supervised learning imports
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
+from tigra.evaluation.classification.classifier import Classifier
+from tigra.evaluation.classification.skl import skl_classifiers_factory
 
 # TODO: Implement link prediction for multiple embeddings
 
@@ -40,8 +40,15 @@ class LinkPrediction(ABC):
 
     def _stratified_sample_links(self, embedding: SingletonEmbedding, graph: Graph):
         positive_links, negative_links = self._sample_links(embedding, graph)
+        if len(positive_links) < len(negative_links):
+            negative_links = random.sample(negative_links, len(positive_links))
+        elif len(positive_links) > len(negative_links):
+            positive_links = random.sample(positive_links, len(negative_links))
 
-        return positive_links, random.sample(negative_links, len(positive_links))
+        return (
+            positive_links,
+            negative_links,
+        )
 
 
 class Distance(ABC):
@@ -113,7 +120,7 @@ class UnsupervisedLinkPrediction(LinkPrediction):
 
         graph = self.dg.get_graph_sequence()[-self.embedding.num_embeddings()]
 
-        positive_links, negative_links = self._sample_links(embedding, graph)
+        positive_links, negative_links = self._stratified_sample_links(embedding, graph)
 
         distance.score(positive_links, negative_links, embedding)
 
@@ -181,7 +188,7 @@ class SupervisedLinkPrediction(LinkPrediction):
     def __init__(self, embedding, dg):
         super().__init__(embedding, dg)
 
-    def predict(self, combiner: CombinePairOperation):
+    def predict(self, combiner: CombinePairOperation, classifier: Classifier):
         embedding = self.embedding.embeddings[-1]
         if embedding == None:
             raise Exception("Embedding is None")
@@ -198,16 +205,11 @@ class SupervisedLinkPrediction(LinkPrediction):
             X, y, test_size=0.2, random_state=42
         )
 
-        # model = LogisticRegression()
-        model = DecisionTreeClassifier()
-        model.fit(X_train, y_train)
+        y_pred = classifier.fit_predict(X_train, y_train, X_test)
+        classifier.score(y_test, y_pred)
 
-        y_pred = model.predict(X_test)
-        y_proba = model.predict_proba(X_test)[:, 1]
-
-        print("SUPERVISED LINK PREDICTION")
-        print(f"ROC AUC: {roc_auc_score(y_test, y_proba)}")
-        print(f"F1 score: {f1_score(y_test, y_pred)}")
+        # # print(f"ROC AUC: {roc_auc_score(y_test, y_proba)}")
+        # print(f"F1 score: {f1_score(y_test, y_pred)}")
         print()
 
 
@@ -232,9 +234,12 @@ if __name__ == "__main__":
 
     print(f"Number of embeddings: {embed.num_embeddings()}")
     print(f"Number of graphs: {len(dg.get_graph_sequence())}")
+    print()
 
     unsup_linkpred = UnsupervisedLinkPrediction(embed, dg)
     unsup_linkpred.predict(CosineSimilarity())
 
     sup_linkpred = SupervisedLinkPrediction(embed, dg)
-    sup_linkpred.predict(ConcatinationCombiner())
+    for classifier in skl_classifiers_factory():
+        print("Classifier: " + classifier.name)
+        sup_linkpred.predict(ConcatinationCombiner(), classifier)
