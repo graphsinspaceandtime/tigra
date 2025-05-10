@@ -196,6 +196,9 @@ class Embedding(ABC):
 
         os.mkdir(folder_name)
         for i in range(len(self.embeddings)):
+            if self.embeddings[i] == None:
+                print(f"Skipping embedding {i} because it's None")
+                continue
             fn = str(i) + ".emb"
             path = os.path.join(folder_name, fn)
             self.embeddings[i].save_to_file(path)
