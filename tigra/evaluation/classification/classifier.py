@@ -63,6 +63,7 @@ class Classifier(ABC):
         pass
 
     def score(self, y_test: np.ndarray, y_pred: np.ndarray, print_results=True):
+        f1 = f1_score(y_test, y_pred)
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred, average="macro", zero_division=0)
         recall = recall_score(y_test, y_pred, average="macro", zero_division=0)
@@ -80,6 +81,7 @@ class Classifier(ABC):
         )
 
         if print_results:
+            print(f"F1 score: {f1}")
             print(f"Accuracy: {accuracy}")
             print(f"Precision: {precision}")
             print(f"Recall: {recall}")
@@ -92,7 +94,7 @@ class Classifier(ABC):
             #     f"{accuracy},{precision},{recall},{pos_prec},{pos_rec},{neg_prec},{neg_rec}"
             # )
 
-        return accuracy, precision, recall, pos_prec, pos_rec, neg_prec, neg_rec
+        return f1, accuracy, precision, recall, pos_prec, pos_rec, neg_prec, neg_rec
 
     # compatibility functions for svc
     def train(self, predictors, target):
