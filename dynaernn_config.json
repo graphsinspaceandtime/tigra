@@ -42,14 +42,6 @@
       ],
       "look_back": 2
     },
-    "ia_hospital_ward_proximity_attr": {
-      "skip": true,
-      "dim": 10,
-      "n_units": [
-        512
-      ],
-      "look_back": 4
-    },
     "ia_primary_school_proximity_attr": {
       "skip": false,
       "dim": 100,
