@@ -152,14 +152,6 @@ class EuclideanDistance(EmbeddingDistance):
         return float(-np.linalg.norm(np.array(u_hat) - np.array(v_hat)))
 
 
-class HadamardProduct(EmbeddingDistance):
-    def __init__(self):
-        super().__init__("hadamardProduct")
-
-    def _measure(self, u_hat, v_hat):
-        return float(np.sum(np.array(u_hat) * np.array(v_hat)))
-
-
 class L1_Distance(EmbeddingDistance):
     def __init__(self):
         super().__init__("L1_Distance")
@@ -226,7 +218,6 @@ def distance_measure_factory() -> Sequence[Distance]:
         DotProduct(),
         CosineSimilarity(),
         EuclideanDistance(),
-        HadamardProduct(),
         L1_Distance(),
         JaccardCoefficient(),
         AdamicAdarIndex(),
