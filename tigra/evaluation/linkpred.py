@@ -400,7 +400,7 @@ class SupervisedLinkPrediction(LinkPrediction):
             res_pos_rec,
             res_neg_prec,
             res_neg_rec,
-        ) = self.classifier.score(y_test, y_pred, print_results=False)
+        ) = self.classifier.score(y_test, y_pred)
         self.result = {
             "f1": res_f1,
             "accuracy": res_accuracy,
