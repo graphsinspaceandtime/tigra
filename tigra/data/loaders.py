@@ -548,7 +548,7 @@ class EmailEuCoreTemporal(_BaseDataset):
             dataset_dir="",
             remote_url="https://snap.stanford.edu/data/email-Eu-core-temporal.txt.gz",
             sha256="1835c94dc6685dcf2a614a1b6a0275b323dd4002f7aa111fbe9f76db8864391f",
-            filename="CollegeMsg.txt",
+            filename="email-Eu-core-temporal.txt",
             resolution="month",
             shrink_amount=-1,
             cumulative=False,
