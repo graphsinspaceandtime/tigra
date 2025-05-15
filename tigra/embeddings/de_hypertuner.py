@@ -110,9 +110,10 @@ class Tuner(ABC):
                 print("Done ", i, " out of", len(self.confs))
 
     def print_report(self):
-        print(self.params_desc + ",F1,PREC,REC")
+        print(self.params_desc)
+        print(",".join([str(key for key in self.confs[0].keys())]) + ",F1,PREC,REC")
         for i in range(len(self.confs)):
-            s = ",".join([str(x) for x in self.confs[i]])
+            s = ",".join([str(x) for x in self.confs[i].values()])
             eval = self.eval_res[i]
             s += "," + str(eval[1]) + "," + str(eval[2]) + "," + str(eval[3])
             print(s)
@@ -151,7 +152,7 @@ class Tuner(ABC):
                     "all": reports,
                     "best": best_report,
                 },
-                f
+                f,
             )
 
 
