@@ -1,0 +1,21 @@
+{
+  "common_configs": {
+    "beta": 5,
+    "nu1": 1e-6,
+    "nu2": 1e-6,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 16,
+    "epochs": 1000
+  },
+  "dataset_configs": {
+    "ia_contacts_hypertext_2009": {
+      "skip": false,
+      "dim": 10,
+      "n_units": [
+        16
+      ],
+      "look_back": 1
+    }
+  }
+}
