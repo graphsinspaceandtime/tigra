@@ -111,7 +111,7 @@ class Tuner(ABC):
 
     def print_report(self):
         print(self.params_desc)
-        print(",".join([str(key for key in self.confs[0].keys())]) + ",F1,PREC,REC")
+        print(",".join([str(key) for key in self.confs[0].keys()]) + ",F1,PREC,REC")
         for i in range(len(self.confs)):
             s = ",".join([str(x) for x in self.confs[i].values()])
             eval = self.eval_res[i]
