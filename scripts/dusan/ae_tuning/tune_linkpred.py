@@ -43,16 +43,16 @@ if data.id == "ia_contacts_hypertext_2009":
     dims = [10, 25, 50]
 
 if linkpred_type == "unsupervised":
-    if num_snaps < 2:
-        raise Exception("Minimal number of snaps for unsupervised learning is 2")
-    elif num_snaps == 2:
+    if num_snaps < 3:
+        raise Exception("Minimal number of snaps for unsupervised learning is 3")
+    elif num_snaps == 3:
         look_backs = [1]
     else:
         look_backs = list(range(1, num_snaps - 1))
 elif linkpred_type == "supervised":
-    if num_snaps < 3:
-        raise Exception("Minimal number of snaps for supervised learning is 3")
-    elif num_snaps == 3:
+    if num_snaps < 4:
+        raise Exception("Minimal number of snaps for supervised learning is 4")
+    elif num_snaps == 4:
         look_backs = [1]
     else:
         look_backs = list(range(1, num_snaps - 1))
