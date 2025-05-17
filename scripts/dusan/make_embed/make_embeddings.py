@@ -1,7 +1,8 @@
 from tigra.embeddings.sota.de_factory import get_dynae_factory
-from tigra.embeddings.embedding import FSEmbedding
 
-dynae_factory = get_dynae_factory("../../../dynae_config.json", "../../../data")
+dynae_factory = get_dynae_factory(
+    "../../../configs/dynae_unsup_config.json", "../../../data"
+)
 
 for dataset, config in dynae_factory.dataset_configs.items():
     if config["skip"]:
@@ -17,5 +18,5 @@ for dataset, config in dynae_factory.dataset_configs.items():
         continue
 
     dynae, _ = embed
-    dynae.save_embedding(f"embs/{dataset}")
+    dynae.save_embedding(f"embs_ae_unsup/{dataset}")
     print(f"Embedding for {dataset} saved")
