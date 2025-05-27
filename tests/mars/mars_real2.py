@@ -33,7 +33,9 @@ metadata = db.get_metadata(dataset_name)
 
 
 # step 3 -- create a temporal graph from the loaded event sequence
-print("\n\n###### step 3 -- create a temporal graph from the loaded event sequence ######\n")
+print(
+    "\n\n###### step 3 -- create a temporal graph from the loaded event sequence ######\n"
+)
 
 dg = DynamicGraph()
 dg.init_from_event_sequence(
@@ -90,5 +92,5 @@ for e in emb:
     emb_0 = e[node_0]
     label_0 = e.get_label(node_0)
     print(node_0, "label", label_0, "emb dimension", len(emb_0))
-    #print(emb_0)
+    # print(emb_0)
     print()

@@ -22,12 +22,10 @@ class Net(nn.Module):
 
         self.layers = nn.Sequential(*all_layers)
 
-
     def forward(self, x):
         x = self.batch_norm(x)
         x = self.layers(x)
         return x
-
 
 
 class NeuralNetworkClassifier(Classifier):
@@ -37,7 +35,6 @@ class NeuralNetworkClassifier(Classifier):
         self._epochs = 100
         self._map_label_lblid = {}
         self._map_lblid_label = {}
-        
 
     def train(self, train_data, train_labels):
         unique_labels = sorted(set(train_labels))
@@ -47,7 +44,7 @@ class NeuralNetworkClassifier(Classifier):
 
         t_train_data = torch.FloatTensor(train_data)
         t_train_labels = torch.tensor(train_ids, dtype=torch.int64)
-        
+
         labels_cnt = len(set(train_ids))
         atts_cnt = t_train_data.shape[1]
 
@@ -66,10 +63,9 @@ class NeuralNetworkClassifier(Classifier):
 
             # print(f"epoch: {i:3} loss: {single_loss.item():10.10f}")
 
-
     def predict(self, test_data):
         t_test_data = torch.FloatTensor(test_data)
-        
+
         with torch.no_grad():
             predicted_labels = np.argmax(self._net(t_test_data), axis=1).tolist()
 

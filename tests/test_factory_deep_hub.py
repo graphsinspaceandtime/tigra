@@ -15,14 +15,14 @@ datasets = databank.get_keys()
 
 for dataset in datasets:
     print("DATASET", dataset)
-    dn2v, dg = deep_hub_fact.get_embedding(dataset)
+    deep_hub, dg = deep_hub_fact.get_embedding(dataset)
 
     org_graphs = dg.get_graph_sequence()
     num_graphs = len(org_graphs)
 
     for i in range(num_graphs):
         og = org_graphs[i]
-        emb = dn2v.embeddings[i]
+        emb = deep_hub.embeddings[i]
 
         print("#nodes", og.num_nodes(), "#links", og.num_edges())
         num_links = og.num_edges()

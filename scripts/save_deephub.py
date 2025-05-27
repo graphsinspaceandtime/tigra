@@ -7,10 +7,20 @@ sys.dont_write_bytecode = True
 from tigra.embeddings.sota.factory import get_deep_hub_factory
 from data.bank import Databank
 
-databank = Databank()
-datasets = databank.get_keys()
 
 deep_hub_fact = get_deep_hub_factory("../deep_hub.conf")
+
+datasets = [
+    "radoslaw-email",
+    "fb-forum",
+    "fb-messages",
+    "ia-contacts_hypertext2009",
+    "ia-enron-employees",
+    "ia-hospital-ward-proximity-attr",
+    "ia-primary-school-proximity-attr",
+    "CollegeMsg",
+    "email-Eu-core-temporal",
+]
 
 
 for dataset in datasets:

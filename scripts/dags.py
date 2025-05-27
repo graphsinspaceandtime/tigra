@@ -14,15 +14,17 @@ sys.dont_write_bytecode = True
 import networkx as nx
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
 from tigra.core.dgraph import DynamicAggregateGraph
 from tigra.core.loaders import load_event_sequence, datasets
 
+
 def analyze_dag(dag):
     print("Analyzing DAG")
-    
+
     G = dag.get_aggregate_graph().G
 
     num_nodes = len(G.nodes())
@@ -37,20 +39,27 @@ def analyze_dag(dag):
     c_size.sort(reverse=True)
     l_frac = c_size[0] / num_nodes
     print("Largest CC", l_frac)
-    
+
     avg_wl, max_wl, std_wl = dag.estimate_avg_temp_path_length()
     print(avg_wl, max_wl, std_wl)
 
-    return str(num_nodes) + "," +\
-        str(num_links) + "," +\
-        str(len(comps)) + "," +\
-        str(round(l_frac, 4)) + "," +\
-        str(round(avg_wl, 4)) + "," +\
-        str(round(max_wl, 4)) + "," +\
-        str(round(std_wl, 4))
+    return (
+        str(num_nodes)
+        + ","
+        + str(num_links)
+        + ","
+        + str(len(comps))
+        + ","
+        + str(round(l_frac, 4))
+        + ","
+        + str(round(avg_wl, 4))
+        + ","
+        + str(round(max_wl, 4))
+        + ","
+        + str(round(std_wl, 4))
+    )
 
 
-    
 def examine_dag(dataset):
     print(dataset)
     es, _ = load_event_sequence(dataset)
@@ -58,7 +67,6 @@ def examine_dag(dataset):
 
     dag = DynamicAggregateGraph(dataset, es, directed=False)
     return analyze_dag(dag)
-
 
 
 if __name__ == "__main__":
@@ -70,5 +78,3 @@ if __name__ == "__main__":
 
     for m in msg:
         print(m)
-
-    

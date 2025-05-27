@@ -6,8 +6,16 @@ sys.path.append("../..")
 
 from tigra.embeddings.embedding import FSEmbedding
 from tigra.evaluation.classification_eval import eval
-from tigra.evaluation.classification.neural_network_classifier import NeuralNetworkClassifier
-from tigra.evaluation.classification.skl_classifiers import DecisionTree, SVM, KNN, NaiveBayes, RandomForest
+from tigra.evaluation.classification.neural_network_classifier import (
+    NeuralNetworkClassifier,
+)
+from tigra.evaluation.classification.skl_classifiers import (
+    DecisionTree,
+    SVM,
+    KNN,
+    NaiveBayes,
+    RandomForest,
+)
 
 
 @contextmanager
@@ -21,20 +29,15 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 
-
 def eval_dataset_classifier(dataset, classifier):
     with suppress_stdout():
         emb = FSEmbedding("../" + dataset)
 
-    (
-        score_accuracy,
-        score_precision,
-        score_recall,
-        score_f1
-    ) = eval(emb, classifier)
+    (score_accuracy, score_precision, score_recall, score_f1) = eval(emb, classifier)
 
-    print(f"{dataset}\t{classifier.__class__.__name__}\t{score_accuracy}\t{score_precision}\t{score_recall}\t{score_f1}")
-
+    print(
+        f"{dataset}\t{classifier.__class__.__name__}\t{score_accuracy}\t{score_precision}\t{score_recall}\t{score_f1}"
+    )
 
 
 def eval_all():
@@ -61,17 +64,5 @@ def eval_all():
             eval_dataset_classifier(dataset, classifier)
 
 
-
-
-
 if __name__ == "__main__":
     eval_all()
-
-
-
-
-
-
-
-
-

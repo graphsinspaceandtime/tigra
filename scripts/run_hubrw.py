@@ -10,15 +10,15 @@ from tigra.core.greval import GraphReconstructionEval
 from tigra.core.dgraph import DynamicGraph
 from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.rndw.hubrw import (
-        DynN2V_HubDelta,
-        DynN2V_HubDeltaNWWL,
-        DynN2V_HubDeltaInverseDegree,
-        DynN2V_HubDeltaLogDegree,
-        DynN2V_HubDeltaMaxDegree,
-        DynN2V_HubDeltaMaxLogDegree,
-        DynN2V_HubDeltaInverseLogDegree,
-        DynN2V_HubDeltaSqrtDegree
-    )
+    DynN2V_HubDelta,
+    DynN2V_HubDeltaNWWL,
+    DynN2V_HubDeltaInverseDegree,
+    DynN2V_HubDeltaLogDegree,
+    DynN2V_HubDeltaMaxDegree,
+    DynN2V_HubDeltaMaxLogDegree,
+    DynN2V_HubDeltaInverseLogDegree,
+    DynN2V_HubDeltaSqrtDegree,
+)
 
 from tigra.embeddings.embedding import FSEmbedding
 from tigra.embeddings.sota.factory import get_dn2v_factory
@@ -96,7 +96,6 @@ def run_hubdelta():
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 def run_hubdeltanwwl():
     print("DynN2V_HubDeltaNWWL")
     graph_sequence, dg = get_graph_sequence()
@@ -123,7 +122,6 @@ def run_hubdeltanwwl():
     print("SNAPSHOT, PRECISION, RECALL, F1")
     for i in range(len(f1)):
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
-
 
 
 def run_hubdeltainversedegree():
@@ -154,7 +152,6 @@ def run_hubdeltainversedegree():
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 def run_hubdeltalogdegree():
     print("DynN2V_HubDeltaLogDegree")
     graph_sequence, dg = get_graph_sequence()
@@ -181,7 +178,6 @@ def run_hubdeltalogdegree():
     print("SNAPSHOT, PRECISION, RECALL, F1")
     for i in range(len(f1)):
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
-
 
 
 def run_hubdeltamaxdegree():
@@ -212,7 +208,6 @@ def run_hubdeltamaxdegree():
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 def run_hubdeltamaxlogdegree():
     print("DynN2V_HubDeltaMaxLogDegree")
     graph_sequence, dg = get_graph_sequence()
@@ -239,7 +234,6 @@ def run_hubdeltamaxlogdegree():
     print("SNAPSHOT, PRECISION, RECALL, F1")
     for i in range(len(f1)):
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
-
 
 
 def run_hubdeltainverselogdegree():
@@ -270,7 +264,6 @@ def run_hubdeltainverselogdegree():
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 def run_hubdeltasqrtdegree():
     print("DynN2V_HubDeltaSqrtDegree")
     graph_sequence, dg = get_graph_sequence()
@@ -299,7 +292,6 @@ def run_hubdeltasqrtdegree():
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 if __name__ == "__main__":
     # run_hubdelta()
     # run_hubdeltainversedegree()
@@ -309,7 +301,6 @@ if __name__ == "__main__":
     # run_hubdeltamaxlogdegree()
     # run_hubdeltanwwl()
     # run_hubdeltasqrtdegree()
-
 
     datasets = [
         "radoslaw-email",

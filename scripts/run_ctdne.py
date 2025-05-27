@@ -12,6 +12,7 @@ sys.path.append("..")
 sys.dont_write_bytecode = True
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
@@ -27,16 +28,19 @@ import numpy as np
 from scipy.stats import spearmanr, kendalltau
 
 
-def run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
-    ctdne = Ctdne(dim, 
-        p=p, 
-        q=q, 
-        walk_length=walk_length, 
-        num_walks=num_walks, 
-        workers=workers, 
-        window=window, 
-        min_count=min_count, 
-        batch_words=batch_words
+def run_ctdne(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
+    ctdne = Ctdne(
+        dim,
+        p=p,
+        q=q,
+        walk_length=walk_length,
+        num_walks=num_walks,
+        workers=workers,
+        window=window,
+        min_count=min_count,
+        batch_words=batch_words,
     )
 
     ctdne.make_embedding(dag)
@@ -69,65 +73,114 @@ def eval_weighted(emb, dag):
     print("Kendal Tau correlation", kt)
 
 
-
-
-def examine_num_walks(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
+def examine_num_walks(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
     num_walks_options = [num_walks, num_walks * 2, num_walks * 3]
-    
+
     for nw in num_walks_options:
         print("NUM-WALKS", nw)
-        run_ctdne(dag, dim, p, q, walk_length, nw, workers, window, min_count, batch_words)
+        run_ctdne(
+            dag, dim, p, q, walk_length, nw, workers, window, min_count, batch_words
+        )
 
-    
-def examine_walk_length(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
+
+def examine_walk_length(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
     walk_length_options = [walk_length, walk_length * 2, walk_length * 3]
-    
+
     for wl in walk_length_options:
         print("WALK-LENGTH", wl)
-        run_ctdne(dag, dim, p, q, wl, num_walks, workers, window, min_count, batch_words)
+        run_ctdne(
+            dag, dim, p, q, wl, num_walks, workers, window, min_count, batch_words
+        )
 
 
-def examine_window(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
-    window_options = [window, window * 2, window * 3, window * 4, window * 5, window * 20]
-    
+def examine_window(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
+    window_options = [
+        window,
+        window * 2,
+        window * 3,
+        window * 4,
+        window * 5,
+        window * 20,
+    ]
+
     for w in window_options:
         print("WINDOW", w)
-        run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, w, min_count, batch_words)
+        run_ctdne(
+            dag, dim, p, q, walk_length, num_walks, workers, w, min_count, batch_words
+        )
 
 
-def examine_min_count(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
-    mc_options = [min_count, min_count * 2, min_count * 3, min_count * 5, min_count * 10]
-    
+def examine_min_count(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
+    mc_options = [
+        min_count,
+        min_count * 2,
+        min_count * 3,
+        min_count * 5,
+        min_count * 10,
+    ]
+
     for mc in mc_options:
         print("MIN-COUNT", mc)
-        run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, mc, batch_words)
+        run_ctdne(
+            dag, dim, p, q, walk_length, num_walks, workers, window, mc, batch_words
+        )
 
 
-def examine_batch_words(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words):
-    bw_options = [batch_words, batch_words * 2, batch_words * 3, batch_words * 5, batch_words * 10]
-    
+def examine_batch_words(
+    dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+):
+    bw_options = [
+        batch_words,
+        batch_words * 2,
+        batch_words * 3,
+        batch_words * 5,
+        batch_words * 10,
+    ]
+
     for bw in bw_options:
         print("BATCH WORDS", bw)
-        run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, bw)
+        run_ctdne(
+            dag, dim, p, q, walk_length, num_walks, workers, window, min_count, bw
+        )
 
 
 if __name__ == "__main__":
     import pandas as pd
+
     conf = pd.read_csv("run_ctdne.conf-radoslaw")
     print(conf)
 
-    dataset = str(conf[conf["PROPERTY"]=="DATASET"]["VALUE"].item())
-    dim = int(conf[conf["PROPERTY"]=="DIM"]["VALUE"].item())
-    p = float(conf[conf["PROPERTY"]=="P"]["VALUE"].item())
-    q = float(conf[conf["PROPERTY"]=="Q"]["VALUE"].item())
-    walk_length = int(conf[conf["PROPERTY"]=="WALK_LENGTH"]["VALUE"].item())
-    num_walks = int(conf[conf["PROPERTY"]=="NUM_WALKS"]["VALUE"].item())
-    workers = int(conf[conf["PROPERTY"]=="WORKERS"]["VALUE"].item())
-    window = int(conf[conf["PROPERTY"]=="WINDOW"]["VALUE"].item())
-    min_count = int(conf[conf["PROPERTY"]=="MIN_COUNT"]["VALUE"].item())
-    batch_words = int(conf[conf["PROPERTY"]=="BATCH_WORDS"]["VALUE"].item())
+    dataset = str(conf[conf["PROPERTY"] == "DATASET"]["VALUE"].item())
+    dim = int(conf[conf["PROPERTY"] == "DIM"]["VALUE"].item())
+    p = float(conf[conf["PROPERTY"] == "P"]["VALUE"].item())
+    q = float(conf[conf["PROPERTY"] == "Q"]["VALUE"].item())
+    walk_length = int(conf[conf["PROPERTY"] == "WALK_LENGTH"]["VALUE"].item())
+    num_walks = int(conf[conf["PROPERTY"] == "NUM_WALKS"]["VALUE"].item())
+    workers = int(conf[conf["PROPERTY"] == "WORKERS"]["VALUE"].item())
+    window = int(conf[conf["PROPERTY"] == "WINDOW"]["VALUE"].item())
+    min_count = int(conf[conf["PROPERTY"] == "MIN_COUNT"]["VALUE"].item())
+    batch_words = int(conf[conf["PROPERTY"] == "BATCH_WORDS"]["VALUE"].item())
 
-    print(dataset, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    print(
+        dataset,
+        dim,
+        p,
+        q,
+        walk_length,
+        num_walks,
+        workers,
+        window,
+        min_count,
+        batch_words,
+    )
 
     es, time_resolution = load_event_sequence(dataset)
 
@@ -137,8 +190,12 @@ if __name__ == "__main__":
 
     print("BASELINE")
     dag = DynamicAggregateGraph(dataset, es, directed=False)
-    run_ctdne(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words) 
-    examine_walk_length(dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    run_ctdne(
+        dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+    )
+    examine_walk_length(
+        dag, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words
+    )
 
     """
     print("\nWEIGHTED")
@@ -148,8 +205,8 @@ if __name__ == "__main__":
     eval_weighted(emb, dag2)
     """
 
-    #examine_num_walks(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
-    #examine_walk_length(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
-    #examine_window(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
-    #examine_min_count(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
-    #examine_batch_words(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    # examine_num_walks(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    # examine_walk_length(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    # examine_window(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    # examine_min_count(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)
+    # examine_batch_words(dag2, dim, p, q, walk_length, num_walks, workers, window, min_count, batch_words)

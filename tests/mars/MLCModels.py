@@ -8,7 +8,9 @@ from tensorflow.keras.layers import Dense
 from sklearn.preprocessing import StandardScaler
 
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 
 class SKLCModel:
     def __init__(self, modelName, classifierMethod):
@@ -65,7 +67,6 @@ class DT_SKLC(SKLCModel):
         super().__init__("DT", tree.DecisionTreeClassifier())
 
 
-
 class TFNNClassifier:
     def __init__(self, hiddenLayersStructure, epochs=10, batchSize=30):
         self.modelName = "TFNN"
@@ -88,12 +89,18 @@ class TFNNClassifier:
         self.numClasses = len(classes)
 
         self.model = Sequential()
-        self.model.add(Dense(self.hiddenLayersStructure[0], activation="relu", input_shape=(self.numPredictors,)))
+        self.model.add(
+            Dense(
+                self.hiddenLayersStructure[0],
+                activation="relu",
+                input_shape=(self.numPredictors,),
+            )
+        )
         for i in range(1, len(self.hiddenLayersStructure)):
             numNodes = self.hiddenLayersStructure[i]
             self.model.add(Dense(numNodes, activation="relu"))
         self.model.add(Dense(self.numClasses, activation="softmax"))
-        self.model.compile(optimizer="adam", loss="mse", metrics=["mse","mae"])
+        self.model.compile(optimizer="adam", loss="mse", metrics=["mse", "mae"])
 
     def toOneHot(self, target):
         labid = self.targetDict[target]
@@ -110,7 +117,13 @@ class TFNNClassifier:
         self.initModelStructure(predictors, classes)
         self.ss = StandardScaler().fit(predictors)
         normPredictors, normTarget = self.prepareData(predictors, target)
-        self.model.fit(normPredictors, normTarget, epochs=self.epochs, batch_size=self.batchSize, verbose=0)
+        self.model.fit(
+            normPredictors,
+            normTarget,
+            epochs=self.epochs,
+            batch_size=self.batchSize,
+            verbose=0,
+        )
 
     def evaluate(self, predictors, target):
         normPredictors, _ = self.prepareData(predictors, target)
@@ -129,9 +142,12 @@ class TFNNClassifier:
         return acc, prec, rec
 
     def predict(self, predictors):
-        if predictors.ndim == 1: predictors = np.expand_dims(predictors, axis=0)
+        if predictors.ndim == 1:
+            predictors = np.expand_dims(predictors, axis=0)
         preds = self.model.predict(self.ss.transform(predictors))
-        maxIndices = np.argmax(preds, axis=1) # Assume preds.shape = [Batchsize, Features]
+        maxIndices = np.argmax(
+            preds, axis=1
+        )  # Assume preds.shape = [Batchsize, Features]
         predictions = [self.targetInvDict[maxIndex] for maxIndex in maxIndices]
         return predictions
 
@@ -139,36 +155,36 @@ class TFNNClassifier:
 # if __name__ == "__main__":
 #     from core.Datasets import loadDefaultDataset
 #     data = loadDefaultDataset()
-# 
+#
 #     predictors, target = data.getData("Depression")
 #     tfc = TFNNClassifier([40, 20, 20])
 #     tfc.train(predictors, target)
 #     print(tfc.evaluate(predictors, target))
-# 
+#
 #     """
 #     for i in data.getTargetFields():
 #         print(i)
 #         predictors, target = data.getData(i)
-# 
+#
 #         model = SVM_SKLC()
 #         model.train(predictors, target)
 #         print("SVM", model.trainingScoresStr())
-# 
+#
 #         model = RF_SKLC()
 #         model.train(predictors, target)
 #         print("RF", model.trainingScoresStr())
-# 
+#
 #         model = NB_SKLC()
 #         model.train(predictors, target)
 #         print("NB", model.trainingScoresStr())
-# 
+#
 #         model = KNN_SKLC()
 #         model.train(predictors, target)
 #         print("KNN", model.trainingScoresStr())
-# 
+#
 #         model = DT_SKLC()
 #         model.train(predictors, target)
 #         print("DT", model.trainingScoresStr())
-# 
+#
 #         print("\n")
 #     """

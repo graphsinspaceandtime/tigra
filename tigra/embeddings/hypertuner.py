@@ -34,11 +34,7 @@ from tigra.embeddings.rndw.hubrw import (
     DynN2V_HubDelta,
 )
 
-from tigra.embeddings.rndw.lidrw import (
-    DynN2V_LIDDelta,
-    DynN2V_LIDRW,
-    DynN2V_LIDRWDelta
-)
+from tigra.embeddings.rndw.lidrw import DynN2V_LIDDelta, DynN2V_LIDRW, DynN2V_LIDRWDelta
 
 
 class Tuner(ABC):
@@ -577,7 +573,7 @@ class DynN2V_LIDDelta_Tuner(N2VMethods_Tuner):
         return DynN2V_LIDDelta(
             dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
-    
+
 
 class DynN2V_LIDRW_Tuner(N2VMethods_Tuner):
     """
@@ -615,7 +611,7 @@ class DynN2V_LIDRW_Tuner(N2VMethods_Tuner):
         return DynN2V_LIDRW(
             dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
-    
+
 
 class DynN2V_LIDRWDelta_Tuner(N2VMethods_Tuner):
     """

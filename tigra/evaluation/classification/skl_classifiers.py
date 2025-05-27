@@ -22,23 +22,25 @@ class SKLClassifier(Classifier):
         return self._model.predict(test_data)
 
 
-
-
 class DecisionTree(SKLClassifier):
     def __init__(self):
         super().__init__(tree.DecisionTreeClassifier())
+
 
 class SVM(SKLClassifier):
     def __init__(self):
         super().__init__(SVC())
 
+
 class KNN(SKLClassifier):
     def __init__(self):
         super().__init__(KNeighborsClassifier())
-        
+
+
 class NaiveBayes(SKLClassifier):
     def __init__(self):
         super().__init__(GaussianNB())
+
 
 class RandomForest(SKLClassifier):
     def __init__(self):

@@ -13,13 +13,11 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 
-
 def section(prefix):
     ch = "-"
     prefix = ch * 6 + " " + prefix + " "
     suffix = ch * (120 - len(prefix))
     print("\n\n\n\n" + prefix + suffix + "\n\n")
-
 
 
 def node_labels_dict(g):
@@ -38,4 +36,3 @@ def node_vectors_dict(g, emb):
 
 def node_labels(g):
     return set(node_labels_dict(g).values())
-

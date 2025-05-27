@@ -5,16 +5,13 @@ from sklearn.model_selection import train_test_split
 
 
 class Classifier:
-
     @abstractmethod
     def train(self, train_data, train_labels):
         pass
-    
 
     @abstractmethod
     def predict(self, test_data):
         pass
-
 
     def evaluate(self, data, labels):
         (
@@ -28,10 +25,12 @@ class Classifier:
         predicted_labels = self.predict(test_data)
 
         return (
-            accuracy_score( test_labels, predicted_labels                                  ),
-            precision_score(test_labels, predicted_labels, average="macro", zero_division=0),
-            recall_score   (test_labels, predicted_labels, average="macro", zero_division=0),
-            f1_score       (test_labels, predicted_labels, average="macro", zero_division=0)
+            accuracy_score(test_labels, predicted_labels),
+            precision_score(
+                test_labels, predicted_labels, average="macro", zero_division=0
+            ),
+            recall_score(
+                test_labels, predicted_labels, average="macro", zero_division=0
+            ),
+            f1_score(test_labels, predicted_labels, average="macro", zero_division=0),
         )
-
-    

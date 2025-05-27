@@ -119,9 +119,16 @@ class STWalk_Factory(Factory):
         dg.init_from_event_sequence(
             es, time_resolution=time_resolution, directed=False, cumulative=conf[2]
         )
-        
-        stw = STWalk(number_restart=10, walk_length=32, dimension=conf[0], time_step=len(dg.get_graph_sequence()), time_window_size=conf[1],workers=16,vocab_window_size=5)
-       
+
+        stw = STWalk(
+            number_restart=10,
+            walk_length=32,
+            dimension=conf[0],
+            time_step=len(dg.get_graph_sequence()),
+            time_window_size=conf[1],
+            workers=16,
+            vocab_window_size=5,
+        )
 
         stw.make_embedding(dg)
 
@@ -156,18 +163,17 @@ class CTDNE_Factory(Factory):
 
         es, time_resolution = load_event_sequence(dataset)  # type: ignore
 
-        #dg = DynamicGraph()
-        #dg.init_from_event_sequence(
+        # dg = DynamicGraph()
+        # dg.init_from_event_sequence(
         #    es, time_resolution=time_resolution, directed=False, cumulative=conf[3]
-        #)
-        
+        # )
+
         ctdne = Ctdne(dim=conf[0], p=conf[1], q=conf[2])
         agg_dg = DynamicAggregateGraph(name=dataset, event_sequence=es, directed=False)
 
         ctdne.make_embedding(agg_dg)
 
         return ctdne, agg_dg  # type: ignore
-
 
 
 class DynDeepHubWalk_Factory(Factory):
@@ -190,15 +196,16 @@ class DynDeepHubWalk_Factory(Factory):
             cumulative = True if tokens[6] == "True" else False
 
             self.configs[dataset_name] = (dim, inverse, log_scaling, p, u, cumulative)
-        
+
     def get_embedding(self, dataset: str) -> Embedding:
         if not dataset in self.configs:
             print("WARNING: dataset not in DeepHub configuration!")
-            return None  
+            return None
 
         conf = self.configs[dataset]
 
-        deep_hub = DynDeepHubWalk(dim=conf[0],
+        deep_hub = DynDeepHubWalk(
+            dim=conf[0],
             inverse=conf[1],
             log_scaling=conf[2],
             p=conf[3],
@@ -212,9 +219,8 @@ class DynDeepHubWalk_Factory(Factory):
         )
 
         deep_hub.make_embedding(dg)
-        
-        return deep_hub, dg
 
+        return deep_hub, dg
 
 
 dn2v_factory = None
@@ -231,6 +237,7 @@ def get_dn2v_factory(dn2vconf, datapath=None):
 
     return dn2v_factory
 
+
 def get_stwalk_factory(stwalkconf, datapath=None):
     global stw_factory
 
@@ -238,6 +245,7 @@ def get_stwalk_factory(stwalkconf, datapath=None):
         stw_factory = STWalk_Factory(stwalkconf, datapath=datapath)
 
     return stw_factory
+
 
 def get_ctdne_factory(ctdneconf, datapath=None):
     global ctdne_factory
@@ -253,5 +261,5 @@ def get_deep_hub_factory(deep_hub_conf, datapath=None):
 
     if deep_hub_factory == None:
         deep_hub_factory = DynDeepHubWalk_Factory(deep_hub_conf, datapath=datapath)
-    
+
     return deep_hub_factory

@@ -36,6 +36,7 @@ def lideval_dn2v(dataset):
     lide = LIDEval(dn2v, dg)
     lide.eval()
 
+
 def lideval_stwalk(dataset):
     global stw_fact
     res = stw_fact.get_embedding(dataset)
@@ -46,6 +47,7 @@ def lideval_stwalk(dataset):
 
     lide = LIDEval(stw, dg)
     lide.eval()
+
 
 def lideval_ctdne(dataset):
     global ctdne_fact
@@ -58,8 +60,8 @@ def lideval_ctdne(dataset):
     lide = LIDEval(ctdne, agg)
     lide.eval()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     for dataset in datasets:
         print("DATASET", dataset)
         if dataset == "ia-contacts_hypertext2009":

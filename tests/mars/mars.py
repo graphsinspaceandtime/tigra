@@ -24,10 +24,7 @@ es = load_snap_dataset("../../data/synthetic/dbac_1000_4.events")
 # step 3 -- create a temporal graph from the loaded event sequence
 dg = DynamicGraph()
 dg.init_from_event_sequence(
-    es,
-    time_resolution="month",
-    directed=False,
-    cumulative=True
+    es, time_resolution="month", directed=False, cumulative=True
 )
 dg.info()
 

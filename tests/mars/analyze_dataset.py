@@ -12,9 +12,6 @@ from utils import *
 from data.bank import Databank
 
 
-
-
-
 def do_dg_embs(dg, embs):
     dg.info()
     gs = dg.get_graph_sequence()
@@ -25,16 +22,15 @@ def do_dg_embs(dg, embs):
         print(f"{i}: {g.num_nodes()} {g.num_edges()} {labels_str}")
 
 
-
 def do_real(db, dataset_name):
     section(dataset_name)
-    
+
     es = db.get_data(dataset_name)
     metadata = db.get_metadata(dataset_name)
-    
+
     print(metadata)
     print()
-    
+
     dg = DynamicGraph()
     dg.init_from_event_sequence(
         es,
@@ -47,7 +43,6 @@ def do_real(db, dataset_name):
     dn2v.make_embedding(dg)
 
     do_dg_embs(dg, dn2v.embeddings)
-    
 
 
 def do_reals():
@@ -59,7 +54,6 @@ def do_reals():
         "ia-primary-school-proximity-attr",
     ]:
         do_real(db, dataset_name)
-    
 
 
 def do_synthetics():
@@ -72,23 +66,19 @@ def do_synthetics():
 
     dg = DynamicGraph()
     dg.init_from_event_sequence(
-        es,
-        time_resolution="month",
-        directed=False,
-        cumulative=True
+        es, time_resolution="month", directed=False, cumulative=True
     )
 
     dn2v = DynN2V(100, 0.5, 4)
     dn2v.make_embedding(dg)
 
     do_dg_embs(dg, dn2v.embeddings)
-    
 
 
 def do():
     # do_reals()
     do_synthetics()
-    
+
 
 if __name__ == "__main__":
     do()
