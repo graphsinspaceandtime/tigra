@@ -55,7 +55,7 @@ elif linkpred_type == "supervised":
     elif num_snaps == 4:
         look_backs = [1]
     else:
-        look_backs = list(range(1, num_snaps - 1))
+        look_backs = list(range(1, num_snaps - 2))
 
 configs = []
 
