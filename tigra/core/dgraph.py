@@ -403,7 +403,6 @@ class DynamicGraph:
     def __init__(self, list_of_graphs: Union[List[Graph], None] = None):
         if list_of_graphs == None:
             self.graphs = []
-            self.timespan_in_days = None
         else:
             self.graphs = list_of_graphs
             self.directed = False
@@ -411,6 +410,8 @@ class DynamicGraph:
                 if g.is_directed():
                     self.directed = True
                     break
+        self.timespan_in_days = None
+
 
     def init_from_event_sequence(
         self,
