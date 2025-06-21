@@ -184,7 +184,7 @@ class RWEmbBase(Embedding):
 
 class RWEmbEgoDelta(RWEmbBase):
     """
-    Delta nodes = new nodes + nodes whose ego network changed
+    Delta nodes = new nodes + nodes whose ego networks changed
     """
 
     def __init__(self, dim, delta_nodes=True, num_workers=1):
