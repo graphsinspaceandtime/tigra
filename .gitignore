@@ -1,6 +1,6 @@
 /local.yaml
 __pycache__/
 /tigra.egg-info/
-emb/
+/embeddings/
 clustering_eval/
 anomalies_eval/
