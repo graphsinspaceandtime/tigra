@@ -1,4 +1,4 @@
-from tigra.evaluation.classification.classifier import Classifier
+from tigra.evaluation.linkpred_classification.classifier import Classifier
 from sklearn import tree, svm, neighbors, ensemble, naive_bayes
 from typing import Sequence
 
