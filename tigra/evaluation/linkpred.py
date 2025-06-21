@@ -66,6 +66,14 @@ class LinkPrediction(ABC):
     def print_result(self):
         pass
 
+    @abstractmethod
+    def result_heading(self, include_snap: bool) -> str:
+        pass
+
+    @abstractmethod
+    def result_str(self) -> str:
+        pass
+
     @property
     @abstractmethod
     def _operation(self) -> NamedOperation:
@@ -261,6 +269,19 @@ class UnsupervisedLinkPrediction(LinkPrediction):
 
         return self.result
 
+    def result_heading(self, include_snap=False):
+        return "{}distance,roc_auc,avg_prec".format("snap," if include_snap else "")
+
+    def result_str(self):
+        return "{},{},{}".format(
+            self.distance.name,
+            self.result["roc_auc"],
+            self.result["average_precision"],
+        )
+
+    def __str__(self):
+        return self.result_str()
+
     def print_result(self):
         roc_auc = self.result["roc_auc"]
         average_precision = self.result["average_precision"]
@@ -414,6 +435,26 @@ class SupervisedLinkPrediction(LinkPrediction):
 
         return self.result
 
+    def result_heading(self, include_snap=False):
+        return "{}classifier,combiner,f1,acc,prec,rec,pos_prec,pos_rec,neg_prec,neg_rec".format("snap," if include_snap else "")
+
+    def result_str(self):
+        return "{},{},{},{},{},{},{},{},{},{}".format(
+            self.classifier.name,
+            self.combiner.name,
+            self.result["f1"],
+            self.result["acc"],
+            self.result["prec"],
+            self.result["rec"],
+            self.result["pos_prec"],
+            self.result["pos_rec"],
+            self.result["neg_prec"],
+            self.result["neg_rec"],
+        )
+
+    def __str__(self):
+        return self.result_str()
+
     def print_result(self):
         f1 = self.result["f1"]
         accuracy = self.result["accuracy"]
@@ -452,27 +493,49 @@ class Predicter:
         self.embedding = embedding
         self.dg = dg
 
-    def predict(self):
-        graph_sequence = dg.get_graph_sequence()
+    def __get_skip_n_embs(self, embedding: Embedding):
+        skip_n_embs = 0
+        for emb in embedding.embeddings:
+            if emb is None:
+                skip_n_embs+=1
+            else:
+                break
+        return skip_n_embs
+
+    def predict(self, print_results=False):
+        graph_sequence = self.dg.get_graph_sequence()
         num_graphs = len(graph_sequence)
         num_embeddings = self.embedding.num_embeddings()
+        skip_n_embs = self.__get_skip_n_embs(self.embedding)
 
         self.results = []
 
         if self.linkpred._prediction_type == "unsupervised":
-            if num_graphs < 2 or num_embeddings < 1:
-                raise Exception("Insufficient number of graphs or embeddings")
-
-            for i in range(num_embeddings - 1):
-                result = self.linkpred.predict(self.embedding, self.dg, i)
-                self.results.append(result)
-        else:
             if num_graphs < 3 or num_embeddings < 2:
                 raise Exception("Insufficient number of graphs or embeddings")
 
-            for i in range(1, num_embeddings - 1):
+            if print_results:
+                print(self.linkpred.result_heading(include_snap=True))
+
+            for i in range(skip_n_embs, num_embeddings - 1):
                 result = self.linkpred.predict(self.embedding, self.dg, i)
                 self.results.append(result)
+
+                if print_results:
+                    print(str(i) + "," + str(self.linkpred))
+        else:
+            if num_graphs < 4 or num_embeddings < 3:
+                raise Exception("Insufficient number of graphs or embeddings")
+
+            if print_results:
+                print(self.linkpred.result_heading(include_snap=True))
+
+            for i in range(skip_n_embs + 1, num_embeddings - 1):
+                result = self.linkpred.predict(self.embedding, self.dg, i)
+                self.results.append(result)
+
+                if print_results:
+                    print(str(i) + "," + str(self.linkpred))
 
     def save_report(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
@@ -485,64 +548,3 @@ class Predicter:
                 f,
             )
 
-    def print_csv_columns(self):
-        for result in self.results:
-            print(result["f1"])
-        return
-        columns = [score for score in self.results[0].keys()]
-        for column in columns:
-            print(column)
-            for result in self.results:
-                print(result[column])
-            print()
-            print()
-            print()
-            print()
-
-
-if __name__ == "__main__":
-    from tigra.embeddings.embedding import FSEmbedding
-    from tigra.data.loaders import RadoslawEmail
-
-    # embed = FSEmbedding(
-    #     folder_name="../../scripts/dusan/make_embed/embs_ae/radoslaw_email"
-    # )
-    embed = FSEmbedding(folder_name="../../tests/radoslaw-dynn2v-25")
-    radoslaw = RadoslawEmail("../../data")
-
-    es = radoslaw.get_event_sequence(shrink=True)
-
-    dg = DynamicGraph()
-    dg.init_from_event_sequence(
-        event_sequence=es,
-        time_resolution=radoslaw.resolution,
-        directed=False,
-        cumulative=radoslaw.cumulative,
-    )
-
-    print(f"Number of embeddings: {embed.num_embeddings()}")
-    print(f"Number of graphs: {len(dg.get_graph_sequence())}")
-    print()
-
-    for distance_measure in distance_measure_factory():
-        print("Distance measure: " + distance_measure.name)
-        unsup_linkpred = UnsupervisedLinkPrediction(distance_measure)
-        predicter = Predicter(unsup_linkpred, embed, dg)
-        predicter.predict()
-        predicter.save_report(
-            f"../../scripts/dusan/results/unsupervised_{distance_measure.name}.json"
-        )
-        print()
-
-    # for classifier in skl_classifiers_factory():
-    #     print("==================")
-    #     print("Classifier: " + classifier.name)
-    #     print("==================")
-    #     for combine_pair_operation in combine_pair_operation_factory():
-    #         sup_linkpred = SupervisedLinkPrediction(combine_pair_operation, classifier)
-    #         print("Combine pair operation: " + combine_pair_operation.name)
-    #         predicter = Predicter(sup_linkpred, embed, dg)
-    #         predicter.predict()
-    #         # predicter.print_csv_columns()
-    #         predicter.save_report(f"../../scripts/dusan/results/supervised_{classifier.name}_{combine_pair_operation.name}.json")
-    #         print()
