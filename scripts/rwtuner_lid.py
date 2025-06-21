@@ -33,7 +33,7 @@ from tigra.core.dgraph import DynamicGraph
 from tigra.embeddings.hypertuner import (
     DynN2V_LIDDelta_Tuner,
     DynN2V_LIDRW_Tuner,
-    DynN2V_LIDRWDelta_Tuner
+    DynN2V_LIDRWDelta_Tuner,
 )
 
 
@@ -85,7 +85,6 @@ def tune_DynN2V_LIDRWDelta(last_graph, dg):
     tuner.print_report()
 
 
-
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("USAGE: rwtuner dataset-index")
@@ -103,7 +102,6 @@ if __name__ == "__main__":
     dataset_name = datasets[dataset_index]
     print("\nTunning", dataset_name)
 
-
     es, time_resolution = load_event_sequence(dataset_name)
 
     dg = DynamicGraph()
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     elapsed_time = end_time - start_time
     print("DynN2V_LIDRW TIME [sec]", elapsed_time)
 
-    '''
+    """
     start_time = time.time()
     tune_DynN2V_LIDDelta(last_graph, dg)
     end_time = time.time()
@@ -131,5 +129,4 @@ if __name__ == "__main__":
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("DynN2V_LIDRWDelta TIME [sec]", elapsed_time)
-    '''
-
+    """

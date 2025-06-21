@@ -28,7 +28,7 @@ class SKLCModel:
     def train(self, predictors, target, classes=[]):
         self.predictors = predictors
         self.target = target
-        self.classifierMethod.fit(predictors, target)
+        self.classifierMethod.train(predictors, target)
 
     def evaluate(self, predictors, target):
         predictions = self.classifierMethod.predict(predictors)

@@ -12,14 +12,15 @@ sys.path.append("..")
 sys.dont_write_bytecode = True
 
 DATASET_INDEX = 8
-DIM           = 50
-P             = 0.5
-Q             = 4.0
-WORKERS       = 16
-WALKLEN       = 32
-NUMWALKS      = 10
+DIM = 50
+P = 0.5
+Q = 4.0
+WORKERS = 16
+WALKLEN = 32
+NUMWALKS = 10
 
 from data.bank import Databank
+
 databank = Databank()
 datasets = databank.get_keys()
 
@@ -30,14 +31,15 @@ from tigra.core.greval import GraphReconstructionEval
 
 
 def run_dn2v(dg):
-    dn2v = Dynnode2vec(DIM, 
-        p=P, 
-        q=Q, 
-        walk_length=WALKLEN, 
-        n_walks_per_node=NUMWALKS, 
-        parallel_processes=WORKERS
+    dn2v = Dynnode2vec(
+        DIM,
+        p=P,
+        q=Q,
+        walk_length=WALKLEN,
+        n_walks_per_node=NUMWALKS,
+        parallel_processes=WORKERS,
     )
-    
+
     dn2v.make_embedding(dg)
 
     org_graphs = dg.get_graph_sequence()
@@ -53,15 +55,12 @@ def run_dn2v(dg):
         rg = emb.reconstruct(num_links, "REC")
         print("#nodes", rg.num_nodes(), "#links", rg.num_edges())
 
-
         gre = GraphReconstructionEval(og, emb, report_warnings=False)
         print("Snapshot", i)
         print("Precision", gre.get_avg_precision())
         print("Recall", gre.get_avg_recall())
         print("F1", gre.getF1())
         print()
-
-
 
 
 if __name__ == "__main__":
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     print("WORKERS", WORKERS)
     print("WALKLEN", WALKLEN)
     print("NUMWALKS", NUMWALKS)
-    
+
     es, time_resolution = load_event_sequence(dataset)
 
     dg = DynamicGraph()
@@ -82,4 +81,3 @@ if __name__ == "__main__":
     dg.info()
 
     run_dn2v(dg)
-
