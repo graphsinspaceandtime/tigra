@@ -31,7 +31,7 @@ if __name__ == "__main__":
         DynN2V_HubDeltaMaxDegree,
         DynN2V_HubDeltaMaxLogDegree,
         DynN2V_HubDeltaInverseLogDegree,
-        DynN2V_HubDeltaSqrtDegree
+        DynN2V_HubDeltaSqrtDegree,
     )
 
     start = time.time_ns()

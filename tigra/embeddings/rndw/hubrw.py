@@ -6,8 +6,12 @@ TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Comp
 HUB-based classes for dynamic graph embedding methods based on random walks
 """
 
-
-from tigra.embeddings.rndw.rndwbase import RWEmbBase, RandomWalkSampler, RWEmbEgoDelta, PQRandomWalk
+from tigra.embeddings.rndw.rndwbase import (
+    RWEmbBase,
+    RandomWalkSampler,
+    RWEmbEgoDelta,
+    PQRandomWalk,
+)
 
 import networkx as nx
 import numpy as np
@@ -31,10 +35,9 @@ class HubChangedEmbedding(RWEmbBase):
                 else:
                     if graph.degree[n] != prev_graph.degree[n]:
                         nodes_with_modified_degree.append(n)
-        
-        delta_nodes = list(graph.nodes | nodes_with_modified_degree) 
-        return delta_nodes      
 
+        delta_nodes = list(graph.nodes | nodes_with_modified_degree)
+        return delta_nodes
 
 
 class HubSampler(RandomWalkSampler):
@@ -56,12 +59,10 @@ class HubSampler(RandomWalkSampler):
         for n in neighbours:
             probabilities.append(self.G.degree[n] / total_hub)
 
-
-        probabilities = np.asarray(probabilities).astype('float64')
+        probabilities = np.asarray(probabilities).astype("float64")
         probabilities = probabilities / np.sum(probabilities)
 
-        return np.random.choice(neighbours, 1, p = probabilities)[0]       
-        
+        return np.random.choice(neighbours, 1, p=probabilities)[0]
 
     def num_walks(self, node):
         return self.nw
@@ -69,7 +70,6 @@ class HubSampler(RandomWalkSampler):
     def walk_length(self, node):
         return self.wl
 
-        
 
 class HubSamplerReverse(RandomWalkSampler):
     def __init__(
@@ -90,12 +90,10 @@ class HubSamplerReverse(RandomWalkSampler):
         for n in neighbours:
             probabilities.insert(0, self.G.degree[n] / total_hub)
 
-
-        probabilities = np.asarray(probabilities).astype('float64')
+        probabilities = np.asarray(probabilities).astype("float64")
         probabilities = probabilities / np.sum(probabilities)
 
-        return np.random.choice(neighbours, 1, p = probabilities)[0]       
-        
+        return np.random.choice(neighbours, 1, p=probabilities)[0]
 
     def num_walks(self, node):
         return self.nw
@@ -108,11 +106,21 @@ class HubSamplerReverse(RandomWalkSampler):
  Base class when num_walks and/or walk_length change
  Change num_walks and/or walk_length as you prefer
 """
+
+
 class HubnessRandomWalk(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
     def num_walks(self, node):
         nw = math.ceil((1 + self.G.degree[node]) * self.nw)
@@ -123,12 +131,19 @@ class HubnessRandomWalk(PQRandomWalk):
         return wl
 
 
-
 class HubnessRandomWalkInverseDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
     def num_walks(self, node):
         nw = math.ceil(((1 / self.G.degree[node])) * self.nw)
@@ -139,12 +154,19 @@ class HubnessRandomWalkInverseDegree(PQRandomWalk):
         return wl
 
 
-
 class HubnessRandomWalkLogDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
     def num_walks(self, node):
         nw = math.ceil((1 + math.log(self.G.degree[node])) * self.nw)
@@ -159,32 +181,49 @@ class HubnessRandomWalkMaxDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
         self.degrees = []
 
         for node in nodes:
             self.degrees.append(self.G.degree[node])
-    
+
     def num_walks(self, node):
         return max(self.degrees)
 
     def walk_length(self, node):
         return max(self.degrees)
-
 
 
 class HubnessRandomWalkMaxLogDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
         self.log_degrees = []
 
         for node in nodes:
-            self.log_degrees.append(1 + (math.log(self.G.degree[node] if self.G.degree[node] > 0 else 0)))
-    
+            self.log_degrees.append(
+                1 + (math.log(self.G.degree[node] if self.G.degree[node] > 0 else 0))
+            )
+
     def num_walks(self, node):
         return math.ceil(max(self.log_degrees))
 
@@ -192,18 +231,27 @@ class HubnessRandomWalkMaxLogDegree(PQRandomWalk):
         return math.ceil(max(self.log_degrees))
 
 
-
 class HubnessRandomWalkInverseLogDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
         self.log_degrees_dict = dict()
 
         for node in nodes:
-            self.log_degrees_dict[node] = (1 + (math.log(self.G.degree[node] if self.G.degree[node] > 0 else 0)))
-    
+            self.log_degrees_dict[node] = 1 + (
+                math.log(self.G.degree[node] if self.G.degree[node] > 0 else 0)
+            )
+
     def num_walks(self, node):
         nw = math.ceil(((1 / self.log_degrees_dict[node])) * self.nw)
         return nw
@@ -213,12 +261,19 @@ class HubnessRandomWalkInverseLogDegree(PQRandomWalk):
         return wl
 
 
-
 class HubnessRandomWalkSqrtDegree(PQRandomWalk):
     def __init__(
         self, graph: nx.Graph, nodes, p, q, num_walks=10, walk_length=32, num_workers=1
     ):
-        super().__init__(graph, nodes, p, q, num_walks=num_walks, walk_length=walk_length, num_workers=num_workers)
+        super().__init__(
+            graph,
+            nodes,
+            p,
+            q,
+            num_walks=num_walks,
+            walk_length=walk_length,
+            num_workers=num_workers,
+        )
 
     def num_walks(self, node):
         nw = math.ceil(math.sqrt(self.G.degree[node]))
@@ -229,7 +284,6 @@ class HubnessRandomWalkSqrtDegree(PQRandomWalk):
         return wl
 
 
-
 class HubRandomWalk(RWEmbEgoDelta):
     def __init__(
         self, dim, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
@@ -238,7 +292,6 @@ class HubRandomWalk(RWEmbEgoDelta):
         self.num_walks = num_walks
         self.walk_length = walk_length
         self.num_workers = num_workers
-    
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return HubSampler(
@@ -258,7 +311,6 @@ class HubChangedRandomWalk(HubChangedEmbedding):
         self.num_walks = num_walks
         self.walk_length = walk_length
         self.num_workers = num_workers
-    
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return HubSampler(
@@ -278,7 +330,6 @@ class HubChangedRandomWalkReverse(HubChangedEmbedding):
         self.num_walks = num_walks
         self.walk_length = walk_length
         self.num_workers = num_workers
-    
 
     def create_random_walk_sampler(self, graph: nx.Graph, nodes):
         return HubSamplerReverse(
@@ -288,7 +339,6 @@ class HubChangedRandomWalkReverse(HubChangedEmbedding):
             walk_length=self.walk_length,
             num_workers=self.num_workers,
         )
-
 
 
 class DynN2V_HubDelta(HubChangedEmbedding):
@@ -314,7 +364,6 @@ class DynN2V_HubDelta(HubChangedEmbedding):
         )
 
 
-
 class DynN2V_HubDeltaNWWL(HubChangedEmbedding):
     def __init__(
         self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
@@ -336,7 +385,6 @@ class DynN2V_HubDeltaNWWL(HubChangedEmbedding):
             walk_length=self.walk_length,
             num_workers=self.num_workers,
         )
-
 
 
 class DynN2V_HubDeltaInverseDegree(HubChangedEmbedding):
@@ -362,7 +410,6 @@ class DynN2V_HubDeltaInverseDegree(HubChangedEmbedding):
         )
 
 
-
 class DynN2V_HubDeltaLogDegree(HubChangedEmbedding):
     def __init__(
         self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
@@ -384,7 +431,6 @@ class DynN2V_HubDeltaLogDegree(HubChangedEmbedding):
             walk_length=self.walk_length,
             num_workers=self.num_workers,
         )
-
 
 
 class DynN2V_HubDeltaMaxDegree(HubChangedEmbedding):
@@ -410,7 +456,6 @@ class DynN2V_HubDeltaMaxDegree(HubChangedEmbedding):
         )
 
 
-
 class DynN2V_HubDeltaMaxLogDegree(HubChangedEmbedding):
     def __init__(
         self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
@@ -432,7 +477,6 @@ class DynN2V_HubDeltaMaxLogDegree(HubChangedEmbedding):
             walk_length=self.walk_length,
             num_workers=self.num_workers,
         )
-
 
 
 class DynN2V_HubDeltaInverseLogDegree(HubChangedEmbedding):
@@ -458,7 +502,6 @@ class DynN2V_HubDeltaInverseLogDegree(HubChangedEmbedding):
         )
 
 
-
 class DynN2V_HubDeltaSqrtDegree(HubChangedEmbedding):
     def __init__(
         self, dim, p, q, delta_nodes=True, num_walks=10, walk_length=32, num_workers=1
@@ -479,4 +522,124 @@ class DynN2V_HubDeltaSqrtDegree(HubChangedEmbedding):
             num_walks=self.num_walks,
             walk_length=self.walk_length,
             num_workers=self.num_workers,
+        )
+
+
+#
+# unifications
+#
+
+import random
+
+
+class DeepHubSampler(RandomWalkSampler):
+    def __init__(
+        self,
+        graph,
+        nodes,
+        walk_length=32,
+        num_walks=10,
+        num_workers=1,
+        inverse=False,
+        log_scaling=False,
+        p=0,
+        u=0,
+    ):
+        super().__init__(graph, nodes, num_workers)
+        self.graph = graph
+        self.nodes = nodes
+        self.wl = walk_length
+        self.nw = num_walks
+        self.num_workers = num_workers
+        self.inverse = inverse
+        self.log_scaling = log_scaling
+        self.p = p  # probability to return back in walk
+        self.u = u  # probability to select node uniformly from its neighborhood
+
+    def select_next_node(self, start_node, current_node, prev_node, neighbours):
+        r = random.random()
+        if r < self.p:
+            return prev_node
+
+        r = random.random()
+        if r < self.u:
+            return random.sample(neighbours, 1)[0]
+
+        probabilities = [0.0] * len(neighbours)
+        degrees = [0] * len(neighbours)
+
+        max_deg = 0.0
+        for i in range(len(neighbours)):
+            n = neighbours[i]
+            deg = self.G.degree[n]
+            degrees[i] = deg
+            if deg > max_deg:
+                max_deg = deg
+
+        if max_deg == 0:
+            return np.random.choice(neighbours, 1)[0]
+
+        for i in range(len(neighbours)):
+            n = neighbours[i]
+            deg = degrees[i]
+            if self.inverse:
+                probabilities[i] = 1 + max_deg - deg
+            else:
+                probabilities[i] = 1 + deg
+
+        if self.log_scaling:
+            for i in range(len(neighbours)):
+                probabilities[i] = math.log(1 + probabilities[i])
+
+        total = 0.0
+        for p in probabilities:
+            total += p
+
+        if total == 0.0:
+            return np.random.choice(neighbours, 1)[0]
+
+        probs = [p / total for p in probabilities]
+
+        return np.random.choice(neighbours, 1, p=probs)[0]
+
+    def num_walks(self, node) -> int:
+        return self.nw
+
+    def walk_length(self, node) -> int:
+        return self.wl
+
+
+class DynDeepHubWalk(RWEmbEgoDelta):
+    def __init__(
+        self,
+        dim,
+        delta_nodes=True,
+        num_walks=10,
+        walk_length=32,
+        num_workers=1,
+        inverse=False,
+        log_scaling=False,
+        p=0,
+        u=0,
+    ):
+        super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
+        self.num_walks = num_walks
+        self.walk_length = walk_length
+        self.num_workers = num_workers
+        self.inverse = inverse
+        self.log_scaling = log_scaling
+        self.p = p
+        self.u = u
+
+    def create_random_walk_sampler(self, graph: nx.Graph, nodes):
+        return DeepHubSampler(
+            graph,
+            nodes,
+            num_walks=self.num_walks,
+            walk_length=self.walk_length,
+            num_workers=self.num_workers,
+            inverse=self.inverse,
+            log_scaling=self.log_scaling,
+            p=self.p,
+            u=self.u,
         )

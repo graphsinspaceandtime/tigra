@@ -67,4 +67,3 @@ if __name__ == "__main__":
         if dataset != "ia-contacts_hypertext2009":
             hubeval_stwalk(dataset)
         print("......................................................................")
-    

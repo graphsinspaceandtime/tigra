@@ -28,11 +28,10 @@ if __name__ == "__main__":
     dn2v.make_embedding(dg)
 
     start = time.time_ns()
-    #lrw = DynN2V_LIDDelta(25, 0.5, 2)
-    #lrw = DynN2V_LIDRW(25, 0.5, 2)
+    # lrw = DynN2V_LIDDelta(25, 0.5, 2)
+    # lrw = DynN2V_LIDRW(25, 0.5, 2)
     lrw = DynN2V_LIDRWDelta(25, 0.5, 2)
     lrw.make_embedding(dg)
-    
 
     graph_sequence = dg.get_graph_sequence()
 
@@ -41,7 +40,7 @@ if __name__ == "__main__":
         emb = lrw.embeddings[i]
         embdn2v = dn2v.embeddings[i]
         graph = graph_sequence[i]
-        
+
         gre = GraphReconstructionEval(graph, emb)
         gre2 = GraphReconstructionEval(graph, embdn2v)
 
