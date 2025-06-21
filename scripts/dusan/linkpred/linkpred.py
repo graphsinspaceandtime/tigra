@@ -16,4 +16,8 @@ dg.init_from_event_sequence(
   cumulative=data.cumulative,
 )
 
-for 
+for distance_measure in distance_measure_factory():
+  print("distance" + distance_measure.name)
+  linkpred = UnsupervisedLinkPrediction(distance_measure)
+  predicter = Predicter(linkpred, embed, dg)
+  predicter.predict()
