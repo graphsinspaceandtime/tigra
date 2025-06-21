@@ -8,7 +8,7 @@ from networkx.algorithms.link_prediction import jaccard_coefficient, adamic_adar
 import json
 
 # supervised learning imports
-from tigra.evaluation.classification.classifier import Classifier
+from tigra.evaluation.linkpred_classification.classifier import Classifier
 
 from typing import Sequence, Literal
 
