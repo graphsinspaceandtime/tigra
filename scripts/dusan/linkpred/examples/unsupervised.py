@@ -2,7 +2,7 @@ from tigra.embeddings.embedding import FSEmbedding
 from tigra.data.loaders import RadoslawEmail
 from tigra.core.dgraph import DynamicGraph
 from tigra.evaluation.linkpred import combine_pair_operation_factory, SupervisedLinkPrediction, Predicter
-from tigra.evaluation.classification.skl import skl_classifiers_factory
+from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
 
 embed = FSEmbedding(folder_name="../../../../embeddings/dn2v/radoslaw_email")
 data = RadoslawEmail("../../../../data")

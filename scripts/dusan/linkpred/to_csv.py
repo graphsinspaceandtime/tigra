@@ -3,7 +3,7 @@ import json
 from typing import Sequence
 
 from tigra.evaluation.linkpred import distance_measure_factory, combine_pair_operation_factory
-from tigra.evaluation.classification.skl import skl_classifiers_factory
+from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
 
 distances = [distance_measure.name for distance_measure in distance_measure_factory()]
 combiners = [combiner.name for combiner in combine_pair_operation_factory()]
