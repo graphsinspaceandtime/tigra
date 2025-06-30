@@ -13,8 +13,8 @@ from tigra.data.loaders import (
 from tigra.core.dgraph import DynamicGraph
 from tigra.evaluation.linkpred import distance_measure_factory, UnsupervisedLinkPrediction, Predicter
 
-embed = FSEmbedding(folder_name="embeddings/deep_hub/radoslaw-email")
-data = RadoslawEmail("../../../../data")
+embed = FSEmbedding(folder_name="embeddings/deep_hub/fb-messages")
+data = FbMessages("../../../../data")
 
 es = data.get_event_sequence(shrink=True)
 
