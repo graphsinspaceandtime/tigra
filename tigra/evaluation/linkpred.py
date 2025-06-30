@@ -168,6 +168,24 @@ class L1_Distance(EmbeddingDistance):
         return np.sum(np.abs(np.array(u_hat) - np.array(v_hat)))
 
 
+class ConcatenationEmbeddingDistance(EmbeddingDistance):
+    def __init__(self, reduction: str = "l2"):
+        super().__init__("Concatenation")
+        self.reduction = reduction
+
+    def _measure(self, u_hat, v_hat):
+        concat = np.concatenate((u_hat, v_hat), axis=None)
+
+        if self.reduction == "l2":
+            return -np.linalg.norm(concat)  # Negative to "reward" closed pairs
+        elif self.reduction == "mean":
+            return np.mean(concat)
+        elif self.reduction == "sum":
+            return np.sum(concat)
+        else:
+            raise ValueError(f"Unknown reduction method: {self.reduction}")
+
+
 class StructuralDistance(Distance):
     name: str
     positive_distances: list
@@ -227,6 +245,7 @@ def distance_measure_factory() -> Sequence[Distance]:
         CosineSimilarity(),
         EuclideanDistance(),
         L1_Distance(),
+        ConcatenationEmbeddingDistance(reduction="l2"),
         JaccardCoefficient(),
         AdamicAdarIndex(),
     ]

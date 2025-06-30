@@ -1,5 +1,5 @@
 from tigra.evaluation.linkpred_classification.classifier import Classifier
-from sklearn import tree, svm, neighbors, ensemble, naive_bayes
+from sklearn import tree, svm, neighbors, ensemble, naive_bayes, linear_model
 from typing import Sequence
 
 
@@ -20,6 +20,11 @@ class SKLModel(Classifier):
     def fit_predict(self, X_train, y_train, X_test):
         self.fit(X_train, y_train)
         return self.predict(X_test)
+
+
+class LogRec(SKLModel):
+    def __init__(self):
+        super().__init__("LogisticRegression", model=linear_model.LogisticRegression())
 
 
 class DecisionTree(SKLModel):
@@ -49,11 +54,21 @@ class NaiveBayes(SKLModel):
         super().__init__("NaiveBayes", model=naive_bayes.GaussianNB())
 
 
+class AdaBoost(SKLModel):
+    def __init__(self, estimator=tree.DecisionTreeClassifier(max_depth=10), n_estimators=100):
+        super().__init__(
+            "AdaBoost", model=ensemble.AdaBoostClassifier(
+                estimator=estimator, n_estimators=n_estimators)
+        )
+
+
 def skl_classifiers_factory() -> Sequence[SKLModel]:
     return [
+        LogRec(),
         DecisionTree(),
         SVM(),
         KNN(),
         RandomForest(),
         NaiveBayes(),
+        AdaBoost()
     ]
