@@ -13,6 +13,7 @@ sys.path.append("..")
 from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.embeddings.sota.factory import get_stwalk_factory
 from tigra.embeddings.sota.factory import get_ctdne_factory
+from tigra.embeddings.sota.factory import get_deep_hub_factory
 from tigra.evaluation.hubeval import HUBEval
 
 from data.bank import Databank
@@ -23,6 +24,7 @@ datasets = databank.get_keys()
 dn2v_fact = get_dn2v_factory("../DN2V_SVC.conf")
 stw_fact = get_stwalk_factory("../stwalk.conf")
 ctdne_fact = get_ctdne_factory("../ctdne.conf")
+deep_hub_fact = get_deep_hub_factory("../deep_hub.conf")
 
 
 def hubeval(dataset):
@@ -61,9 +63,21 @@ def hubeval_ctdne(dataset):
     hube.eval()
 
 
+def hubeval_deep_hub(dataset):
+    global deep_hub_fact
+    res = deep_hub_fact.get_embedding(dataset)
+    if res == None:
+        return
+
+    deeph, dg = res
+    hube = HUBEval(deeph, dg)
+    hube.eval()
+
+
 if __name__ == "__main__":
     for dataset in datasets:
         print("DATASET", dataset)
-        if dataset != "ia-contacts_hypertext2009":
-            hubeval_stwalk(dataset)
+        hubeval_deep_hub(dataset)
+        # if dataset != "ia-contacts_hypertext2009":
+        #    hubeval_stwalk(dataset)
         print("......................................................................")
