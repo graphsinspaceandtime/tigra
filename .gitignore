@@ -4,3 +4,5 @@ __pycache__/
 /embeddings/
 clustering_eval/
 anomalies_eval/
+
+*.emb
