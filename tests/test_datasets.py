@@ -4,6 +4,7 @@ from data.bank import Databank
 
 databank = Databank()
 
+print("Test datasets")
 
 def form_graphs(es, tr="month"):
     dg = DynamicGraph()
