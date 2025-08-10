@@ -64,9 +64,11 @@ def get_embeddings(ds_name):
 def diffusion_eval(emb, dg, beta=0.2, seed=0):
     si = SI(verbose=False, beta=beta)
     dp = DiffusionPrediction(emb, dg, si, negative_sampling=True, verbose=False, seed=seed)
+    dp.init_evaluation()
     f1, p, r, cl = dp.evaluate()
 
     dp2 = DiffusionPrediction(emb, dg, si, negative_sampling=False, verbose=False, seed=seed)
+    dp.init_evaluation()
     f1_2, p_2, r_2, cl_2 = dp2.evaluate()
 
     if f1 > f1_2:
@@ -81,7 +83,7 @@ def difeval(dataset, num_runs=1):
     hub_wins, hub_losses, lid_wins, lid_losses = 0, 0, 0, 0
 
     beta = 0.01
-    while beta <= 0.25:
+    while beta <= 0.26:
         f1_dn2v, f1_hub, f1_lid = 0, 0, 0
         
         f1s = []
@@ -122,4 +124,4 @@ def difeval(dataset, num_runs=1):
 
 
 if __name__ == "__main__":
-    difeval(datasets[1], num_runs=10)
+    difeval(datasets[7], num_runs=10)

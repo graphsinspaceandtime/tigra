@@ -25,7 +25,7 @@ class SKLCModel:
         self.modelName = modelName
         self.classifierMethod = classifierMethod
 
-    def train(self, predictors, target, classes=[]):
+    def train(self, predictors, target):
         self.predictors = predictors
         self.target = target
         self.classifierMethod.fit(predictors, target)
@@ -61,8 +61,8 @@ class SKLCModel:
 
 
 class SVM_SKLC(SKLCModel):
-    def __init__(self):
-        super().__init__("SVM", svm.SVC())
+    def __init__(self, kernel="rbf"):
+        super().__init__("SVM", svm.SVC(kernel=kernel))
 
 
 class RF_SKLC(SKLCModel):
@@ -214,6 +214,49 @@ class DiffusionPrediction:
                     len(self.activations[i]),
                 )
 
+        #
+        # classification models
+        #
+
+        self.RF_MODELS = [
+            (RF_SKLC(numEstimators=1), "RF-1"),
+            (RF_SKLC(numEstimators=2), "RF-2"),
+            (RF_SKLC(numEstimators=3), "RF-3"),
+            (RF_SKLC(numEstimators=3), "RF-4"),
+            (RF_SKLC(numEstimators=5), "RF-5"),
+            (RF_SKLC(numEstimators=10), "RF-10"),
+            (RF_SKLC(numEstimators=15), "RF-15"),
+            (RF_SKLC(numEstimators=20), "RF-20"),
+            (RF_SKLC(numEstimators=25), "RF-25"),
+            (RF_SKLC(numEstimators=50), "RF-50"),
+        ]        
+
+        self.NB_MODELS = [
+            (NB_SKLC(), "NB")
+        ]
+
+        self.KNN_MODELS = [
+            (KNN_SKLC(numNeighbors=1), "KNN-1"),
+            (KNN_SKLC(numNeighbors=2), "KNN-2"),
+            (KNN_SKLC(numNeighbors=3), "KNN-3"),
+            (KNN_SKLC(numNeighbors=4), "KNN-4"),
+            (KNN_SKLC(numNeighbors=5), "KNN-5"),
+            (KNN_SKLC(numNeighbors=10), "KNN-10"),
+            (KNN_SKLC(numNeighbors=15), "KNN-15"),
+            (KNN_SKLC(numNeighbors=20), "KNN-20"),
+        ]
+
+        self.SVM_MODELS = [
+            (SVM_SKLC(kernel="rbf"), "SVM-RBF"),
+            (SVM_SKLC(kernel="linear"), "SVM-LIN"),
+            (SVM_SKLC(kernel="poly"), "SVM-POLY"),
+            (SVM_SKLC(kernel="sigmoid"), "SVM-SIGM")
+        ]
+
+        self.ALL_MODELS = self.RF_MODELS + self.NB_MODELS + self.KNN_MODELS + self.SVM_MODELS
+
+
+
     def make_ML_data(self):
         self.training_X, self.training_y = [], []
         self.test_X, self.test_y = [], []
@@ -274,20 +317,6 @@ class DiffusionPrediction:
                 else:
                     self.training_X.extend(positive_samples)
                     self.training_y.extend([1] * len(positive_samples))
-
-                """
-                if self.negative_sampling:
-                    if negative_selection:
-                        self.training_X.extend(negative_samples_selected)
-                        self.training_y.extend([0] * len(negative_samples_selected))
-                    
-                else:
-                    self.training_X.extend(positive_samples)
-                    self.training_y.extend([1] * len(positive_samples))
-                    self.training_X.extend(negative_samples)
-                    self.training_y.extend([0] * len(negative_samples))
-                """
-
             else:
                 self.test_X.extend(positive_samples)
                 self.test_y.extend([1] * len(positive_samples))
@@ -303,30 +332,7 @@ class DiffusionPrediction:
             print("Positive test samples", num_positive)
 
 
-    def train_and_evaluate_classifiers(self):
-        models = [
-            (SVM_SKLC(), "SVM"),
-            (RF_SKLC(numEstimators=2), "RF-2"),
-            (RF_SKLC(numEstimators=3), "RF-3"),
-            (RF_SKLC(numEstimators=3), "RF-4"),
-            (RF_SKLC(numEstimators=5), "RF-5"),
-            (RF_SKLC(numEstimators=10), "RF-10"),
-            (RF_SKLC(numEstimators=15), "RF-15"),
-            (RF_SKLC(numEstimators=20), "RF-20"),
-            (RF_SKLC(numEstimators=25), "RF-25"),
-            (RF_SKLC(numEstimators=50), "RF-50"),
-            (NB_SKLC(), "NB"),
-            (KNN_SKLC(numNeighbors=1), "KNN-1"),
-            (KNN_SKLC(numNeighbors=2), "KNN-2"),
-            (KNN_SKLC(numNeighbors=3), "KNN-3"),
-            (KNN_SKLC(numNeighbors=4), "KNN-4"),
-            (KNN_SKLC(numNeighbors=5), "KNN-5"),
-            (KNN_SKLC(numNeighbors=10), "KNN-10"),
-            (KNN_SKLC(numNeighbors=15), "KNN-15"),
-            (KNN_SKLC(numNeighbors=20), "KNN-20"),
-            (DT_SKLC(), "DT"),
-        ]
-
+    def train_and_evaluate_classifiers(self, models):
         best_f1, best_f1_cl, best_f1_prec, best_f1_rec = 0, None, 0, 0
 
         if self.verbose:
@@ -336,16 +342,7 @@ class DiffusionPrediction:
             try:
                 sk_model = model[0]
                 model_name = model[1]
-
-                """
-                train_ys = set(self.training_y)
-                if len(train_ys) == 1:
-                    print("[warning] all ys in training set equal to", train_ys)
-                test_ys = set(self.test_y)
-                if len(test_ys) == 1:
-                    print("[warning] all ys in test set equal to", test_ys)
-                """
-                    
+    
                 sk_model.train(self.training_X, self.training_y)
                 acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec = sk_model.evaluate(
                    self.test_X, self.test_y
@@ -378,6 +375,39 @@ class DiffusionPrediction:
 
         return best_f1, best_f1_prec, best_f1_rec, best_f1_cl
 
-    def evaluate(self):
+    
+    def init_evaluation(self):
         self.make_ML_data()
-        return self.train_and_evaluate_classifiers()
+
+    def evaluate_RF(self):
+        return self.train_and_evaluate_classifiers(self.RF_MODELS)
+    
+    def evaluate_KNN(self):
+        return self.train_and_evaluate_classifiers(self.KNN_MODELS)
+
+    def evaluate_NB(self):
+        return self.train_and_evaluate_classifiers(self.NB_MODELS)
+    
+    def evaluate_SVM(self):
+        return self.train_and_evaluate_classifiers(self.SVM_MODELS)
+    
+    def evaluate_ALL(self):
+        return self.train_and_evaluate_classifiers(self.ALL_MODELS)
+
+    def evaluate(self, model_type="ALL"):
+        if model_type == "RF":
+            return self.evaluate_RF()
+        elif model_type == "KNN":
+            return self.evaluate_KNN()
+        elif model_type == "NB":
+            return self.evaluate_NB()
+        elif model_type == "SVM":
+            return self.evaluate_SVM()
+        
+        return self.evaluate_ALL()
+    
+    
+
+
+
+
