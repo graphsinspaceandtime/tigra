@@ -18,9 +18,9 @@ if __name__ == "__main__":
     dg.init_from_event_sequence(es, time_resolution=resol, directed=False)
     dg.info()
 
-    #emb = FSEmbedding(f"../../tigra_emb/dn2v/radoslaw_email")
+    emb = FSEmbedding(f"../../tigra_emb/dn2v/radoslaw_email")
     #emb = FSEmbedding(f"../../tigra_emb/deep_hub/radoslaw-email")
-    emb = FSEmbedding(f"../../tigra_emb/deep_lid/radoslaw-email")
+    #emb = FSEmbedding(f"../../tigra_emb/deep_lid/radoslaw-email")
     print("#embeddings", emb.num_embeddings())
 
     graph_sequence = dg.get_graph_sequence()

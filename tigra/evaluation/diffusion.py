@@ -17,7 +17,7 @@ from tigra.core.dgraph import DynamicAggregateGraph
 ### classifiers
 
 from sklearn.metrics import precision_score, recall_score, accuracy_score
-from sklearn import tree, svm, neighbors, naive_bayes, ensemble
+from sklearn import tree, svm, neighbors, naive_bayes, ensemble, linear_model
 
 
 class SKLCModel:
@@ -85,6 +85,11 @@ class KNN_SKLC(SKLCModel):
 class DT_SKLC(SKLCModel):
     def __init__(self):
         super().__init__("DT", tree.DecisionTreeClassifier())
+
+
+class LR_SKLC(SKLCModel):
+    def __init__(self, penalty=None):
+        super().__init__("LOGREG", linear_model.LogisticRegression(penalty=penalty))
 
 
 ### END-OF-classifiers
@@ -222,7 +227,7 @@ class DiffusionPrediction:
             (RF_SKLC(numEstimators=1), "RF-1"),
             (RF_SKLC(numEstimators=2), "RF-2"),
             (RF_SKLC(numEstimators=3), "RF-3"),
-            (RF_SKLC(numEstimators=3), "RF-4"),
+            (RF_SKLC(numEstimators=4), "RF-4"),
             (RF_SKLC(numEstimators=5), "RF-5"),
             (RF_SKLC(numEstimators=10), "RF-10"),
             (RF_SKLC(numEstimators=15), "RF-15"),
@@ -253,7 +258,14 @@ class DiffusionPrediction:
             (SVM_SKLC(kernel="sigmoid"), "SVM-SIGM")
         ]
 
-        self.ALL_MODELS = self.RF_MODELS + self.NB_MODELS + self.KNN_MODELS + self.SVM_MODELS
+        self.LR_MODELS = [
+            (LR_SKLC(penalty=None), "LR-NOP"),
+            (LR_SKLC(penalty="l1"), "LR-L1"),
+            (LR_SKLC(penalty="l2"), "LR-L2"),
+            (LR_SKLC(penalty="elasticnet"), "LR-ELNET")
+        ]
+
+        self.ALL_MODELS = self.RF_MODELS + self.NB_MODELS + self.KNN_MODELS + self.SVM_MODELS + self.LR_MODELS
 
 
 
@@ -391,6 +403,9 @@ class DiffusionPrediction:
     def evaluate_SVM(self):
         return self.train_and_evaluate_classifiers(self.SVM_MODELS)
     
+    def evaluate_LR(self):
+        return self.train_and_evaluate_classifiers(self.LR_MODELS)
+    
     def evaluate_ALL(self):
         return self.train_and_evaluate_classifiers(self.ALL_MODELS)
 
@@ -403,6 +418,8 @@ class DiffusionPrediction:
             return self.evaluate_NB()
         elif model_type == "SVM":
             return self.evaluate_SVM()
+        elif model_type == "LR":
+            return self.evaluate_LR()
         
         return self.evaluate_ALL()
     
