@@ -55,10 +55,14 @@ class NaiveBayes(SKLModel):
 
 
 class AdaBoost(SKLModel):
-    def __init__(self, estimator=tree.DecisionTreeClassifier(max_depth=10), n_estimators=100):
+    def __init__(
+        self, estimator=tree.DecisionTreeClassifier(max_depth=10), n_estimators=100
+    ):
         super().__init__(
-            "AdaBoost", model=ensemble.AdaBoostClassifier(
-                estimator=estimator, n_estimators=n_estimators)
+            "AdaBoost",
+            model=ensemble.AdaBoostClassifier(
+                estimator=estimator, n_estimators=n_estimators
+            ),
         )
 
 
@@ -70,5 +74,5 @@ def skl_classifiers_factory() -> Sequence[SKLModel]:
         KNN(),
         RandomForest(),
         NaiveBayes(),
-        AdaBoost()
+        AdaBoost(),
     ]

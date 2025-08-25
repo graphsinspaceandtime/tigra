@@ -71,20 +71,24 @@ for dim in dims:
             configs.append(config)
         if len(n_units) > 1:
             if method == "DynAERNN":
-                configs.append({
-                    "dim": dim,
-                    "look_back": look_back,
-                    "ae_units": n_units,
-                    "rnn_units": n_units,
-                    **default_parameters,
-                })
+                configs.append(
+                    {
+                        "dim": dim,
+                        "look_back": look_back,
+                        "ae_units": n_units,
+                        "rnn_units": n_units,
+                        **default_parameters,
+                    }
+                )
             else:
-                configs.append({
-                    "dim": dim,
-                    "look_back": look_back,
-                    "n_units": n_units,
-                    **default_parameters,
-                })
+                configs.append(
+                    {
+                        "dim": dim,
+                        "look_back": look_back,
+                        "n_units": n_units,
+                        **default_parameters,
+                    }
+                )
 
 
 print(f"NUM OF CONFIGS: {len(configs)}")

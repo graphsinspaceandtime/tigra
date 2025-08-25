@@ -33,4 +33,3 @@ for dataset, config in dynae_factory.dataset_configs.items():
 
     hubeval = HUBEval(emb, dg)
     hubeval.eval()
-

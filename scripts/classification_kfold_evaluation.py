@@ -17,6 +17,7 @@ sys.path.append("../..")
 
 from tigra.embeddings.embedding import FSEmbedding
 
+
 def evalCV(embedding):
     print("Classifier\tAccuracy\tPrecision\tRecall\tF1")
 
@@ -25,31 +26,43 @@ def evalCV(embedding):
     scorers = {
         "accuracy": make_scorer(accuracy_score),
         "precision": make_scorer(precision_score, average=avg, zero_division=0),
-        "recall": make_scorer(recall_score, average=avg, zero_division=0)
+        "recall": make_scorer(recall_score, average=avg, zero_division=0),
     }
-    
+
     for e in embedding:
         node_ids = e.get_node_ids()
         node_vectors = [e[node_id] for node_id in node_ids]
         labels = [e.get_label(node_id) for node_id in node_ids]
 
-        models = [tree.DecisionTreeClassifier(), SVC(), KNeighborsClassifier(), GaussianNB(), ensemble.RandomForestClassifier()]
+        models = [
+            tree.DecisionTreeClassifier(),
+            SVC(),
+            KNeighborsClassifier(),
+            GaussianNB(),
+            ensemble.RandomForestClassifier(),
+        ]
         names = ["DecisionTree", "SVM", "kNN", "NaiveBayes", "RandomForest"]
 
-        scores = {name: {"accuracy": [], "precision": [], "recall": []} for name in names}
+        scores = {
+            name: {"accuracy": [], "precision": [], "recall": []} for name in names
+        }
 
         for model, name in zip(models, names):
-            
             cv = StratifiedShuffleSplit(n_splits=10, test_size=0.2, random_state=42)
 
-            acc = cross_val_score(model, node_vectors, labels, scoring=scorers["accuracy"], cv=cv).mean()
-            prec = cross_val_score(model, node_vectors, labels, scoring=scorers["precision"], cv=cv).mean()
-            rec = cross_val_score(model, node_vectors, labels, scoring=scorers["recall"], cv=cv).mean()
+            acc = cross_val_score(
+                model, node_vectors, labels, scoring=scorers["accuracy"], cv=cv
+            ).mean()
+            prec = cross_val_score(
+                model, node_vectors, labels, scoring=scorers["precision"], cv=cv
+            ).mean()
+            rec = cross_val_score(
+                model, node_vectors, labels, scoring=scorers["recall"], cv=cv
+            ).mean()
 
             scores[name]["accuracy"].append(acc)
             scores[name]["precision"].append(prec)
             scores[name]["recall"].append(rec)
-            
 
     for name in names:
         acc_avg = average(scores[name]["accuracy"])
@@ -69,10 +82,10 @@ def main_eval():
         with suppress_stdout():
             # Load the dataset(s) with labels
             embedding = FSEmbedding("embs/deepLID/" + dataset)
-        
+
         print(dataset)
         evalCV(embedding)
-            
+
 
 if __name__ == "__main__":
     main_eval()

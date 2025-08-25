@@ -229,7 +229,7 @@ class FSEmbedding(Embedding):
 
         embs = [f for f in onlyfiles if f.endswith(".emb")]
         embs.sort(key=sorting_criteria)
-        skip_n_embs = int(embs[0][:embs[0].find(".")])
+        skip_n_embs = int(embs[0][: embs[0].find(".")])
         self.embeddings.extend([None] * skip_n_embs)
         for emb in embs:
             s = SingletonEmbedding()

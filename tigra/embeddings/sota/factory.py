@@ -224,7 +224,6 @@ class DynDeepHubWalk_Factory(Factory):
         return deep_hub, dg
 
 
-
 class DynDeepLID_Factory(Factory):
     def __init__(self, deep_lid_conf, datapath=None):
         super().__init__(datapath)
@@ -272,8 +271,6 @@ class DynDeepLID_Factory(Factory):
         return deep_lid, dg
 
 
-
-
 dn2v_factory = None
 stw_factory = None
 ctdne_factory = None
@@ -315,6 +312,7 @@ def get_deep_hub_factory(deep_hub_conf, datapath=None):
         deep_hub_factory = DynDeepHubWalk_Factory(deep_hub_conf, datapath=datapath)
 
     return deep_hub_factory
+
 
 def get_deep_lid_factory(deep_lid_conf, datapath=None):
     global deep_lid_factory

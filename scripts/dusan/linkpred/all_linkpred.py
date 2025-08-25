@@ -48,7 +48,9 @@ for method in tqdm(methods, desc="Methods"):
         )
 
         # unsupervised link prediction
-        for distance_measure in tqdm(distance_measure_factory(), desc="Unsupervised", leave=False):
+        for distance_measure in tqdm(
+            distance_measure_factory(), desc="Unsupervised", leave=False
+        ):
             # print("=== Unsupervised Link Prediction ===")
             # print(f"method: {method}")
             # print(f"dataset: {dataset_id}")
@@ -73,7 +75,9 @@ for method in tqdm(methods, desc="Methods"):
             # print("====================================")
 
         # supervised link prediction
-        for classifier in tqdm(skl_classifiers_factory(), desc="Supervised", leave=False):
+        for classifier in tqdm(
+            skl_classifiers_factory(), desc="Supervised", leave=False
+        ):
             for combine_pair_operation in combine_pair_operation_factory():
                 # print("=== Unsupervised Link Prediction ===")
                 # print(f"method: {method}")

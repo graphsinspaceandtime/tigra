@@ -16,7 +16,13 @@ data = Data(base_path=dataset_base_path)
 
 data.download()
 
-dsmg = DynamicSparseMatrixGraph(data.name, data.get_event_sequence(), time_resolution=data.resolution, directed=False, cumulative=data.cumulative,)
+dsmg = DynamicSparseMatrixGraph(
+    data.name,
+    data.get_event_sequence(),
+    time_resolution=data.resolution,
+    directed=False,
+    cumulative=data.cumulative,
+)
 print("Loaded dataset")
 
 n_nodes = dsmg.number_of_nodes
@@ -30,16 +36,16 @@ n_unit = layer_size
 print(f"n_unit: {n_unit}")
 
 config = {
-  "beta": 5,
-  "nu1": 1e-6,
-  "nu2": 1e-6,
-  "batch_size": 16,
-  "epochs": 1000,
-  "learning_rate": 1e-3,
-  "weight_decay": 1e-4,
-  "dim": dim,
-  "look_back": look_back,
-  "n_units": [n_unit],
+    "beta": 5,
+    "nu1": 1e-6,
+    "nu2": 1e-6,
+    "batch_size": 16,
+    "epochs": 1000,
+    "learning_rate": 1e-3,
+    "weight_decay": 1e-4,
+    "dim": dim,
+    "look_back": look_back,
+    "n_units": [n_unit],
 }
 
 dynae = DynAE(has_cuda=False, **config)
@@ -49,6 +55,6 @@ dynae.make_embedding(data=dsmg)
 last_embedding = dynae.embeddings[-1]
 
 if last_embedding == None:
-  raise Exception("bad, last_embedding is none")
+    raise Exception("bad, last_embedding is none")
 
 last_embedding.save_to_file(f"dynae_{data.id}.emb")
