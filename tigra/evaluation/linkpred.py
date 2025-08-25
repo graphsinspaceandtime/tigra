@@ -658,9 +658,7 @@ class Predicter:
                 print(self.linkpred.result_heading(include_snap=True))
 
             for i in range(skip_n_embs + 1, num_embeddings - 1):
-                result = self.linkpred.predict(
-                    self.embedding, self.dg, i, take_top_k=take_top_k
-                )
+                result = self.linkpred.predict(self.embedding, self.dg, i)
                 self.results.append(result)
 
                 if print_results:
