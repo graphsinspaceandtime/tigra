@@ -6,15 +6,17 @@ sys.path.append("../..")
 
 from tigra.embeddings.embedding import FSEmbedding
 from tigra.evaluation.classification_eval import eval
-from tigra.evaluation.classification.neural_network_classifier import (
+
+from tigra.evaluation.clbase.nn_torch import (
     NeuralNetworkClassifier,
 )
-from tigra.evaluation.classification.skl_classifiers import (
-    DecisionTree,
-    SVM,
-    KNN,
-    NaiveBayes,
-    RandomForest,
+
+from tigra.evaluation.clbase.skl import (
+    DT_SKLC,
+    SVM_SKLC,
+    KNN_SKLC,
+    NB_SKLC,
+    RF_SKLC,
 )
 
 
@@ -49,11 +51,11 @@ def eval_all():
     ]
 
     classifiers = [
-        DecisionTree(),
-        SVM(),
-        KNN(),
-        NaiveBayes(),
-        RandomForest(),
+        DT_SKLC(),
+        SVM_SKLC(),
+        KNN_SKLC(),
+        NB_SKLC(),
+        RF_SKLC(),
         NeuralNetworkClassifier(),
     ]
 

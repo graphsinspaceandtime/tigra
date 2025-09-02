@@ -1,7 +1,7 @@
 from numpy.ma.extras import average
 
 
-def eval(embedding, classifier):
+def eval(embedding, classifier, tt_split=True):
     scores_accuracy = []
     scores_precision = []
     scores_recall = []
@@ -12,12 +12,20 @@ def eval(embedding, classifier):
             node_vectors = [e[node_id] for node_id in node_ids]
             labels = [e.get_label(node_id) for node_id in node_ids]
 
-            (
-                score_accuracy,
-                score_precision,
-                score_recall,
-                score_f1,
-            ) = classifier.evaluate(node_vectors, labels)
+            if tt_split:
+                (
+                    score_accuracy,
+                    score_precision,
+                    score_recall,
+                    score_f1,
+                ) = classifier.evaluate_ttsplit(node_vectors, labels)
+            else:
+                (
+                    score_accuracy,
+                    score_precision,
+                    score_recall,
+                    score_f1,
+                ) = classifier.evaluate_kfold_cv(node_vectors, labels)
 
             scores_accuracy.append(score_accuracy)
             scores_precision.append(score_precision)

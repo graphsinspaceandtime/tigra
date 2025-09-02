@@ -1,8 +1,8 @@
+from tigra.evaluation.clbase.classifier_base import Classifier
+
 import numpy as np
 import torch
 import torch.nn as nn
-
-from tigra.evaluation.classification.classifier import Classifier
 
 
 class Net(nn.Module):
@@ -30,13 +30,13 @@ class Net(nn.Module):
 
 class NeuralNetworkClassifier(Classifier):
     def __init__(self):
-        super().__init__()
+        super().__init__("PYTORCH-NN")
         self._net = None
         self._epochs = 100
         self._map_label_lblid = {}
         self._map_lblid_label = {}
 
-    def train(self, train_data, train_labels):
+    def fit(self, train_data, train_labels):
         unique_labels = sorted(set(train_labels))
         self._map_label_lblid = {label: idx for idx, label in enumerate(unique_labels)}
         self._map_lblid_label = {idx: label for idx, label in enumerate(unique_labels)}

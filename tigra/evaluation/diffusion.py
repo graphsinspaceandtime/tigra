@@ -14,88 +14,10 @@ import numpy as np
 
 from tigra.core.dgraph import DynamicAggregateGraph
 
-### classifiers
-
-from sklearn.metrics import precision_score, recall_score, accuracy_score
-from sklearn import tree, svm, neighbors, naive_bayes, ensemble, linear_model
+from tigra.evaluation.clbase.skl import RF_SKLC, KNN_SKLC, NB_SKLC, SVM_SKLC, LR_SKLC
 
 
-class SKLCModel:
-    def __init__(self, modelName, classifierMethod):
-        self.modelName = modelName
-        self.classifierMethod = classifierMethod
-
-    def train(self, predictors, target):
-        self.predictors = predictors
-        self.target = target
-        self.classifierMethod.fit(predictors, target)
-
-    def evaluate(self, predictors, target):
-        predictions = self.classifierMethod.predict(predictors)
-        acc = accuracy_score(target, predictions)
-        prec = precision_score(target, predictions, average="macro", zero_division=0)
-        rec = recall_score(target, predictions, average="macro", zero_division=0)
-        pos_prec = precision_score(
-            target, predictions, average="binary", pos_label=1, zero_division=0
-        )
-        pos_rec = recall_score(
-            target, predictions, average="binary", pos_label=1, zero_division=0
-        )
-        neg_prec = precision_score(
-            target, predictions, average="binary", pos_label=0, zero_division=0
-        )
-        neg_rec = recall_score(
-            target, predictions, average="binary", pos_label=0, zero_division=0
-        )
-        return acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec
-
-    def trainingScores(self):
-        return self.evaluate(self.predictors, self.target)
-
-    def trainingScoresStr(self):
-        ev = self.evaluate(self.predictors, self.target)
-        return "ACC=" + str(ev[0]) + ", P=" + str(ev[1]) + ", R=" + str(ev[2])
-
-    def predict(self, predictors):
-        return self.classifierMethod.predict(predictors)
-
-
-class SVM_SKLC(SKLCModel):
-    def __init__(self, kernel="rbf"):
-        super().__init__("SVM", svm.SVC(kernel=kernel))
-
-
-class RF_SKLC(SKLCModel):
-    def __init__(self, numEstimators=5):
-        cm = ensemble.RandomForestClassifier(n_estimators=numEstimators)
-        super().__init__("RF", cm)
-
-
-class NB_SKLC(SKLCModel):
-    def __init__(self):
-        super().__init__("NB", naive_bayes.GaussianNB())
-
-
-class KNN_SKLC(SKLCModel):
-    def __init__(self, numNeighbors=5):
-        cm = neighbors.KNeighborsClassifier(n_neighbors=numNeighbors)
-        super().__init__("KNN", cm)
-
-
-class DT_SKLC(SKLCModel):
-    def __init__(self):
-        super().__init__("DT", tree.DecisionTreeClassifier())
-
-
-class LR_SKLC(SKLCModel):
-    def __init__(self, penalty=None):
-        super().__init__("LOGREG", linear_model.LogisticRegression(penalty=penalty))
-
-
-### END-OF-classifiers
-
-
-class DiffusionProcess:
+class DiffusionProcess(ABC):
     def __init__(self):
         self.initially_active = set()
         self.activations = []
@@ -355,15 +277,10 @@ class DiffusionPrediction:
                 sk_model = model[0]
                 model_name = model[1]
     
-                sk_model.train(self.training_X, self.training_y)
-                acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec = sk_model.evaluate(
-                   self.test_X, self.test_y
+                f1, acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec = sk_model.evaluate_binarycl(
+                    self.training_X, self.training_y, self.test_X, self.test_y
                 )
 
-                f1 = 0
-                if prec + rec > 0:
-                    f1 = 2 * prec * rec / (prec + rec)
-                
                 if f1 > best_f1:
                     best_f1 = f1
                     best_f1_cl = model_name
