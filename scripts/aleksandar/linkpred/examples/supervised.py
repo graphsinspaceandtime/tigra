@@ -11,12 +11,10 @@ from tigra.data.loaders import (
     EmailEuCoreTemporal,
 )
 from tigra.core.dgraph import DynamicGraph
-from tigra.evaluation.linkpred import (
-    combine_pair_operation_factory,
-    SupervisedLinkPrediction,
-    Predicter,
-)
-from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
+from tigra.evaluation.linkpred import combine_pair_operation_factory, SupervisedLinkPrediction, Predicter
+
+#from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
+from tigra.evaluation.clbase.skl import skl_classifiers_factory
 
 embed = FSEmbedding(folder_name="embeddings/dn2v/fb_forum")
 data = FbForum("../../../../data")

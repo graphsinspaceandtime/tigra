@@ -8,7 +8,9 @@ from networkx.algorithms.link_prediction import jaccard_coefficient, adamic_adar
 import json
 
 # supervised learning imports
-from tigra.evaluation.linkpred_classification.classifier import Classifier
+#from tigra.evaluation.linkpred_classification.classifier import Classifier
+
+from tigra.evaluation.clbase.classifier_base import Classifier
 
 from typing import Sequence, Literal
 
@@ -534,6 +536,18 @@ class SupervisedLinkPrediction(LinkPrediction):
             self.combiner.labels
         )
 
+        (
+            res_f1,
+            res_accuracy,
+            res_precision,
+            res_recall,
+            res_pos_prec,
+            res_pos_rec,
+            res_neg_prec,
+            res_neg_rec,
+        ) = self.classifier.evaluate_binarycl(X_train, y_train, X_test, y_test)
+
+        """
         y_pred = self.classifier.fit_predict(X_train, y_train, X_test)
         (
             res_f1,
@@ -545,6 +559,8 @@ class SupervisedLinkPrediction(LinkPrediction):
             res_neg_prec,
             res_neg_rec,
         ) = self.classifier.score(y_test, y_pred)
+        """
+        
         self.result = {
             "f1": res_f1,
             "accuracy": res_accuracy,
