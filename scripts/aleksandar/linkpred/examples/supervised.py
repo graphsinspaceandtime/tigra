@@ -3,10 +3,8 @@ from tigra.data.loaders import (
     RadoslawEmail,
     FbForum,
     FbMessages,
-    IaContactsHypertext2009,
     IaEnronEmployees,
     IaHospitalWardProximityAttr,
-    IaPrimarySchoolProximityAttr,
     CollegeMsg,
     EmailEuCoreTemporal,
 )
@@ -16,8 +14,8 @@ from tigra.evaluation.linkpred import combine_pair_operation_factory, Supervised
 #from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
 from tigra.evaluation.clbase.skl import skl_classifiers_factory
 
-embed = FSEmbedding(folder_name="embeddings/dn2v/fb_forum")
-data = FbForum("../../../../data")
+embed = FSEmbedding(folder_name="embeddings/deep_hub/email-Eu-core-temporal")
+data = EmailEuCoreTemporal("../../../../data")
 
 es = data.get_event_sequence(shrink=True)
 
