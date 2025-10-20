@@ -22,7 +22,7 @@ class Graph:
     Model class for TIGRA static graphs based on networkx
     """
 
-    def __init__(self, name, directed=True, nx_graph=None):
+    def __init__(self, name, directed=True, nx_graph=None, labeled=False):
         """
         Parameters
         name
@@ -37,7 +37,7 @@ class Graph:
         else:
             self.G = nx.DiGraph() if directed else nx.Graph()
 
-        self.labeled = False
+        self.labeled = labeled
 
     def is_directed(self):
         """
