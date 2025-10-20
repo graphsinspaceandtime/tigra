@@ -48,7 +48,7 @@ class DT_SKLC(SKLCModel):
 
 class LR_SKLC(SKLCModel):
     def __init__(self, penalty=None):
-        super().__init__("LOGREG", linear_model.LogisticRegression(penalty=penalty))
+        super().__init__("LOGREG", linear_model.LogisticRegression(penalty=penalty, max_iter=10000))
 
 
 class AdaBoost_SKLC(SKLCModel):

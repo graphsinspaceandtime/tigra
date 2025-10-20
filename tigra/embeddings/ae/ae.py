@@ -6,11 +6,21 @@ from torch import nn
 import torch
 from typing import Sequence
 
+
 class AE_Model(nn.Module):
     encoder: MLP
     decoder: MLP
 
-    def __init__(self, input_size: int, output_size: int, look_back: int, layer_sizes: Sequence[int], bias=True, *args, **kwargs):
+    def __init__(
+        self,
+        input_size: int,
+        output_size: int,
+        look_back: int,
+        layer_sizes: Sequence[int],
+        bias=True,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.encoder = MLP(input_size * look_back, output_size, layer_sizes, bias)
         self.decoder = MLP(output_size, input_size, layer_sizes[::-1], bias)
@@ -20,9 +30,45 @@ class AE_Model(nn.Module):
         x_pred = self.decoder(hx)
         return hx, x_pred
 
+
 class DynAE(SymetricAEBase):
-    def __init__(self, dim, look_back, beta, nu1, nu2, batch_size, epochs, learning_rate, weight_decay, n_units, last_only=True, bias=True, shuffle=True, has_cuda=False, verbose=0, **kawrgs):
-        super().__init__(dim, look_back, beta, nu1, nu2, batch_size, epochs, learning_rate, weight_decay, n_units, last_only, bias, shuffle, has_cuda, verbose, **kawrgs)
+    def __init__(
+        self,
+        dim,
+        look_back,
+        beta,
+        nu1,
+        nu2,
+        batch_size,
+        epochs,
+        learning_rate,
+        weight_decay,
+        n_units,
+        last_only=True,
+        bias=True,
+        shuffle=True,
+        has_cuda=False,
+        verbose=0,
+        **kawrgs,
+    ):
+        super().__init__(
+            dim,
+            look_back,
+            beta,
+            nu1,
+            nu2,
+            batch_size,
+            epochs,
+            learning_rate,
+            weight_decay,
+            n_units,
+            last_only,
+            bias,
+            shuffle,
+            has_cuda,
+            verbose,
+            **kawrgs,
+        )
         self.name = "DynAE"
 
     def __construct(self, data, prediction_index, num_nodes, node_list):

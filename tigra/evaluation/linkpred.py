@@ -30,6 +30,7 @@ class LinkPrediction(ABC):
     def predict(self, embedding: Embedding, graph: DynamicGraph, snapshot: int) -> dict:
         pass
 
+    """
     def _sample_links(
         self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph
     ):
@@ -63,6 +64,58 @@ class LinkPrediction(ABC):
             positive_links,
             negative_links,
         )
+    """
+
+    def _sample_links(
+        self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph
+    ):
+        positive_links = []
+        negative_links = []
+
+        nodes = list(embedding.embedding.keys())
+
+        for i, u in enumerate(nodes):
+            for v in nodes[i + 1 :]:
+                if graph_tp1.has_edge(u, v) and not graph_t.has_edge(u, v):
+                    positive_links.append((u, v))
+                elif not graph_tp1.has_edge(u, v) and not graph_t.has_edge(u, v):
+                    negative_links.append((u, v))
+
+        # Ensure at least one positive and one negative link exists
+        if len(positive_links) == 0:
+            # fallback: take an edge from graph_tp1 as positive
+            for u, v in graph_tp1.G.edges():
+                if not graph_t.has_edge(u, v):
+                    positive_links.append((u, v))
+                    break
+
+        if len(negative_links) == 0:
+            # fallback: pick any non-edge as negative
+            all_pairs = [(u, v) for i, u in enumerate(nodes) for v in nodes[i + 1 :]]
+            non_edges = [
+                (u, v)
+                for (u, v) in all_pairs
+                if not graph_tp1.has_edge(u, v) and not graph_t.has_edge(u, v)
+            ]
+            if non_edges:
+                negative_links.append(non_edges[0])
+
+        return positive_links, negative_links
+
+    def _negative_sample_links(
+        self, embedding: SingletonEmbedding, graph_t: Graph, graph_tp1: Graph
+    ):
+        positive_links, negative_links = self._sample_links(
+            embedding, graph_t, graph_tp1
+        )
+
+        # Balance positive and negative links
+        if len(positive_links) < len(negative_links):
+            negative_links = random.sample(negative_links, len(positive_links))
+        elif len(positive_links) > len(negative_links):
+            positive_links = random.sample(positive_links, len(negative_links))
+
+        return positive_links, negative_links
 
     @abstractmethod
     def print_result(self):
@@ -261,9 +314,9 @@ class UnsupervisedLinkPrediction(LinkPrediction):
         self.distance = distance
         self._prediction_type = "unsupervised"
 
-    def predict(self, embedding, graph, snapshot) -> dict:
+    def predict(self, embedding, graph, snapshot, take_top_k=True) -> dict:
         singleton_embedding = embedding.embeddings[snapshot]
-        if singleton_embedding == None:
+        if singleton_embedding is None:
             raise Exception("Embedding is None")
 
         graph_sequence = graph.get_graph_sequence()
@@ -281,12 +334,63 @@ class UnsupervisedLinkPrediction(LinkPrediction):
         elif self.distance._distance_type == "structural":
             self.distance.measure(positive_links, negative_links, graph=graph_t)
 
-        self.result = {
-            "roc_auc": roc_auc_score(self.distance.labels, self.distance.scores),
-            "average_precision": average_precision_score(
-                self.distance.labels, self.distance.scores
-            ),
-        }
+        K = len(positive_links)
+
+        # --- Sort scores and labels together ---
+        sorted_pairs = sorted(
+            zip(self.distance.scores, self.distance.labels),
+            key=lambda x: x[0],
+            reverse=True,
+        )
+        sorted_scores, sorted_labels = map(list, zip(*sorted_pairs))
+
+        if take_top_k:
+            # --- Take first K ensuring at least one positive and one negative ---
+            top_scores = []
+            top_labels = []
+            pos_taken = 0
+            neg_taken = 0
+
+            for score, label in zip(sorted_scores, sorted_labels):
+                if len(top_scores) >= K:
+                    break
+                if label == 1 and pos_taken == 0:
+                    top_scores.append(score)
+                    top_labels.append(label)
+                    pos_taken += 1
+                elif label == 0 and neg_taken == 0:
+                    top_scores.append(score)
+                    top_labels.append(label)
+                    neg_taken += 1
+                elif len(top_scores) < K:
+                    top_scores.append(score)
+                    top_labels.append(label)
+
+            # Fill remaining slots if K > len(top_scores)
+            for score, label in zip(sorted_scores, sorted_labels):
+                if len(top_scores) >= K:
+                    break
+                if label == 1 and pos_taken > 0:
+                    top_scores.append(score)
+                    top_labels.append(label)
+                elif label == 0 and neg_taken > 0:
+                    top_scores.append(score)
+                    top_labels.append(label)
+        else:
+            # Use all sampled links without slicing
+            top_scores = sorted_scores
+            top_labels = sorted_labels
+
+        # --- Compute metrics safely ---
+        if len(set(top_labels)) > 1:
+            self.result = {
+                "roc_auc": roc_auc_score(top_labels, top_scores),
+                "average_precision": average_precision_score(
+                    top_labels, top_scores, average="weighted"
+                ),
+            }
+        else:
+            self.result = {"roc_auc": None, "average_precision": None}
 
         return self.result
 
@@ -471,7 +575,9 @@ class SupervisedLinkPrediction(LinkPrediction):
         return self.result
 
     def result_heading(self, include_snap=False):
-        return "{}classifier,combiner,f1,acc,prec,rec,pos_prec,pos_rec,neg_prec,neg_rec".format("snap," if include_snap else "")
+        return "{}classifier,combiner,f1,acc,prec,rec,pos_prec,pos_rec,neg_prec,neg_rec".format(
+            "snap," if include_snap else ""
+        )
 
     def result_str(self):
         return "{},{},{},{},{},{},{},{},{},{}".format(
@@ -532,12 +638,12 @@ class Predicter:
         skip_n_embs = 0
         for emb in embedding.embeddings:
             if emb is None:
-                skip_n_embs+=1
+                skip_n_embs += 1
             else:
                 break
         return skip_n_embs
 
-    def predict(self, print_results=False):
+    def predict(self, print_results=False, take_top_k=True):
         graph_sequence = self.dg.get_graph_sequence()
         num_graphs = len(graph_sequence)
         num_embeddings = self.embedding.num_embeddings()
@@ -553,7 +659,9 @@ class Predicter:
                 print(self.linkpred.result_heading(include_snap=True))
 
             for i in range(skip_n_embs, num_embeddings - 1):
-                result = self.linkpred.predict(self.embedding, self.dg, i)
+                result = self.linkpred.predict(
+                    self.embedding, self.dg, i, take_top_k=take_top_k
+                )
                 self.results.append(result)
 
                 if print_results:
@@ -582,4 +690,3 @@ class Predicter:
                 },
                 f,
             )
-

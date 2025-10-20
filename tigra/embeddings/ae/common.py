@@ -4,10 +4,19 @@ from typing import Sequence
 import numpy as np
 import torch
 
+
 class MLP(nn.Module):
     layers: nn.ModuleList
 
-    def __init__(self, input_size: int, output_size: int, layer_sizes: Sequence[int], bias: bool, *args, **kwargs):
+    def __init__(
+        self,
+        input_size: int,
+        output_size: int,
+        layer_sizes: Sequence[int],
+        bias: bool,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.layers = nn.ModuleList()
         self.layers.append(nn.Linear(input_size, layer_sizes[0], bias))
@@ -22,6 +31,7 @@ class MLP(nn.Module):
         for layer in self.layers:
             x = F.relu(layer(x))
         return x
+
 
 class BatchGenerator:
     node_list: list
@@ -95,6 +105,7 @@ class BatchGenerator:
                 if self.shuffle:
                     np.random.shuffle(node_indices)
                 counter = 0
+
 
 class BatchPredictor:
     node_list: list
@@ -175,6 +186,7 @@ class BatchPredictor:
             )
         return embedding_mat, x_pred
 
+
 class DynamicEmbedder:
     full_node_list: Sequence[int]
     node_num: int
@@ -197,9 +209,7 @@ class DynamicEmbedder:
         self.full_node_list = node_list
         self.node_num = len(self.full_node_list)  # node num
 
-    def prepare(
-        self, lr=1e-3, weight_decay=0.0
-    ):
+    def prepare(self, lr=1e-3, weight_decay=0.0):
         self.model = self.model.to(self.device)
         self.loss = self.loss.to(self.device)
 

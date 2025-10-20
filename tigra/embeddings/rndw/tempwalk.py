@@ -31,7 +31,6 @@ from tigra.embeddings.rndw.rndwbase import RandomWalkSampler, UnbiasedRandomWalk
 from tigra.evaluation.lideval import NCLIDEstimator
 
 
-
 class RWEmbBaseBF(Embedding):
     def __init__(self, dim, delta_nodes=True, num_workers=1):
         """
@@ -117,9 +116,10 @@ class RWEmbBaseBF(Embedding):
         pass
 
     @abstractmethod
-    def determine_delta_nodes(self, graph: nx.Graph, prev_graph: nx.Graph, next_graph: nx.Graph) -> List[int]:
+    def determine_delta_nodes(
+        self, graph: nx.Graph, prev_graph: nx.Graph, next_graph: nx.Graph
+    ) -> List[int]:
         pass
-
 
 
 class RWEmbEgoDeltaBF(RWEmbBaseBF):
@@ -130,7 +130,9 @@ class RWEmbEgoDeltaBF(RWEmbBaseBF):
     def __init__(self, dim, delta_nodes=True, num_workers=1):
         super().__init__(dim, delta_nodes=delta_nodes, num_workers=num_workers)
 
-    def determine_delta_nodes(self, graph: nx.Graph, prev_graph: nx.Graph, next_graph: nx.Graph) -> List[int]:
+    def determine_delta_nodes(
+        self, graph: nx.Graph, prev_graph: nx.Graph, next_graph: nx.Graph
+    ) -> List[int]:
         if next_graph != None:
             delta_edges = graph.edges ^ prev_graph.edges ^ next_graph.edges
         else:
@@ -138,7 +140,7 @@ class RWEmbEgoDeltaBF(RWEmbBaseBF):
         nodes_with_modified_edges = set(chain(*delta_edges))
         delta_nodes = list(graph.nodes & nodes_with_modified_edges)
         return delta_nodes
-    
+
 
 class DynDeepWalkBF(RWEmbEgoDeltaBF):
     def __init__(
@@ -188,7 +190,6 @@ class LIDDeepSampler(RandomWalkSampler):
         self.lids = self.lidestimator.get_lid_values()
 
     def select_next_node(self, start_node, current_node, prev_node, neighbours):
-
         r = random.random()
         if r < self.p:
             return prev_node

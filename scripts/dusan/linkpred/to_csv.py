@@ -2,17 +2,27 @@ import os
 import json
 from typing import Sequence
 
+<<<<<<< HEAD
+from tigra.evaluation.linkpred import (
+    distance_measure_factory,
+    combine_pair_operation_factory,
+)
+from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
+=======
 from tigra.evaluation.linkpred import distance_measure_factory, combine_pair_operation_factory
 
 #from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
 from tigra.evaluation.clbase.skl import skl_classifiers_factory
+>>>>>>> main
 
 distances = [distance_measure.name for distance_measure in distance_measure_factory()]
 combiners = [combiner.name for combiner in combine_pair_operation_factory()]
 classifiers = [classifier.name for classifier in skl_classifiers_factory()]
 
+
 def fragments(name: str) -> Sequence[str]:
     return name[:-5].split("~")
+
 
 def write_unsup_csv(data: dict, dataset_id: str, method: str, metric_name: str):
     metric = []
@@ -37,6 +47,7 @@ def write_unsup_csv(data: dict, dataset_id: str, method: str, metric_name: str):
 
     print("\n".join(metric))
 
+
 def write_sup_csv(data: dict, combiner_name: str):
     combiner = []
     combiner.append(("Classifier," + ",".join(list(data[combiner_name].keys()))))
@@ -56,7 +67,6 @@ def write_sup_csv(data: dict, combiner_name: str):
         combiner.append(result_line)
 
     print("\n".join(combiner))
-
 
 
 results_path = "./results"
