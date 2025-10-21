@@ -136,7 +136,7 @@ class SingletonEmbedding:
                 )
                 num_emb_vectors += 1
 
-        print("Loaded from file", file, num_emb_vectors, " node embedding vectors")
+        # print("Loaded from file", file, num_emb_vectors, " node embedding vectors")
 
     def load_labels_from_file(self, file: str):
         self.label = dict()
@@ -196,6 +196,9 @@ class Embedding(ABC):
 
         os.mkdir(folder_name)
         for i in range(len(self.embeddings)):
+            if self.embeddings[i] == None:
+                print(f"Skipping embedding {i} because it's None")
+                continue
             fn = str(i) + ".emb"
             path = os.path.join(folder_name, fn)
             self.embeddings[i].save_to_file(path)
@@ -226,7 +229,8 @@ class FSEmbedding(Embedding):
 
         embs = [f for f in onlyfiles if f.endswith(".emb")]
         embs.sort(key=sorting_criteria)
-        print(embs)
+        skip_n_embs = int(embs[0][: embs[0].find(".")])
+        self.embeddings.extend([None] * skip_n_embs)
         for emb in embs:
             s = SingletonEmbedding()
             path = os.path.join(folder_name, emb)
@@ -240,7 +244,9 @@ class FSEmbedding(Embedding):
         labs.sort()
         for i in range(len(labs)):
             lab = labs[i]
-            emb = self.embeddings[i]
+            emb = self.embeddings[i + skip_n_embs]
+            if emb is None:
+                raise Exception("Not possible")
             path = os.path.join(folder_name, lab)
             emb.load_labels_from_file(path)
 

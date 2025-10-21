@@ -11,21 +11,13 @@ import typing
 
 from statistics import mean
 import tqdm
-import math
-
-from sklearn.model_selection import ParameterGrid
 
 from tigra.embeddings.embedding import Embedding
 from tigra.core.greval import GraphReconstructionEval
-from tigra.embeddings.utils import n_nodes_to_ae_layers
 
 from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
 from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.embeddings.sota.stwalk import STWalk
-from tigra.embeddings.sota.dynae_wrapper import DynAE
-from tigra.embeddings.sota.dynrnn_wrapper import DynRNN
-from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
-from tigra.embeddings.sota.dyngem_wrapper import DynGEM
 
 from tigra.embeddings.rndw.rndwbase import DynN2V
 from tigra.embeddings.rndw.hubrw import (
@@ -34,11 +26,7 @@ from tigra.embeddings.rndw.hubrw import (
     DynN2V_HubDelta,
 )
 
-from tigra.embeddings.rndw.lidrw import (
-    DynN2V_LIDDelta,
-    DynN2V_LIDRW,
-    DynN2V_LIDRWDelta
-)
+from tigra.embeddings.rndw.lidrw import DynN2V_LIDDelta, DynN2V_LIDRW, DynN2V_LIDRWDelta
 
 
 class Tuner(ABC):
@@ -82,15 +70,19 @@ class Tuner(ABC):
             iterator = tqdm.tqdm(iterator)
 
         for i in iterator:
+            # test creating an instance
+            try:
+                self.create_instance(i)
+            except Exception as e:
+                print("[tuner] failed to create instance")
+                print("[tuner] configuration: " + str(self.confs[i]))
+                print("[tuner] this configuration will not be accounted during tuning")
+                print(e)
+                continue
+
             prec_values, rec_values, f1_values = [], [], []
             for run_num in range(self.num_runs):
-                try:
-                    current_instance = self.create_instance(i)
-                except:
-                    print("[tuner] failed to create instance")
-                    print("[tuner] configuration: " + str(self.confs[i]))
-                    print("[tuner] run_num: " + str(run_num))
-                    continue
+                current_instance = self.create_instance(i)
                 current_instance.make_embedding(self.data)
                 last_embedding = current_instance.embeddings[-1]
                 if last_embedding == None:
@@ -450,97 +442,6 @@ class STWalk_Tuner(Tuner):
         )
 
 
-class DynamicEmbedding_Tuner(Tuner):
-    """
-    Tuner for DynamicEmbedding methods (DynGem, DynAE, DynRNN, DynAERNN)
-    """
-
-    ParamGrid = typing.Mapping[str, typing.Sequence[typing.Any]]
-    Method = typing.Literal["DynAE", "DynRNN", "DynAERNN", "DynGEM"]
-
-    method: Method
-    param_grid: ParamGrid
-    epochs: int
-    batch_size: int
-    n_nodes: int
-    has_cuda: bool
-    pick_n_layers_from_middle: int
-
-    def __init__(
-        self,
-        graph,
-        data,
-        params_desc,
-        method: Method,
-        param_grid: ParamGrid,
-        epochs: int,
-        batch_size: int,
-        n_nodes: int,
-        has_cuda: bool,
-        num_runs=1,
-        pick_n_layers_from_middle=0,
-    ):
-        super().__init__(graph, data, params_desc, num_runs)
-        self.method = method
-        self.param_grid = param_grid
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.n_nodes = n_nodes
-        self.has_cuda = has_cuda
-        self.pick_n_layers_from_middle = pick_n_layers_from_middle
-
-    def create_configurations(self) -> typing.List:
-        return list(ParameterGrid(self.param_grid))
-
-    def create_instance(self, conf_index) -> Embedding:
-        conf = self.confs[conf_index]
-        fixed_params = {
-            "beta": 5,
-            "nu1": 1e-6,
-            "nu2": 1e-6,
-            "batch_size": self.batch_size,
-            "epochs": self.epochs,
-            "learning_rate": 1e-3,
-            "weight_decay": 1e-4,
-        }
-
-        n_units = n_nodes_to_ae_layers(self.n_nodes, conf["dim"])
-        if self.pick_n_layers_from_middle != 0:
-            if self.pick_n_layers_from_middle > len(n_units):
-                print(
-                    "[tuner] DynamicEmbedding_Tuner instance field 'pick_n_layers_from_middle' larger than length of 'n_units'"
-                )
-                raise Exception(
-                    "field 'pick_n_layers_from_middle' larger than length of 'n_units'"
-                )
-            padding = (len(n_units) - self.pick_n_layers_from_middle) / 2
-            padding_left = math.ceil(padding)
-            padding_right = math.floor(padding)
-            n_units = n_units[padding_left:padding_right]
-
-        if self.method == "DynAE":
-            return DynAE(
-                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
-            )
-        if self.method == "DynRNN":
-            return DynRNN(
-                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
-            )
-        if self.method == "DynAERNN":
-            return DynAERNN(
-                ae_units=n_units,
-                has_cuda=self.has_cuda,
-                rnn_units=n_units,
-                **conf,
-                **fixed_params,
-            )
-        if self.method == "DynGEM":
-            return DynGEM(
-                n_units=n_units, has_cuda=self.has_cuda, **conf, **fixed_params
-            )
-        raise Exception(f"method '{self.method}' is incorrect")
-
-
 class DynN2V_LIDDelta_Tuner(N2VMethods_Tuner):
     """
     Tuner for DynN2V_LIDDelta
@@ -577,7 +478,7 @@ class DynN2V_LIDDelta_Tuner(N2VMethods_Tuner):
         return DynN2V_LIDDelta(
             dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
-    
+
 
 class DynN2V_LIDRW_Tuner(N2VMethods_Tuner):
     """
@@ -615,7 +516,7 @@ class DynN2V_LIDRW_Tuner(N2VMethods_Tuner):
         return DynN2V_LIDRW(
             dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
-    
+
 
 class DynN2V_LIDRWDelta_Tuner(N2VMethods_Tuner):
     """

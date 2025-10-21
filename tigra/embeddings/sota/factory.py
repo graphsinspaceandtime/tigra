@@ -15,6 +15,8 @@ from data.bank import Databank
 
 # from tigra.embeddings.sota.dynnode2vec import Dynnode2vec
 from tigra.embeddings.rndw.rndwbase import DynN2V
+from tigra.embeddings.rndw.hubrw import DynDeepHubWalk
+from tigra.embeddings.rndw.lidrw import DynDeepLIDWalk
 from tigra.embeddings.sota.stwalk import STWalk
 from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.core.loaders import load_event_sequence
@@ -118,9 +120,16 @@ class STWalk_Factory(Factory):
         dg.init_from_event_sequence(
             es, time_resolution=time_resolution, directed=False, cumulative=conf[2]
         )
-        
-        stw = STWalk(number_restart=10, walk_length=32, dimension=conf[0], time_step=len(dg.get_graph_sequence()), time_window_size=conf[1],workers=16,vocab_window_size=5)
-       
+
+        stw = STWalk(
+            number_restart=10,
+            walk_length=32,
+            dimension=conf[0],
+            time_step=len(dg.get_graph_sequence()),
+            time_window_size=conf[1],
+            workers=16,
+            vocab_window_size=5,
+        )
 
         stw.make_embedding(dg)
 
@@ -155,11 +164,11 @@ class CTDNE_Factory(Factory):
 
         es, time_resolution = load_event_sequence(dataset)  # type: ignore
 
-        #dg = DynamicGraph()
-        #dg.init_from_event_sequence(
+        # dg = DynamicGraph()
+        # dg.init_from_event_sequence(
         #    es, time_resolution=time_resolution, directed=False, cumulative=conf[3]
-        #)
-        
+        # )
+
         ctdne = Ctdne(dim=conf[0], p=conf[1], q=conf[2])
         agg_dg = DynamicAggregateGraph(name=dataset, event_sequence=es, directed=False)
 
@@ -168,11 +177,105 @@ class CTDNE_Factory(Factory):
         return ctdne, agg_dg  # type: ignore
 
 
+class DynDeepHubWalk_Factory(Factory):
+    def __init__(self, deep_hub_conf, datapath=None):
+        super().__init__(datapath)
+
+        conf_file = open(deep_hub_conf, "r")
+        conf_file.readline()
+
+        self.configs = dict()
+
+        for line in conf_file:
+            tokens = line.split(",")
+            dataset_name = tokens[0]
+            dim = int(tokens[1])
+            inverse = True if tokens[2] == "True" else False
+            log_scaling = True if tokens[3] == "True" else False
+            p = float(tokens[4])
+            u = float(tokens[5])
+            cumulative = True if tokens[6] == "True" else False
+
+            self.configs[dataset_name] = (dim, inverse, log_scaling, p, u, cumulative)
+
+    def get_embedding(self, dataset: str) -> Embedding:
+        if not dataset in self.configs:
+            print("WARNING: dataset not in DeepHub configuration!")
+            return None
+
+        conf = self.configs[dataset]
+
+        deep_hub = DynDeepHubWalk(
+            dim=conf[0],
+            inverse=conf[1],
+            log_scaling=conf[2],
+            p=conf[3],
+            u=conf[4],
+        )
+
+        es, time_resolution = load_event_sequence(dataset)
+        dg = DynamicGraph()
+        dg.init_from_event_sequence(
+            es, time_resolution=time_resolution, directed=False, cumulative=conf[5]
+        )
+
+        deep_hub.make_embedding(dg)
+
+        return deep_hub, dg
+
+
+class DynDeepLID_Factory(Factory):
+    def __init__(self, deep_lid_conf, datapath=None):
+        super().__init__(datapath)
+
+        conf_file = open(deep_lid_conf, "r")
+        conf_file.readline()
+
+        self.configs = dict()
+
+        for line in conf_file:
+            tokens = line.split(",")
+            dataset_name = tokens[0]
+            dim = int(tokens[1])
+            inverse = True if tokens[2] == "True" else False
+            log_scaling = True if tokens[3] == "True" else False
+            p = float(tokens[4])
+            u = float(tokens[5])
+            cumulative = True if tokens[6] == "True" else False
+
+            self.configs[dataset_name] = (dim, inverse, log_scaling, p, u, cumulative)
+
+    def get_embedding(self, dataset: str) -> Embedding:
+        if not dataset in self.configs:
+            print("WARNING: dataset not in DeepLID configuration!")
+            return None
+
+        conf = self.configs[dataset]
+
+        deep_lid = DynDeepLIDWalk(
+            dim=conf[0],
+            inverse=conf[1],
+            log_scaling=conf[2],
+            p=conf[3],
+            u=conf[4],
+        )
+
+        es, time_resolution = load_event_sequence(dataset)
+        dg = DynamicGraph()
+        dg.init_from_event_sequence(
+            es, time_resolution=time_resolution, directed=False, cumulative=conf[5]
+        )
+
+        deep_lid.make_embedding(dg)
+
+        return deep_lid, dg
 
 
 dn2v_factory = None
 stw_factory = None
 ctdne_factory = None
+deep_hub_factory = None
+deep_lid_factory = None
 
 
 def get_dn2v_factory(dn2vconf, datapath=None):
@@ -183,6 +286,7 @@ def get_dn2v_factory(dn2vconf, datapath=None):
 
     return dn2v_factory
 
+
 def get_stwalk_factory(stwalkconf, datapath=None):
     global stw_factory
 
@@ -191,6 +295,7 @@ def get_stwalk_factory(stwalkconf, datapath=None):
 
     return stw_factory
 
+
 def get_ctdne_factory(ctdneconf, datapath=None):
     global ctdne_factory
 
@@ -198,3 +303,21 @@ def get_ctdne_factory(ctdneconf, datapath=None):
         ctdne_factory = CTDNE_Factory(ctdneconf, datapath=datapath)
 
     return ctdne_factory
+
+
+def get_deep_hub_factory(deep_hub_conf, datapath=None):
+    global deep_hub_factory
+
+    if deep_hub_factory == None:
+        deep_hub_factory = DynDeepHubWalk_Factory(deep_hub_conf, datapath=datapath)
+
+    return deep_hub_factory
+
+
+def get_deep_lid_factory(deep_lid_conf, datapath=None):
+    global deep_lid_factory
+
+    if deep_lid_factory == None:
+        deep_lid_factory = DynDeepLID_Factory(deep_lid_conf, datapath=datapath)
+
+    return deep_lid_factory

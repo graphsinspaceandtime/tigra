@@ -39,32 +39,28 @@ def clustereval(dataset):
             return
         dn2v, dg = res
         emb = FSEmbedding(f"emb2/{name}_{dataset}")
-        
-        if isinstance(dg, DynamicAggregateGraph): #ctdne
+
+        if isinstance(dg, DynamicAggregateGraph):  # ctdne
             graph = dg.get_aggregate_graph()
             embd = emb.embeddings[0]
             gre = GraphReconstructionEval(graph, embd)
             print("Precision", gre.get_avg_precision())
             print("Recall", gre.get_avg_recall())
             print("F1", gre.getF1())
-            
+
             path = os.path.join("clustering_eval_ctdne", f"{name}_{dataset}.txt")
             with open(path, "w", encoding="utf-8") as f:
-                f.write(
-                    "METHOD,LP,,Louvain,,GMO,,KMEANS,,,DBSCAN,,,AGG,,\n"
-                )
-                f.write(
-                    "SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL,Q,NC,SIL\n"
-                )
+                f.write("METHOD,LP,,Louvain,,GMO,,KMEANS,,,DBSCAN,,,AGG,,\n")
+                f.write("SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL,Q,NC,SIL\n")
             lide = ClusteringEval(emb, dg, dataset, path)
             lide.eval()
 
-        else: #dn2vec
+        else:  # dn2vec
             graph_sequence = dg.get_graph_sequence()
-            
+
             print(f"graph sequence num: {len(graph_sequence)}\n")
             print(f"emb num: {len(emb.embeddings)}\n")
-            
+
             for i in range(len(graph_sequence)):
                 print("SNAPSHOT", i)
 
@@ -78,12 +74,8 @@ def clustereval(dataset):
             
             path = os.path.join("clustering_eval_dn2vec_n", f"{name}_{dataset}.txt")
             with open(path, "w", encoding="utf-8") as f:
-                f.write(
-                    "METHOD,LP,,Louvain,,GMO,,KMEANS,,,AGG,,\n"
-                )
-                f.write(
-                    "SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL\n"
-                )
+                f.write("METHOD,LP,,Louvain,,GMO,,KMEANS,,,AGG,,\n")
+                f.write("SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL\n")
             lide = ClusteringEval(emb, dg, dataset, path)
             lide.eval()
 

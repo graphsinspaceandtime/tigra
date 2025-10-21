@@ -1,10 +1,10 @@
 # For Mars
-# hackaton 22.2.2025
+# hackathon 22.2.2025
 
-import sys
 import os
+import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tigra.generators.dsbm import DPPGenerator
 from tigra.core.loaders import load_snap_dataset
@@ -14,13 +14,14 @@ from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.embedding import FSEmbedding
 
 # step 1 -- generate and save the event sequence of a synthetic graph with labels
-dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
-dppg.generate_and_save("dpp_1000_4.events")
+# dppg = DPPGenerator([500, 250, 150, 100], 0.03, 0.001)
+# dppg.generate_and_save("dpp_1000_4.events")
 
 # step 2 -- load event sequence
-es = load_snap_dataset("dpp_1000_4.events")
+es = load_snap_dataset("../../data/synthetic/dbac_1000_4.events")
 
-# step 3 -- create temporal graph from loaded event sequence
+
+# step 3 -- create a temporal graph from the loaded event sequence
 dg = DynamicGraph()
 dg.init_from_event_sequence(
     es, time_resolution="month", directed=False, cumulative=True

@@ -1,0 +1,47 @@
+{
+  "common_configs": {
+    "beta": 5,
+    "nu1": 1e-6,
+    "nu2": 1e-6,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 16,
+    "epochs": 1000
+  },
+  "dataset_configs": {
+    "radoslaw_email": {
+      "skip": false,
+      "dim": 25,
+      "n_units": [
+        128,
+        64,
+        32
+      ],
+      "look_back": 8
+    },
+    "ia_contacts_hypertext_2009": {
+      "skip": false,
+      "dim": 10,
+      "n_units": [
+        32
+      ],
+      "look_back": 2
+    },
+    "ia_enron_employees": {
+      "skip": false,
+      "dim": 10,
+      "n_units": [
+        128
+      ],
+      "look_back": 2
+    },
+    "ia_primary_school_proximity_attr": {
+      "skip": false,
+      "dim": 25,
+      "n_units": [
+        1024
+      ],
+      "look_back": 1
+    }
+  }
+}

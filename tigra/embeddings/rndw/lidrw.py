@@ -588,7 +588,6 @@ class LIDDeepSampler(RandomWalkSampler):
         self.lids = self.lidestimator.get_lid_values()
 
     def select_next_node(self, start_node, current_node, prev_node, neighbours):
-
         r = random.random()
         if r < self.p:
             return prev_node

@@ -662,9 +662,7 @@ class DynamicSparseMatrixGraph:
         value_type="bool",
         cumulative=False,
     ):
-        print("============== DynamicSparseMatrixGraph ==============")
         number_of_nodes = event_sequence.num_nodes()
-        print(number_of_nodes)
         self.number_of_nodes = number_of_nodes
         self.value_type = value_type
 

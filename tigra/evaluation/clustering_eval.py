@@ -29,7 +29,6 @@ from tigra.core.dgraph import DynamicAggregateGraph
 
 class EmbClusterer:
     def __init__(self, graph, embedding, num_com=None):
-
         self.graph = graph
         self.embedding = embedding
         self.nodes_list = list(self.graph.nodes())
@@ -44,10 +43,9 @@ class EmbClusterer:
         self.results = []
 
     def detect_clusters(self):
-
         for alg in self.clustering_algorithms:
             alg_name = alg.__class__.__name__
-            
+
             labels = alg.fit_predict(self.X)
 
             lab = set(labels)
@@ -63,7 +61,7 @@ class EmbClusterer:
 
             mod = modularity(self.graph, part)
             if labels is not None:
-                    num_clusters = len(set(labels))
+                num_clusters = len(set(labels))
             else:
                 num_clusters = "N/A"
                 
@@ -113,7 +111,7 @@ class GraphClusterer:
 
     def get_gmc(self, graph):
         return np.asarray(greedy_modularity_communities(graph))
-    
+
     def louvian(self, graph):
         return louvain_communities(graph, seed=0)
 
@@ -134,7 +132,7 @@ class GraphClusterer:
                     "alg": name,
                     "communities": communities,
                     "modularity": mod,
-                    "labels": labels
+                    "labels": labels,
                 }
             )
 
@@ -169,7 +167,7 @@ class ClusteringEval:
 
         best_ginfo = max(grc.results, key=lambda ginfo: ginfo["modularity"])
         num_com = len(best_ginfo["communities"])
-            
+
         embc = EmbClusterer(lightcopyg, emb, num_com=num_com)
         embc.detect_clusters()
 
@@ -192,7 +190,7 @@ class ClusteringEval:
                 einfo_dict = {}
                 for g in grc:
                     ginfo_dict[g["alg"]] = g
-                    
+
                 for e in embc:
                     einfo_dict[e["alg"]] = e
 
@@ -200,7 +198,7 @@ class ClusteringEval:
                 for alg in algorithms:
                     ginfo = ginfo_dict.get(alg, None)
                     einfo = einfo_dict.get(alg, None)
-                    
+
                     if ginfo:
                         row.extend([ginfo["modularity"], len(ginfo["communities"])])
                         current_labels = ginfo_dict[alg]["labels"]
@@ -214,7 +212,7 @@ class ClusteringEval:
                     if alg in ["KMeans", "AgglomerativeClustering"]:
                         row.append(einfo["silhouette_score"])
 
-                self.save_results_to_csv( row)
+                self.save_results_to_csv(row)
             except Exception as e:
                 print(f"An error occurred: {e}")
         print("-------------------\n")
@@ -223,7 +221,6 @@ class ClusteringEval:
 
     def save_results_to_csv(self, row):
         with open(self.path, "a", encoding="utf-8") as f:
-
             output = ", ".join(map(str, row))
 
             f.write(f"{output}\n")
