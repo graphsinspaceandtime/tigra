@@ -7,8 +7,11 @@ Script to perform clustering
 """
 
 import sys
+import os
 
 sys.path.append("..")
+sys.path.append(os.path.abspath("."))
+
 
 from tigra.core.dgraph import DynamicAggregateGraph, DynamicGraph
 from tigra.embeddings.sota.factory import get_dn2v_factory
@@ -38,6 +41,7 @@ def clustereval(dataset):
         if res == None:
             return
         dn2v, dg = res
+
         emb = FSEmbedding(f"emb2/{name}_{dataset}")
 
         if isinstance(dg, DynamicAggregateGraph):  # ctdne
@@ -56,7 +60,12 @@ def clustereval(dataset):
             lide.eval()
 
         else:  # dn2vec
-            graph_sequence = dg.get_graph_sequence()
+            if len(emb.embeddings) < len(dg.get_graph_sequence()):  # stwalk
+                n = len(dg.get_graph_sequence())
+                k = len(emb.embeddings)
+                graph_sequence = dg.get_graph_sequence()[n - k : n]
+            else:
+                graph_sequence = dg.get_graph_sequence()
 
             print(f"graph sequence num: {len(graph_sequence)}\n")
             print(f"emb num: {len(emb.embeddings)}\n")
@@ -66,7 +75,7 @@ def clustereval(dataset):
 
                 snap = emb.embeddings[i]
                 graph = graph_sequence[i]
-                gre = GraphReconstructionEval(graph, snap)
+                gre = GraphReconstructionEval(graph, snap, report_warnings=False)
                 print("Precision", gre.get_avg_precision())
                 print("Recall", gre.get_avg_recall())
                 print("F1", gre.getF1())
@@ -76,7 +85,7 @@ def clustereval(dataset):
             with open(path, "w", encoding="utf-8") as f:
                 f.write("METHOD,LP,,Louvain,,GMO,,KMEANS,,,AGG,,\n")
                 f.write("SNAPSHOT_NUM,Q,NC,Q,NC,Q,NC,Q,NC,SIL,Q,NC,SIL\n")
-            lide = ClusteringEval(emb, dg, dataset, path)
+            lide = ClusteringEval(emb, graph_sequence, dataset, path)
             lide.eval()
 
 

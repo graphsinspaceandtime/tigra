@@ -14,7 +14,12 @@ class AnomaliesEval:
         if isinstance(dg, DynamicAggregateGraph):
             self.graph_sequence = [dg.get_aggregate_graph()]
         else:
-            self.graph_sequence = dg.get_graph_sequence()
+            if len(embedding.embeddings) < len(dg.get_graph_sequence()):  # stwalk
+                n = len(dg.get_graph_sequence())
+                k = len(embedding.embeddings)
+                self.graph_sequence = dg.get_graph_sequence()[n - k : n]
+            else:
+                self.graph_sequence = dg.get_graph_sequence()
         self.embedding = embedding
         self.dataset = dataset
         self.path = f

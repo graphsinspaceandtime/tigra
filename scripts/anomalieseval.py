@@ -7,8 +7,10 @@ Script to perform clustering
 """
 
 import sys
+import os
 
 sys.path.append("..")
+sys.path.append(os.path.abspath("."))
 
 from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.embeddings.sota.factory import get_stwalk_factory

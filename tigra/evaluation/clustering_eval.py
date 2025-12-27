@@ -17,7 +17,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
 from networkx.algorithms.community.modularity_max import greedy_modularity_communities
-from networkx.algorithms.community.quality import modularity, coverage
+from networkx.algorithms.community.quality import modularity
 from networkx.algorithms.community import (
     girvan_newman,
     louvain_communities,
@@ -64,11 +64,11 @@ class EmbClusterer:
                 num_clusters = len(set(labels))
             else:
                 num_clusters = "N/A"
-                
+
             labels_dictionary = {}
             for i in labels:
                 labels_dictionary[i] = labels[i]
-                
+
             self.results.append(
                 {
                     "alg": alg_name,
@@ -148,12 +148,13 @@ class GraphClusterer:
 
 
 class ClusteringEval:
-    def __init__(self, embedding, dg, dataset, f):
-        if isinstance(dg, DynamicAggregateGraph):
-            self.graph_sequence = [dg.get_aggregate_graph()]
-        else:
-            self.graph_sequence = dg.get_graph_sequence()
+    def __init__(self, embedding, graph_sequence, dataset, f):
+        # if isinstance(dg, DynamicAggregateGraph):
+        #     self.graph_sequence = [dg.get_aggregate_graph()]
+        # else:
+        #     self.graph_sequence = dg.get_graph_sequence()
 
+        self.graph_sequence = graph_sequence
         self.embedding = embedding
         self.dataset = dataset
         self.path = f
@@ -228,11 +229,9 @@ class ClusteringEval:
             print(f"Results saved to file")
             
     def nmi_calc(self, labels_by_alg):
-        path = os.path.join("clustering_eval_dn2vec_nmi", f"{self.dataset}.csv")
+        path = os.path.join("clustering_eval_stwalk_nmi", f"{self.dataset}.csv")
         with open(path, "a", encoding="utf-8") as f:
-            f.write(
-                "ALG,SNP1,SNP2,NMI,\n"
-            )
+            f.write("ALG,SNP1,SNP2,NMI,\n")
             for alg, label_dict_list in labels_by_alg.items():
                 for i in range(1, len(label_dict_list)):
                     prev_dict = label_dict_list[i - 1]
@@ -244,5 +243,5 @@ class ClusteringEval:
                         nmi = normalized_mutual_info_score(prev_labels, curr_labels)
                         f.write(f"{alg},{i-1},{i},{nmi:.4f}\n")
                     else:
-                        print(f"Snapshot {i-1} ili {i} nemaju zajednicke cvorove, NMI se ne moze izracunati.")
+                        print(f"Snapshot {i-1} and {i} has no shared nodes. NMI could not be calculated.")
                     print("-------------------")

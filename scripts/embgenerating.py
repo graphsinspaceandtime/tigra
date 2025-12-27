@@ -6,9 +6,11 @@ TIGRA -- Graphs in Space and Time: Graph Embeddings for Machine Learning in Comp
 Script to generate & save embeddings
 """
 
-import sys
+import sys, os
 
 sys.path.append("..")
+sys.path.append(os.path.abspath("."))
+
 
 from tigra.embeddings.sota.factory import get_dn2v_factory
 from tigra.embeddings.sota.factory import get_stwalk_factory
@@ -24,9 +26,9 @@ databank = Databank()
 datasets = databank.get_keys()
 
 factories = {
-    "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
-    # "stwalk": get_stwalk_factory("../stwalk.conf"),
-    # "ctdne": get_ctdne_factory("../ctdne.conf"),
+    # "dn2v": get_dn2v_factory("DN2V_SVC.conf"),
+    # "stwalk": get_stwalk_factory("stwalk.conf"),
+    "ctdne": get_ctdne_factory("configs//ctdne.conf"),
 }
 
 
@@ -68,7 +70,7 @@ if __name__ == "__main__":
     # print("\n\n\nEVAL-FROM-LOAD")
     # gre_eval(graph_sequence, emb)
 
-    os.mkdir("emb2")
+    # os.mkdir("emb2")
 
     for dataset in datasets:
         if "synt" not in dataset:
