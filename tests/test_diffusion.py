@@ -39,7 +39,7 @@ if __name__ == "__main__":
     si = SI(verbose=False)
     dp = DiffusionPrediction(emb, dg, si, negative_sampling=True, verbose=True)
     dp.init_evaluation()
-    f1, p, r, cl = dp.evaluate()
+    f1, p, r, cl = dp.evaluate(model_type="ALL")
 
     print("GRE-eval", round(np.mean(f1_list), 4), round(f1_list[-1], 4))
     print("DIF-eval", round(f1, 4), round(p, 4), round(r, 4), " -- ", cl)

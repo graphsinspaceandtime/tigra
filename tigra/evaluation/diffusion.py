@@ -15,6 +15,8 @@ import numpy as np
 from tigra.core.dgraph import DynamicAggregateGraph
 
 from tigra.evaluation.clbase.skl import RF_SKLC, KNN_SKLC, NB_SKLC, SVM_SKLC, LR_SKLC
+from tigra.evaluation.clbase.tabpfn import TPFN
+from tigra.evaluation.clbase.boost import XGB, CAT, LGBM
 
 
 class DiffusionProcess(ABC):
@@ -187,7 +189,31 @@ class DiffusionPrediction:
             (LR_SKLC(penalty="elasticnet"), "LR-ELNET")
         ]
 
-        self.ALL_MODELS = self.RF_MODELS + self.NB_MODELS + self.KNN_MODELS + self.SVM_MODELS + self.LR_MODELS
+        self.TABPFN_MODELS = [
+            (TPFN(), "TPFN-D")
+        ]
+
+        self.XGB_MODELS = [
+            (XGB(), "XGB-D")
+        ]
+
+        self.CAT_MODELS = [
+            (CAT(), "CAT-D")
+        ]
+
+        self.LGBM_MODELS = [
+            (LGBM(), "LGBM-D")
+        ]
+
+        self.ALL_MODELS = self.RF_MODELS + \
+            self.NB_MODELS     + \
+            self.KNN_MODELS    + \
+            self.SVM_MODELS    + \
+            self.LR_MODELS     + \
+            self.TABPFN_MODELS + \
+            self.XGB_MODELS    + \
+            self.CAT_MODELS    + \
+            self.LGBM_MODELS
 
 
 
@@ -323,6 +349,9 @@ class DiffusionPrediction:
     def evaluate_LR(self):
         return self.train_and_evaluate_classifiers(self.LR_MODELS)
     
+    def evaluate_TABPFN(self):
+        return self.train_and_evaluate_classifiers(self.TABPFN_MODELS)
+    
     def evaluate_ALL(self):
         return self.train_and_evaluate_classifiers(self.ALL_MODELS)
 
@@ -337,6 +366,8 @@ class DiffusionPrediction:
             return self.evaluate_SVM()
         elif model_type == "LR":
             return self.evaluate_LR()
+        elif model_type == "TABPFN":
+            return self.evaluate_TABPFN()
         
         return self.evaluate_ALL()
     
