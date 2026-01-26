@@ -1,0 +1,31 @@
+{
+  "common_configs": {
+    "beta": 5,
+    "nu1": 1e-6,
+    "nu2": 1e-6,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 16,
+    "epochs": 1000
+  },
+  "dataset_configs": {
+    "radoslaw_email": {
+      "skip": false,
+      "dim": 25,
+      "n_units": [
+        128,
+        64,
+        32
+      ],
+      "look_back": 7
+    },
+    "ia_contacts_hypertext_2009": {
+      "skip": true,
+      "dim": 10,
+      "n_units": [
+        16
+      ],
+      "look_back": 1
+    }
+  }
+}

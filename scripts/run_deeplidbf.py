@@ -71,7 +71,7 @@ def run_deeplid(inverse, log_scaling, p, u):
             inverse=inverse,
             log_scaling=log_scaling,
             p=p,
-            u=u
+            u=u,
         )
         elid.make_embedding(dg)
         eval_res = eval(elid, graph_sequence)
@@ -87,9 +87,19 @@ def run_deeplid(inverse, log_scaling, p, u):
         print(i, prec[i] / NUM_RUNS, rec[i] / NUM_RUNS, f1[i] / NUM_RUNS)
 
 
-
 if __name__ == "__main__":
-    datasets = ['radoslaw-email', 'fb-forum', 'fb-messages', 'ia-contacts_hypertext2009', 'ia-enron-employees', 'ia-hospital-ward-proximity-attr', 'ia-primary-school-proximity-attr', 'ia-reality-call', 'CollegeMsg', 'email-Eu-core-temporal']
+    datasets = [
+        "radoslaw-email",
+        "fb-forum",
+        "fb-messages",
+        "ia-contacts_hypertext2009",
+        "ia-enron-employees",
+        "ia-hospital-ward-proximity-attr",
+        "ia-primary-school-proximity-attr",
+        "ia-reality-call",
+        "CollegeMsg",
+        "email-Eu-core-temporal",
+    ]
     for d in datasets:
         DATASET = d
         NUM_RUNS = 5
@@ -101,7 +111,6 @@ if __name__ == "__main__":
         print("DEFAULT, no inverse, no log-scaling")
         run_deeplid(False, False, 0.5, 0.25)
 
-        
         print("log-scaling only")
         run_deeplid(False, True, 0.5, 0.25)
 
@@ -114,4 +123,3 @@ if __name__ == "__main__":
         print()
         print()
         print()
-        
