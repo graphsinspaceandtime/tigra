@@ -1,84 +1,138 @@
+from abc import ABC, abstractmethod
+
+import networkx as nx
+
+from tigra.core.dgraph import DynamicGraph
+
 from torch import nn
 from torch.nn import functional as F
 from typing import Sequence
 import numpy as np
 import torch
 
+class PenaltyTensorInitializer(ABC):
+    @abstractmethod
+    def initialize(self, x_cur_batch, **kwargs) -> torch.Tensor:
+        pass
 
-class MLP(nn.Module):
-    layers: nn.ModuleList
+class BetaPenaltyTensorInitializer(PenaltyTensorInitializer):
+    beta: float
 
-    def __init__(
-        self,
-        input_size: int,
-        output_size: int,
-        layer_sizes: Sequence[int],
-        bias: bool,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(*args, **kwargs)
-        self.layers = nn.ModuleList()
-        self.layers.append(nn.Linear(input_size, layer_sizes[0], bias))
+    def __init__(self, beta: float):
+        self.beta = beta
 
-        n_layer_sizes = len(layer_sizes)
-        for i in range(1, n_layer_sizes):
-            self.layers.append(nn.Linear(layer_sizes[i - 1], layer_sizes[i], bias))
+    def initialize(self, x_cur_batch, **kwargs):
+        y_batch = torch.ones(
+            x_cur_batch.shape, device=x_cur_batch.device
+        )  # penalty tensor for x_cur_batch
+        y_batch[x_cur_batch != 0] = self.beta
+        return y_batch
 
-        self.layers.append(nn.Linear(layer_sizes[-1], output_size, bias))
+class GraphLIDPenaltyTensorInitializer(PenaltyTensorInitializer):
+    dynamic_graph: DynamicGraph
+    k: int
+    cutoff: int
 
-    def forward(self, x):
-        for layer in self.layers:
-            x = F.relu(layer(x))
-        return x
+    def __init__(self, dynamic_graph: DynamicGraph, k: int = 10, cutoff: int = 10):
+        self.dynamic_graph = dynamic_graph
+        self.k = k
+        self.cutoff = cutoff
+        self.snapshot_lid_cache = {}
 
+        for idx, graph in enumerate(self.dynamic_graph.get_nx_graph_sequence()):
+            lid_tensor = self._compute_snapshot_lid(graph)
+            self.snapshot_lid_cache[idx] = lid_tensor
+    
+    def _compute_lid_node(self, G, node) -> float:
+        """Compute graph-based LID for a single node using k nearest distances"""
+        lengths = nx.single_source_shortest_path_length(G, node, cutoff=self.cutoff)
+        dists = sorted(lengths.values())
+        if len(dists) <= self.k:
+            return 0.0
+
+        dists = dists[1 : self.k + 1]  # exclude distance to itself (0)
+        d_k = dists[-1]
+        return -self.k / sum(np.log(d / d_k) for d in dists)
+    
+    def _compute_snapshot_lid(self, G):
+        lid_dict = {v: self._compute_lid_node(G, v) for v in G.nodes()}
+        lid = torch.tensor([lid_dict[v] for v in sorted(lid_dict.keys())], dtype=torch.float32)
+        # normalize
+        lid = (lid - lid.mean()) / (lid.std() + 1e-8)
+        return lid
+
+
+
+    def initialize(self, x_cur_batch, **kwargs):
+        snapshot_index = kwargs.get("snapshot_index", None)
+        batch_node_ids = kwargs.get("batch_node_ids", None)
+
+        if snapshot_index is None:
+            raise ValueError("snapshot_index must be provided for GraphLIDPenaltyTensorInitializer")
+        if batch_node_ids is None:
+            raise ValueError("batch_node_ids must be provided for GraphLIDPenaltyTensorInitializer")
+        if snapshot_index not in self.snapshot_lid_cache:
+            raise ValueError(f"Snapshot index {snapshot_index} not found in cache")
+
+        snapshot_lid = self.snapshot_lid_cache[snapshot_index]
+
+        y_batch = snapshot_lid[batch_node_ids].to(x_cur_batch.device)
+
+        return y_batch
 
 class BatchGenerator:
     node_list: list
     node_num: int
     batch_size: int
     look_back: int
-    beta: float
+    penalty_initializer: PenaltyTensorInitializer
     shuffle: bool
     has_cuda: bool
 
     def __init__(
-        self, node_list, batch_size, look_back, beta, shuffle=True, has_cuda=False
+        self, node_list, batch_size, look_back, penalty_initializer: PenaltyTensorInitializer, shuffle=True, has_cuda=False
     ):
         self.node_list = node_list
         self.node_num = len(node_list)
         self.batch_size = batch_size
         self.look_back = look_back
-        self.beta = beta
+        self.penalty_initializer = penalty_initializer
         self.shuffle = shuffle
         self.has_cuda = has_cuda
 
     def generate(self, graph_list):
+        # Number of graphs
         graph_num = len(graph_list)
+        # Training size = graphs that can be learned (excluding look_back graphs)
         train_size = graph_num - self.look_back
         assert train_size > 0
+        # Total number of nodes in all training graphs
         all_node_num = self.node_num * train_size
+        # Number of batches (each batch has batch_size samples)
         batch_num = all_node_num // self.batch_size
         if all_node_num % self.batch_size != 0:
             batch_num += 1
+        # Create a list of all node indices in all training graphs
         node_indices = np.arange(all_node_num)
 
+        # Shuffle the node indices if required
         if self.shuffle:
             np.random.shuffle(node_indices)
         counter = 0
         while True:
+            # Get the indices for the current batch
             batch_indices = node_indices[
                 self.batch_size
                 * counter : min(all_node_num, self.batch_size * (counter + 1))
             ]
+            # Initialize tensor for previous graphs
             x_pre_batch = torch.zeros((self.batch_size, self.look_back, self.node_num))
             x_pre_batch = x_pre_batch.cuda() if self.has_cuda else x_pre_batch
+
+            # Initialize tensor for current graph
             x_cur_batch = torch.zeros(
                 (self.batch_size, self.node_num), device=x_pre_batch.device
             )
-            y_batch = torch.ones(
-                x_cur_batch.shape, device=x_pre_batch.device
-            )  # penalty tensor for x_cur_batch
 
             for idx, record_id in enumerate(batch_indices):
                 graph_idx = record_id // self.node_num
@@ -97,7 +151,8 @@ class BatchGenerator:
                 )
                 x_cur_batch[idx] = cur_tensor
 
-            y_batch[x_cur_batch != 0] = self.beta
+            # Initialize penalty tensor for current graph
+            y_batch = self.penalty_initializer.initialize(x_cur_batch, batch_node_ids=batch_indices, snapshot_index=graph_idx + self.look_back)
             counter += 1
             yield x_pre_batch, x_cur_batch, y_batch
 

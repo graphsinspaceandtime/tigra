@@ -1,183 +1,112 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from typing import Sequence, Union, List
+import torch
+from torch import nn
+from torch.autograd import Variable
 
-from tigra.embeddings.embedding import Embedding, SingletonEmbedding
-from tigra.core.dgraph import DynamicSparseMatrixGraph
 
-
-class AutoEncoderBase(Embedding):
+class BaseLoss(nn.Module):
     """
-    Base class for auto encoder embedding methods
+    Base class for auto encoder loss functions
     """
 
-    name: str
-    look_back: int
-    beta: float
-    nu1: float
-    nu2: float
-    batch_size: int
-    epochs: int
-    learning_rate: float
-    weight_decay: float
-    last_only: bool
-    bias: bool
-    shuffle: bool
-    has_cuda: bool
-    verbose: int
-
-    def __init__(
-        self,
-        dim,
-        look_back: int,
-        beta: float,
-        nu1: float,
-        nu2: float,
-        batch_size: int,
-        epochs: int,
-        learning_rate: float,
-        weight_decay: float,
-        last_only=True,
-        bias=True,
-        shuffle=True,
-        has_cuda=False,
-        verbose=0,
-        **kawrgs,  # collect redundant arguments
-    ):
-        super().__init__(dim)
-        self.look_back = look_back
-        self.beta = beta
-        self.nu1 = nu1
-        self.nu2 = nu2
-        self.batch_size = batch_size
-        self.epochs = epochs
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
-        self.last_only = last_only
-        self.bias = bias
-        self.shuffle = shuffle
-        self.has_cuda = has_cuda
-        self.verbose = verbose
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def __construct(
-        self,
-        data: DynamicSparseMatrixGraph,
-        prediction_index: int,
-        num_nodes: int,
-        node_list: Sequence[int],
-    ):
+    def forward(self, model, input_list):
         pass
 
-    def construct(self, data) -> List[Union[SingletonEmbedding, None]]:
-        if not isinstance(data, DynamicSparseMatrixGraph):
-            raise Exception(
-                "{} works with DynamicSparseMatrixGraph objects.".format(
-                    type(self).__name__
-                )
-            )
+# L1 and L2 regularization loss
+class RegularizationLoss(nn.Module):
+    nu1: float
+    nu2: float
 
-        graphs = data.get_scipy_sparse_matrices()
-        num_graphs = len(graphs)
-        num_nodes = graphs[0].shape[0]
-        node_list = list(range(num_nodes))
+    def __init__(self, nu1, nu2):
+        super(RegularizationLoss, self).__init__()
+        self.nu1 = nu1
+        self.nu2 = nu2
 
-        embs: List[Union[SingletonEmbedding, None]] = []
+    @staticmethod
+    def get_weight(model):
+        weight_list = []
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                weight = (name, param)
+                # print('name: ', name)
+                weight_list.append(weight)
+        return weight_list
 
-        if self.last_only:
-            embs = [self.__construct(data, num_graphs - 1, num_nodes, node_list)]
-        else:
-            embs = [None] * self.look_back
-            for prediction_index in range(self.look_back, num_graphs):
-                embs.append(
-                    self.__construct(data, prediction_index, num_nodes, node_list)
-                )
+    def forward(self, model):
+        loss = Variable(torch.FloatTensor([0.]), requires_grad=True).cuda() if torch.cuda.is_available() else Variable(torch.FloatTensor([0.]), requires_grad=True)
+        # No L1 regularization and no L2 regularization
+        if self.nu1 == 0. and self.nu2 == 0.:
+            return loss
+        # calculate L1-regularization loss and L2-regularization loss
+        weight_list = self.get_weight(model)
+        weight_num = len(weight_list)
+        # print('weight num', weight_num)
+        l1_reg_loss, l2_reg_loss = 0, 0
+        for name, weight in weight_list:
+            if self.nu1 > 0:
+                l1_reg = torch.norm(weight, p=1)
+                l1_reg_loss = l1_reg_loss + l1_reg
+            if self.nu2 > 0:
+                l2_reg = torch.norm(weight, p=2)
+                l2_reg_loss = l2_reg_loss + l2_reg
+        l1_loss = self.nu1 * l1_reg_loss / weight_num
+        l2_loss = self.nu2 * l2_reg_loss / weight_num
+        return l1_loss + l2_loss
 
-        return embs
+# Loss used for DynAE, DynRNN, DynAERNN
+class DynGraph2VecLoss(nn.Module):
+    beta: float
+    regularization: RegularizationLoss
 
+    def __init__(self, beta, nu1, nu2):
+        super(DynGraph2VecLoss, self).__init__()
+        self.beta = beta
+        self.regularization = RegularizationLoss(nu1, nu2)
 
-class SymetricAEBase(AutoEncoderBase):
-    n_units: Sequence[int]
+    def forward(self, model, input_list):
+        x_reconstruct, x_real, y_penalty = input_list[0], input_list[1], input_list[2]
+        assert len(input_list) == 3
+        reconstruct_loss = torch.mean(torch.sum(torch.square((x_reconstruct - x_real) * y_penalty), dim=1))
+        regularization_loss = self.regularization(model)
+        # print('total loss: ', main_loss.item(), ', reconst loss: ', reconstruct_loss.item(), ', L1 loss: ', l1_loss.item(), ', L2 loss: ', l2_loss.item())
+        return reconstruct_loss + regularization_loss
 
-    def __init__(
-        self,
-        dim,
-        look_back,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
-        weight_decay,
-        n_units: Sequence[int],
-        last_only=True,
-        bias=True,
-        shuffle=True,
-        has_cuda=False,
-        verbose=0,
-        **kawrgs,
-    ):
-        super().__init__(
-            dim,
-            look_back,
-            beta,
-            nu1,
-            nu2,
-            batch_size,
-            epochs,
-            learning_rate,
-            weight_decay,
-            last_only,
-            bias,
-            shuffle,
-            has_cuda,
-            verbose,
-            **kawrgs,
-        )
-        self.n_units = n_units
+class GraphLIDLoss(nn.Module):
+    """
+    Loss function for LID
+    """
 
+    def __init__(self):
+        super(GraphLIDLoss, self).__init__()
 
-class AsymetricAEBase(AutoEncoderBase):
-    ae_units: Sequence[int]
-    rnn_units: Sequence[int]
+    def forward(self, model, input_list):
+        _, _, lid_batch = input_list
+        Z = model.z
 
-    def __init__(
-        self,
-        dim,
-        look_back,
-        beta,
-        nu1,
-        nu2,
-        batch_size,
-        epochs,
-        learning_rate,
-        weight_decay,
-        ae_units: Sequence[int],
-        rnn_units: Sequence[int],
-        last_only=True,
-        bias=True,
-        shuffle=True,
-        has_cuda=False,
-        verbose=0,
-        **kawrgs,
-    ):
-        super().__init__(
-            dim,
-            look_back,
-            beta,
-            nu1,
-            nu2,
-            batch_size,
-            epochs,
-            learning_rate,
-            weight_decay,
-            last_only,
-            bias,
-            shuffle,
-            has_cuda,
-            verbose,
-            **kawrgs,
-        )
-        self.ae_units = ae_units
-        self.rnn_units = rnn_units
+        z_centered = Z - Z.mean(dim=0, keepdim=True)
+        latent_complexity = torch.norm(z_centered, dim=1)
+
+        latent_complexity = (
+            latent_complexity - latent_complexity.mean()
+        ) / (latent_complexity.std() + 1e-8)
+
+        return torch.mean(torch.abs(latent_complexity - lid_batch))
+
+class HUBLoss(nn.Module):
+    """
+    Loss function for HUB
+    """
+
+    def __init__(self):
+        super(HUBLoss, self).__init__()
+
+    def forward(self, model, input_list):
+        x_reconstruct, x_real = input_list[0], input_list[1]
+        assert len(input_list) == 2
+        loss = torch.mean(torch.sum(torch.abs(x_reconstruct - x_real), dim=1))
+        return loss
