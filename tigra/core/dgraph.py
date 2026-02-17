@@ -549,6 +549,37 @@ class DynamicGraph:
         return list(set(neighbours))
 
 
+class TemporalAggregateGraph:
+    """
+    Aggregate representation of temporal/dynamic graphs
+    for CTDNE-like graph embedding methods
+    """
+    def __init__(self, name, event_sequence: EventSequence, directed=False):
+        self.event_sequence = event_sequence
+        self.graph = Graph(name + "-agg", directed=directed)
+        self.construct()
+
+    def construct(self):
+        for event in self.event_sequence:
+            src, dst = event.src, event.dst
+            timestamp  = event.timestamp
+            
+            if not self.graph.G.has_node(src):
+                self.graph.G.add_node(src, timestamp=timestamp) 
+
+            if not self.graph.G.has_node(dst):
+                self.graph.G.add_node(dst, timestamp=timestamp)
+
+            if not self.graph.has_edge(src, dst):
+                self.graph.add_edge(src, dst, edge_data=[timestamp])
+            else:
+                edge = self.graph.G[src][dst]
+                edge["edge_data"].append(timestamp)
+                
+        self.G = self.graph.G
+
+
+
 class DynamicAggregateGraph:
     """
     Aggregate representation of temporal/dynamic graphs
@@ -737,6 +768,7 @@ class DynamicSparseMatrixGraph:
 
     def get_num_snaps(self) -> int:
         return len(self.matrices)
+
 
 
 """
