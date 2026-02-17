@@ -27,17 +27,35 @@ if __name__ == "__main__":
         print(w)
     """
 
-    from tigra.embeddings.rndw.trndwbase import TemporalDeepWalk
+    from tigra.embeddings.rndw.trndwbase import DeepTemporalWalk
+    from tigra.embeddings.rndw.trndw import DeepLIDTemporalWalk, DeepHubTemporalWalk
     from tigra.core.greval import GraphReconstructionEval
     
     DIMS = [10, 25, 50, 100, 200, 500]
     for d in DIMS:
-        tdw = TemporalDeepWalk(d)
-        tdw.make_embedding(tag)
-    
-        print("\nGRAPH RECONSTRUCTION")
+        dtw = DeepTemporalWalk(d)
+        dtw.make_embedding(tag)
+        print("\nGRAPH RECONSTRUCTION [deep-temporal-walk]")
         print(d)
-        gre = GraphReconstructionEval(tag, tdw.embeddings[0])
+        gre = GraphReconstructionEval(tag, dtw.embeddings[0])
+        print("Precision", gre.get_avg_precision())
+        print("Recall", gre.get_avg_recall())
+        print("F1", gre.getF1())
+
+        dltw = DeepLIDTemporalWalk(d)
+        dltw.make_embedding(tag)
+        print("\nGRAPH RECONSTRUCTION [deep-lid-temporal-walk]")
+        print(d)
+        gre = GraphReconstructionEval(tag, dltw.embeddings[0])
+        print("Precision", gre.get_avg_precision())
+        print("Recall", gre.get_avg_recall())
+        print("F1", gre.getF1())
+
+        dhtw = DeepHubTemporalWalk(d)
+        dhtw.make_embedding(tag)
+        print("\nGRAPH RECONSTRUCTION [deep-hub-temporal-walk]")
+        print(d)
+        gre = GraphReconstructionEval(tag, dhtw.embeddings[0])
         print("Precision", gre.get_avg_precision())
         print("Recall", gre.get_avg_recall())
         print("F1", gre.getF1())

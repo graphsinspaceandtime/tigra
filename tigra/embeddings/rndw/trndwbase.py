@@ -165,7 +165,7 @@ class TemporalRWEmbedding(Embedding):
         pass
 
 
-class TemporalDeepWalk(TemporalRWEmbedding):
+class DeepTemporalWalk(TemporalRWEmbedding):
     def __init__(self, dim, num_walks=10, walk_length=32, num_workers=1):
         super().__init__(dim, num_workers=num_workers)
         self.num_walks = num_walks
