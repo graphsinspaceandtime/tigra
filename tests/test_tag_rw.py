@@ -27,6 +27,7 @@ if __name__ == "__main__":
         print(w)
     """
 
+    """
     from tigra.embeddings.rndw.trndwbase import DeepTemporalWalk
     from tigra.embeddings.rndw.trndw import DeepLIDTemporalWalk, DeepHubTemporalWalk
     from tigra.core.greval import GraphReconstructionEval
@@ -59,3 +60,9 @@ if __name__ == "__main__":
         print("Precision", gre.get_avg_precision())
         print("Recall", gre.get_avg_recall())
         print("F1", gre.getF1())
+    """
+
+    from tigra.embeddings.hypertuner import DeepLIDTemporalWalk_Tuner
+    tuner = DeepLIDTemporalWalk_Tuner(tag, tag)
+    tuner.tune()
+    tuner.print_report()
