@@ -23,10 +23,10 @@ def eval_on_dataset(index):
     es, resol = load_event_sequence(dataset_name)
     tag = TemporalAggregateGraph(dataset_name + "-tag", es)
 
-    print("DEEP-TEMPORAL-WALK")
-    tuner = DeepTemporalWalk_Tuner(tag, tag)
-    tuner.tune()
-    tuner.print_report()
+    #print("DEEP-TEMPORAL-WALK")
+    #tuner = DeepTemporalWalk_Tuner(tag, tag)
+    #tuner.tune()
+    #tuner.print_report()
 
     print("DEEP-LID-TEMPORAL-WALK")
     tuner = DeepLIDTemporalWalk_Tuner(tag, tag)

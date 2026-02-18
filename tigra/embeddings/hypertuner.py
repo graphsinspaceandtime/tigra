@@ -595,7 +595,7 @@ class DeepLIDTemporalWalk_Tuner(Tuner):
         super().__init__(graph, data, "DIM,u,inverse,log-scaling", num_runs=num_runs)
 
     def create_configurations(self):
-        u_values = [0.15, 0.25, 0.5, 0.75]
+        u_values = [0, 0.15, 0.25, 0.5, 0.75]
         inverse_values = [False, True]
         log_scaling_values = [False, True]
         confs = []
@@ -629,7 +629,7 @@ class DeepHUBTemporalWalk_Tuner(Tuner):
         super().__init__(graph, data, "DIM,u,inverse,log-scaling", num_runs=num_runs)
 
     def create_configurations(self):
-        u_values = [0.15, 0.25, 0.5, 0.75]
+        u_values = [0, 0.15, 0.25, 0.5, 0.75]
         inverse_values = [False, True]
         log_scaling_values = [False, True]
         confs = []
