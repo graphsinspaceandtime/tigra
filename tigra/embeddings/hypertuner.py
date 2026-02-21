@@ -554,3 +554,97 @@ class DynN2V_LIDRWDelta_Tuner(N2VMethods_Tuner):
         return DynN2V_LIDRWDelta(
             dim, p, q, num_walks=nw, walk_length=wl, num_workers=self.parallel_processes
         )
+    
+from tigra.embeddings.rndw.trndwbase import DeepTemporalWalk
+from tigra.embeddings.rndw.trndw import DeepLIDTemporalWalk, DeepHubTemporalWalk
+
+class DeepTemporalWalk_Tuner(Tuner):
+    """
+    Tuner for DeepTemporalWalk
+    """
+    def __init__(
+        self,
+        graph,
+        data,
+        num_runs=5
+    ):
+        super().__init__(graph, data, "DIM", num_runs=num_runs)
+
+    def create_configurations(self):
+        confs = []
+        for d in EMBEDDING_DIMENSIONS:
+            confs.append((d,))
+
+        return confs
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        return DeepTemporalWalk(dim)
+    
+
+class DeepLIDTemporalWalk_Tuner(Tuner):
+    """
+    Tuner for DeepLIDTemporalWalk
+    """
+    def __init__(
+        self,
+        graph,
+        data,
+        num_runs=5
+    ):
+        super().__init__(graph, data, "DIM,u,inverse,log-scaling", num_runs=num_runs)
+
+    def create_configurations(self):
+        u_values = [0, 0.15, 0.25, 0.5, 0.75]
+        inverse_values = [False, True]
+        log_scaling_values = [False, True]
+        confs = []
+        for d in EMBEDDING_DIMENSIONS:
+            for u in u_values:
+                for i in inverse_values:
+                    for l in log_scaling_values:
+                        confs.append((d, u, i, l))
+
+        return confs
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        u   = self.confs[conf_index][1]
+        inv = self.confs[conf_index][2]
+        log = self.confs[conf_index][3]
+
+        return DeepLIDTemporalWalk(dim, u=u, inverse=inv, log_scaling=log)
+
+
+class DeepHUBTemporalWalk_Tuner(Tuner):
+    """
+    Tuner for DeepHubTemporalWalk
+    """
+    def __init__(
+        self,
+        graph,
+        data,
+        num_runs=5
+    ):
+        super().__init__(graph, data, "DIM,u,inverse,log-scaling", num_runs=num_runs)
+
+    def create_configurations(self):
+        u_values = [0, 0.15, 0.25, 0.5, 0.75]
+        inverse_values = [False, True]
+        log_scaling_values = [False, True]
+        confs = []
+        for d in EMBEDDING_DIMENSIONS:
+            for u in u_values:
+                for i in inverse_values:
+                    for l in log_scaling_values:
+                        confs.append((d, u, i, l))
+
+        return confs
+
+    def create_instance(self, conf_index) -> Embedding:
+        dim = self.confs[conf_index][0]
+        u   = self.confs[conf_index][1]
+        inv = self.confs[conf_index][2]
+        log = self.confs[conf_index][3]
+
+        return DeepHubTemporalWalk(dim, u=u, inverse=inv, log_scaling=log)

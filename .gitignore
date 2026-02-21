@@ -6,3 +6,5 @@ clustering_eval/
 anomalies_eval/
 
 *.emb
+
+tests/catboost_info/

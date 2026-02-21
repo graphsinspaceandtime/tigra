@@ -81,7 +81,7 @@ def main_eval():
     for dataset in datasets:
         with suppress_stdout():
             # Load the dataset(s) with labels
-            embedding = FSEmbedding("embs/deepLID/" + dataset)
+            embedding = FSEmbedding("dn2v/" + dataset)
 
         print(dataset)
         evalCV(embedding)
