@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+
 sys.path.append(os.path.join("..", ".."))
 sys.path.append(os.path.abspath("."))
 sys.dont_write_bytecode = True
@@ -14,17 +15,7 @@ from tigra.core.greval import GraphReconstructionEval
 import pickle
 
 from tigra.evaluation.classification_eval import eval
-from tigra.evaluation.classification.neural_network_classifier import (
-    NeuralNetworkClassifier,
-)
-from tigra.evaluation.classification.skl_classifiers import (
-    DecisionTree,
-    SVM,
-    KNN,
-    NaiveBayes,
-    RandomForest,
-)
-
+from tigra.evaluation.clbase.skl import skl_classifiers_factory
 
 
 def load_tigra_dgraph(fname):
@@ -33,24 +24,22 @@ def load_tigra_dgraph(fname):
         graphs = pickle.load(f)
         for i, graph in enumerate(graphs):
             tigra_graphs.append(Graph(f"snapshot {i}", nx_graph=graph, labeled=True))
-        dyn = DynamicGraph(list_of_graphs = tigra_graphs)
+        dyn = DynamicGraph(list_of_graphs=tigra_graphs)
         dyn.info()
-        
+
         return dyn
+
 
 if __name__ == "__main__":
 
-
-    dyn = load_tigra_dgraph("Plane_50_10_1.0_graph.pkl")
+    dyn = load_tigra_dgraph("Plane_10_5_1.0_graph.pkl")
     dyn.info()
-    
-    deep_lid = DynDeepHubWalk(
-            dim=25
-    )
+
+    deep_lid = DynDeepHubWalk(dim=25)
     deep_lid.make_embedding(dyn)
-    folder_name = "Plane_50_10_1.0_graph_emb_deep_hub"
+    folder_name = "Plane_10_5_1.0_graph_emb_deep_hub"
     deep_lid.save_embedding(folder_name)
-    
+
     graph_sequence = dyn.get_graph_sequence()
 
     for i in range(len(graph_sequence)):
@@ -63,14 +52,14 @@ if __name__ == "__main__":
         print("Precision", gre.get_avg_precision(), gre.get_avg_precision())
         print("Recall", gre.get_avg_recall(), gre.get_avg_recall())
         print("F1", gre.getF1(), gre.getF1())
-        
+
         fn = str(i) + ".labels"
         path = os.path.join(folder_name, fn)
         graph.export_labels(path)
 
     emb = FSEmbedding(folder_name)
     print("#embeddings", len(emb.embeddings))
-    
+
     for e in emb:
         nodes = e.get_node_ids()
         node_0 = nodes[0]
@@ -79,23 +68,14 @@ if __name__ == "__main__":
         print(node_0, "label", label_0, "emb dimension", len(emb_0))
         print(emb_0)
         print()
-    
-    classifiers = [
-        DecisionTree(),
-        SVM(),
-        KNN(),
-        NaiveBayes(),
-        RandomForest(),
-        NeuralNetworkClassifier(),
-    ]
-    
-    for classifier in classifiers:
-        (score_accuracy, score_precision, score_recall, score_f1) = eval(emb, classifier)
-        print(
-        f"{classifier.__class__.__name__}\t{score_accuracy}\t{score_precision}\t{score_recall}\t{score_f1}"
+
+    for classifier in skl_classifiers_factory():
+        (score_accuracy, score_precision, score_recall, score_f1) = eval(
+            emb, classifier
         )
-
-
+        print(
+            f"{classifier.__class__.__name__}\t{score_accuracy}\t{score_precision}\t{score_recall}\t{score_f1}"
+        )
 
     # print("TESTING TUNER")
     # start_time = time.time()
@@ -115,4 +95,3 @@ if __name__ == "__main__":
     # end_time = time.time()
     # elapsed_time = end_time - start_time
     # print("TIME [sec]", elapsed_time)
-
