@@ -8,3 +8,8 @@ anomalies_eval/
 *.emb
 
 tests/catboost_info/
+*.emb
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
