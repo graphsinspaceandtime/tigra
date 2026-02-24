@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import networkx as nx
 
 from tigra.core.dgraph import DynamicGraph
+from tigra.embeddings.sota.CTGCN.baseline.dynAE import DynamicEmbedding
 
 from torch import nn
 from torch.nn import functional as F
@@ -52,7 +53,15 @@ class GraphLIDPenaltyTensorInitializer(PenaltyTensorInitializer):
 
         dists = dists[1 : self.k + 1]  # exclude distance to itself (0)
         d_k = dists[-1]
-        return -self.k / sum(np.log(d / d_k) for d in dists)
+
+        # Compute sum of log ratios, handling edge cases
+        log_sum = sum(np.log(d / d_k) for d in dists if d > 0)
+
+        # If all distances are equal (log_sum == 0) or d_k is 0, return 0
+        if log_sum == 0 or d_k == 0:
+            return 0.0
+
+        return -self.k / log_sum
     
     def _compute_snapshot_lid(self, G):
         lid_dict = {v: self._compute_lid_node(G, v) for v in G.nodes()}
@@ -64,19 +73,26 @@ class GraphLIDPenaltyTensorInitializer(PenaltyTensorInitializer):
 
 
     def initialize(self, x_cur_batch, **kwargs):
-        snapshot_index = kwargs.get("snapshot_index", None)
+        batch_snapshot_indices = kwargs.get("batch_snapshot_indices", None)
         batch_node_ids = kwargs.get("batch_node_ids", None)
 
-        if snapshot_index is None:
-            raise ValueError("snapshot_index must be provided for GraphLIDPenaltyTensorInitializer")
+        if batch_snapshot_indices is None:
+            raise ValueError("batch_snapshot_indices must be provided for GraphLIDPenaltyTensorInitializer")
         if batch_node_ids is None:
             raise ValueError("batch_node_ids must be provided for GraphLIDPenaltyTensorInitializer")
-        if snapshot_index not in self.snapshot_lid_cache:
-            raise ValueError(f"Snapshot index {snapshot_index} not found in cache")
 
-        snapshot_lid = self.snapshot_lid_cache[snapshot_index]
+        # Handle batches where nodes may come from different snapshots
+        batch_size = len(batch_node_ids)
+        # y_batch should match x_cur_batch shape (batch_size, node_num)
+        y_batch = torch.zeros(x_cur_batch.shape, dtype=torch.float32, device=x_cur_batch.device)
 
-        y_batch = snapshot_lid[batch_node_ids].to(x_cur_batch.device)
+        for idx, (node_id, snapshot_idx) in enumerate(zip(batch_node_ids, batch_snapshot_indices)):
+            if snapshot_idx not in self.snapshot_lid_cache:
+                raise ValueError(f"Snapshot index {snapshot_idx} not found in cache")
+
+            snapshot_lid = self.snapshot_lid_cache[snapshot_idx]
+            # Assign the LID value to all elements in this row (broadcast across all potential edges)
+            y_batch[idx, :] = snapshot_lid[node_id]
 
         return y_batch
 
@@ -134,9 +150,18 @@ class BatchGenerator:
                 (self.batch_size, self.node_num), device=x_pre_batch.device
             )
 
+            # Track actual node IDs and snapshot indices for penalty computation
+            batch_node_ids = []
+            batch_snapshot_indices = []
+
             for idx, record_id in enumerate(batch_indices):
                 graph_idx = record_id // self.node_num
                 node_idx = record_id % self.node_num
+
+                # Store actual node ID and snapshot index
+                batch_node_ids.append(node_idx)
+                batch_snapshot_indices.append(graph_idx + self.look_back)
+
                 for step in range(self.look_back):
                     # graph is a scipy.sparse.lil_matrix
                     pre_tensor = torch.tensor(
@@ -152,7 +177,11 @@ class BatchGenerator:
                 x_cur_batch[idx] = cur_tensor
 
             # Initialize penalty tensor for current graph
-            y_batch = self.penalty_initializer.initialize(x_cur_batch, batch_node_ids=batch_indices, snapshot_index=graph_idx + self.look_back)
+            y_batch = self.penalty_initializer.initialize(
+                x_cur_batch,
+                batch_node_ids=batch_node_ids,
+                batch_snapshot_indices=batch_snapshot_indices
+            )
             counter += 1
             yield x_pre_batch, x_cur_batch, y_batch
 
@@ -294,7 +323,32 @@ class DynamicEmbedder:
         # DynAE uses 2D tensor as its input
         if model.method_name == "DynAE":
             x_pre_batches = x_pre_batches.reshape(batch_size, -1)
-        _, x_pred_batch = model(x_pre_batches)
-        loss_input_list = [x_pred_batch, x_cur_batch, y_batch]
+        embedding_batch, x_pred_batch = model(x_pre_batches)
+        # Include embeddings in input_list for LID loss
+        loss_input_list = [x_pred_batch, x_cur_batch, y_batch, embedding_batch]
+
+        return loss_input_list
+
+
+# Custom DynamicEmbedding that includes embeddings in loss input
+class DynamicEmbeddingWithLID(DynamicEmbedding):
+    """
+    Subclass of DynamicEmbedding with LID loss support.
+
+    This class overrides get_model_res to include embeddings in the loss input,
+    which is required for GraphLIDLoss.
+    """
+
+    def get_model_res(self, model, generator):
+        """Override to include embeddings in loss input_list"""
+        batch_size = self.batch_generator.batch_size
+
+        x_pre_batches, x_cur_batch, y_batch = next(generator)
+        # DynAE uses 2D tensor as its input
+        if model.method_name == "DynAE":
+            x_pre_batches = x_pre_batches.reshape(batch_size, -1)
+        embedding_batch, x_pred_batch = model(x_pre_batches)
+        # Include embeddings in input_list for LID loss
+        loss_input_list = [x_pred_batch, x_cur_batch, y_batch, embedding_batch]
 
         return loss_input_list

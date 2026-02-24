@@ -27,6 +27,9 @@ from tigra.embeddings.sota.dynrnn_wrapper import DynRNN
 from tigra.embeddings.sota.dynaernn_wrapper import DynAERNN
 from tigra.embeddings.sota.dyngem_wrapper import DynGEM
 
+# Import new wrapper with penalty tensor support
+from tigra.embeddings.ae.dynae_wrapper import DynAE as DynAE_v2
+
 
 class Tuner(ABC):
     """
@@ -310,3 +313,71 @@ class DynamicEmbedding2_Tuner(Tuner):
         if self.method == "DynGEM":
             return DynGEM(has_cuda=self.has_cuda, **conf)
         raise Exception(f"method '{self.method}' is incorrect")
+
+
+class DynamicEmbedding3_Tuner(Tuner):
+    """
+    Tuner for new DynamicEmbedding methods with penalty tensor support
+
+    This tuner uses the new wrapper implementation from tigra.embeddings.ae
+    which supports penalty_type parameter ("beta" or "lid") and LID-based penalties.
+
+    Unlike DynamicEmbedding2_Tuner, this only supports DynAE for now.
+    """
+
+    method: typing.Literal["DynAE"]
+    configs: typing.List
+    has_cuda: bool
+
+    def __init__(
+        self,
+        graph,
+        data,
+        params_desc,
+        configs: typing.List,
+        has_cuda: bool,
+        num_runs=1,
+    ):
+        """
+        Parameters:
+        -----------
+        graph : Graph
+            Referent graph used when reconstructing graph from embedding
+        data : DynamicSparseMatrixGraph
+            Dynamic graph data used to construct embedding
+        params_desc : str
+            Description of hyperparameters
+        configs : List[dict]
+            List of configuration dictionaries. Each config should contain:
+            - dim: int - embedding dimension
+            - look_back: int - number of historical snapshots to use
+            - n_units: List[int] - architecture of autoencoder layers
+            - beta: float - beta penalty weight (for penalty_type="beta")
+            - nu1: float - L1 regularization weight
+            - nu2: float - L2 regularization weight
+            - batch_size: int - batch size for training
+            - epochs: int - number of training epochs
+            - learning_rate: float - learning rate
+            - weight_decay: float - weight decay
+            - penalty_type: str - "beta" or "lid" (optional, default="beta")
+            - lid_k: int - k for LID computation (optional, default=10)
+            - lid_cutoff: int - cutoff for LID shortest paths (optional, default=10)
+            - use_lid_loss: bool - use GraphLIDLoss as additional loss (optional, default=False)
+            - lambda_lid: float - weight for LID loss component (optional, default=0.1)
+        has_cuda : bool
+            Whether to use CUDA
+        num_runs : int
+            Number of runs per configuration (default=1)
+        """
+        super().__init__(graph, data, params_desc, num_runs)
+        self.configs = configs
+        self.has_cuda = has_cuda
+
+    def create_configurations(self) -> typing.List:
+        return self.configs
+
+    def create_instance(self, conf_index) -> Embedding:
+        conf = self.confs[conf_index]
+
+        # Use new DynAE wrapper with penalty tensor support
+        return DynAE_v2(has_cuda=self.has_cuda, **conf)
