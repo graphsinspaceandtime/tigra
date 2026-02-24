@@ -6,12 +6,7 @@ sys.path.append(os.path.join("..", ".."))
 sys.path.append(os.path.abspath("."))
 sys.dont_write_bytecode = True
 
-from tigra.core.dgraph import DynamicGraph, Graph
-from tigra.core.greval import GraphReconstructionEval
 from tigra.embeddings.embedding import FSEmbedding
-from tigra.embeddings.rndw.hubrw import DynDeepHubWalk
-
-from tigra.core.greval import GraphReconstructionEval
 import pickle
 
 from tigra.evaluation.classification_eval import eval
@@ -56,7 +51,7 @@ if __name__ == "__main__":
             emb = FSEmbedding(folder_name)
             f.write(f"{folder_name}\n")
             f.flush()
-            os.fsync(f.fileno())  #
+            os.fsync(f.fileno())
 
             for classifier in skl_classifiers_factory():
                 (score_accuracy, score_precision, score_recall, score_f1) = eval(
@@ -67,4 +62,4 @@ if __name__ == "__main__":
                 f.write(header)
                 f.write(f"{line}\n\n")
                 f.flush()
-                os.fsync(f.fileno())  #
+                os.fsync(f.fileno())
