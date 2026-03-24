@@ -146,7 +146,7 @@ class DiffusionPrediction:
         #
         # classification models
         #
-
+        
         self.RF_MODELS = [
             (RF_SKLC(numEstimators=1), "RF-1"),
             (RF_SKLC(numEstimators=2), "RF-2"),
@@ -181,14 +181,14 @@ class DiffusionPrediction:
             (SVM_SKLC(kernel="poly"), "SVM-POLY"),
             (SVM_SKLC(kernel="sigmoid"), "SVM-SIGM")
         ]
-
+        
         self.LR_MODELS = [
             (LR_SKLC(penalty=None), "LR-NOP"),
             (LR_SKLC(penalty="l1"), "LR-L1"),
             (LR_SKLC(penalty="l2"), "LR-L2"),
             (LR_SKLC(penalty="elasticnet"), "LR-ELNET")
         ]
-
+        
         self.TABPFN_MODELS = [
             (TPFN(), "TPFN-D")
         ]
@@ -204,12 +204,12 @@ class DiffusionPrediction:
         self.LGBM_MODELS = [
             (LGBM(), "LGBM-D")
         ]
-
-        self.ALL_MODELS = self.RF_MODELS + \
+        
+        self.ALL_MODELS = self.LR_MODELS + \
             self.NB_MODELS     + \
             self.KNN_MODELS    + \
             self.SVM_MODELS    + \
-            self.LR_MODELS     + \
+            self.LR_MODELS
             self.TABPFN_MODELS + \
             self.XGB_MODELS    + \
             self.CAT_MODELS    + \
@@ -370,9 +370,3 @@ class DiffusionPrediction:
             return self.evaluate_TABPFN()
         
         return self.evaluate_ALL()
-    
-    
-
-
-
-
