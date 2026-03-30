@@ -9,6 +9,7 @@ import os
 import networkx as nx
 import pandas as pd
 import pickle
+import numpy as np
 
 
 from tigra.core.dgraph import DynamicGraph, Graph
@@ -82,6 +83,25 @@ def tsgr(snapshots, grt, labels):
     return DynamicGraph(list_of_graphs=graphs)
 
 
+def tsgr_knn(snapshots, k, labels):
+    graphs = []
+    for i, mat in snapshots.items():
+        n_nodes = mat.shape[0]
+        graph = nx.Graph()
+        graph.add_nodes_from(range(n_nodes))
+        for node_id, label in enumerate(labels):
+            graph.nodes[node_id]["node_label"] = label
+
+        for node in range(n_nodes):
+            neighbors = sorted(range(n_nodes), key=lambda other: mat[node][other])
+            for neighbor in neighbors[1 : k + 1]:
+                graph.add_edge(node, neighbor)
+
+        graphs.append(Graph(f"snapshot {i}", nx_graph=graph, labeled=True))
+
+    return DynamicGraph(list_of_graphs=graphs)
+
+
 def load_tigra_dgraph(fname):
     with open(fname, "rb") as f:
         tigra_graphs = []
@@ -97,26 +117,36 @@ def load_tigra_dgraph(fname):
 # expected to have dir Plane_50_5_1.0 with list of data files and labels file in the TIGRA root in case of running as standalone script from TIGRA/scripts
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(script_dir, "..", "Haptics_50_5_1.0")
-    prefix_string = "Haptics_50_5_1.0"
+    data_dir = os.path.join(script_dir, "..", "ArrowHead_50_5_1.0")
+    prefix_string = "ArrowHead_50_5_1.0"
 
-    labels = load_labels(data_dir, "Haptics.csv")
+    labels = load_labels(data_dir, "ArrowHead.csv")
 
     loaded = load_data(data_dir, prefix_string)
     distance_tresholds = set()
 
-    for fname, mat in loaded.items():
-        print(f"Loaded data from {fname}: {mat.shape}")
-        distances = order_nodes_by_distance(mat)
-        treshold = find_distance_treshold(distances, mat.shape[0])
-        distance_tresholds.add(treshold)
-        print(f"Snap number: {len(distance_tresholds)}, treshold: {treshold}")
+    # max distance
 
-    grt = max(distance_tresholds)
-    print(f"Max distance {grt}")
+    # for fname, mat in loaded.items():
+    #     print(f"Loaded data from {fname}: {mat.shape}")
+    #     distances = order_nodes_by_distance(mat)
+    #     treshold = find_distance_treshold(distances, mat.shape[0])
+    #     distance_tresholds.add(treshold)
+    #     print(f"Snap number: {len(distance_tresholds)}, treshold: {treshold}")
 
-    dyn_graph = tsgr(loaded, grt, labels)
+    # grt = max(distance_tresholds)
+    # print(f"Max distance {grt}")
+
+    # dyn_graph = tsgr(loaded, grt, labels)
+
+    # knn
+    first_mat = next(iter(loaded.values()))
+    n_nodes = first_mat.shape[0]
+    k = int(np.ceil(np.log2(n_nodes)))
+    print(f"K = {k}")
+
+    dyn_graph = tsgr_knn(loaded, k, labels)
     dyn_graph.info()
 
-    with open("haptics_dynamic_graph.pkl", "wb") as f:
+    with open("arrow_head__knn_dynamic_graph.pkl", "wb") as f:
         pickle.dump(dyn_graph.get_nx_graph_sequence(), f)
