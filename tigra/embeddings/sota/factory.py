@@ -17,6 +17,7 @@ from data.bank import Databank
 from tigra.embeddings.rndw.rndwbase import DynN2V
 from tigra.embeddings.rndw.hubrw import DynDeepHubWalk
 from tigra.embeddings.rndw.lidrw import DynDeepLIDWalk
+from tigra.embeddings.rndw.rlwalk import DynRLWalk
 from tigra.embeddings.sota.stwalk import STWalk
 from tigra.embeddings.sota.ctdne_wrapper import Ctdne
 from tigra.core.loaders import load_event_sequence
@@ -271,11 +272,75 @@ class DynDeepLID_Factory(Factory):
         return deep_lid, dg
 
 
+class DynRLWalk_Factory(Factory):
+    def __init__(self, rl_conf, datapath=None):
+        super().__init__(datapath)
+
+        with open(rl_conf, "r") as conf_f:
+            conf_f.readline()
+
+            self.configs = dict()
+
+            for line in conf_f:
+                line = line.strip()
+                if not line: continue
+                
+                tokens = line.split(",")
+                dsname = tokens[0]
+                dim = int(tokens[1])
+                epsilon = float(tokens[2])
+                alpha = float(tokens[3])
+                bias = True if tokens[4].strip() == "True" else False
+                cumulative = True if tokens[5].strip() == "True" else False
+                
+                time_res = None
+                if len(tokens) > 6:
+                    raw_res = tokens[6].strip()
+                    if raw_res.isdigit():
+                        time_res = int(raw_res)
+                    else:
+                        time_res = raw_res
+
+                self.configs[dsname] = (dim, epsilon, alpha, bias, cumulative, time_res)
+
+    def get_embedding(self, dataset: str) -> Embedding:
+        if dataset not in self.configs:
+            print(f"WARNING: dataset '{dataset}' not in RL-Walk configuration")
+            return None
+
+        conf = self.configs[dataset]
+        dim, eps, alpha, bias, cumulative, time_res_override = conf
+
+        rl_walk = DynRLWalk(
+            dim=dim,
+            epsilon=eps,
+            alpha=alpha,
+            reward_bias=bias,
+            num_walks=10,
+            walk_length=40,
+            num_workers=1
+        )
+
+        es, default_time_res = load_event_sequence(dataset)
+        
+        final_res = time_res_override if time_res_override is not None else default_time_res
+
+        dg = DynamicGraph()
+        dg.init_from_event_sequence(
+            es, time_resolution=final_res, directed=False, cumulative=cumulative
+        )
+
+        rl_walk.make_embedding(dg)
+
+        return rl_walk, dg
+
+
 dn2v_factory = None
 stw_factory = None
 ctdne_factory = None
 deep_hub_factory = None
 deep_lid_factory = None
+rl_walk_factory = None
 
 
 def get_dn2v_factory(dn2vconf, datapath=None):
@@ -321,3 +386,12 @@ def get_deep_lid_factory(deep_lid_conf, datapath=None):
         deep_lid_factory = DynDeepLID_Factory(deep_lid_conf, datapath=datapath)
 
     return deep_lid_factory
+
+
+def get_rl_walk_factory(rl_conf, datapath=None):
+    global rl_walk_factory
+
+    if rl_walk_factory is None:
+        rl_walk_factory = DynRLWalk_Factory(rl_conf, datapath=datapath)
+
+    return rl_walk_factory
