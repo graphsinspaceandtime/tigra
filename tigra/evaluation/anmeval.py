@@ -47,21 +47,50 @@ class AnomaliesEval:
 
         centrality_scores = np.array([degree[node] for node in nodes_list])
 
-        corr_lof_cen, p_lof_cen = spearmanr(lof_score, centrality_scores)
-        corr_iso_cen, p_iso_cen = spearmanr(iforest_score, centrality_scores)
-        # corr_aen_cen, p_aen_cen = spearmanr(aencoder_score, centrality_scores)
+        # corr_lof_cen, p_lof_cen = spearmanr(lof_score, centrality_scores)
+        # corr_iso_cen, p_iso_cen = spearmanr(iforest_score, centrality_scores)
 
         betweenes_scores = np.array([betweenes[node] for node in nodes_list])
-        corr_lof_btw, p_lof_btw = spearmanr(lof_score, betweenes_scores)
-        corr_iso_btw, p_iso_btw = spearmanr(iforest_score, betweenes_scores)
-        # corr_aen_btw, p_aen_btw = spearmanr(aencoder_score, betweenes_scores)
+        # corr_lof_btw, p_lof_btw = spearmanr(lof_score, betweenes_scores)
+        # corr_iso_btw, p_iso_btw = spearmanr(iforest_score, betweenes_scores)
 
         eigenvector_scores = np.array([eigenvector[node] for node in nodes_list])
-        corr_lof_egn, p_lof_egn = spearmanr(lof_score, eigenvector_scores)
-        corr_iso_egn, p_iso_egn = spearmanr(iforest_score, eigenvector_scores)
-        # corr_aen_egn, p_aen_egn = spearmanr(aencoder_score, eigenvector_scores)
+        # corr_lof_egn, p_lof_egn = spearmanr(lof_score, eigenvector_scores)
+        # corr_iso_egn, p_iso_egn = spearmanr(iforest_score, eigenvector_scores)
 
-        rez = f"{corr_lof_cen},{corr_iso_cen},{corr_lof_btw},{corr_iso_btw},{corr_lof_egn},{corr_iso_egn}"
+        # rez = f"{corr_lof_cen},{corr_iso_cen},{corr_lof_btw},{corr_iso_btw},{corr_lof_egn},{corr_iso_egn}"
+
+        # top 10 LOF
+        top10_lof_idx = np.argsort(lof_score)[:10]
+        top10_lof_scores = lof_score[top10_lof_idx]
+        corr_top10_lof_cen, _ = spearmanr(
+            top10_lof_scores, centrality_scores[top10_lof_idx]
+        )
+        corr_top10_lof_btw, _ = spearmanr(
+            top10_lof_scores, betweenes_scores[top10_lof_idx]
+        )
+        corr_top10_lof_egn, _ = spearmanr(
+            top10_lof_scores, eigenvector_scores[top10_lof_idx]
+        )
+
+        # top 10 IF
+        top10_iso_idx = np.argsort(iforest_score)[:10]
+        top10_iso_scores = iforest_score[top10_iso_idx]
+        corr_top10_iso_cen, _ = spearmanr(
+            top10_iso_scores, centrality_scores[top10_iso_idx]
+        )
+        corr_top10_iso_btw, _ = spearmanr(
+            top10_iso_scores, betweenes_scores[top10_iso_idx]
+        )
+        corr_top10_iso_egn, _ = spearmanr(
+            top10_iso_scores, eigenvector_scores[top10_iso_idx]
+        )
+
+        rez = (
+            f"{corr_top10_lof_cen},{corr_top10_iso_cen},"
+            f"{corr_top10_lof_btw},{corr_top10_iso_btw},"
+            f"{corr_top10_lof_egn},{corr_top10_iso_egn}"
+        )
 
         return rez
 
