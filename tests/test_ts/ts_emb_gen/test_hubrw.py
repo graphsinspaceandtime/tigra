@@ -27,14 +27,15 @@ def load_tigra_dgraph(fname):
         return dyn
 
 
-if __name__ == "__main__":
+def process_dataset(pkl_path, log_file):
+    prefix = os.path.basename(pkl_path).replace("_graph.pkl", "")
+    folder_name = f"{prefix}_emb_hub"
 
-    dyn = load_tigra_dgraph("Plane_10_5_1.0_graph.pkl")
+    dyn = load_tigra_dgraph(pkl_path)
     dyn.info()
 
     deep_lid = DynDeepHubWalk(dim=25)
     deep_lid.make_embedding(dyn)
-    folder_name = "Plane_10_5_1.0_graph_emb_deep_hub"
     deep_lid.save_embedding(folder_name)
 
     graph_sequence = dyn.get_graph_sequence()
@@ -45,23 +46,31 @@ if __name__ == "__main__":
         graph = graph_sequence[i]
 
         gre = GraphReconstructionEval(graph, emb)
+        precision = gre.get_avg_precision()
+        recall = gre.get_avg_recall()
+        f1 = gre.getF1()
 
-        print("Precision", gre.get_avg_precision(), gre.get_avg_precision())
-        print("Recall", gre.get_avg_recall(), gre.get_avg_recall())
-        print("F1", gre.getF1(), gre.getF1())
+        line = f"{prefix},{i},{precision:.4f},{recall:.4f},{f1:.4f}\n"
+        print(line, end="")
+        log_file.write(line)
 
         fn = str(i) + ".labels"
         path = os.path.join(folder_name, fn)
         graph.export_labels(path)
 
-    emb = FSEmbedding(folder_name)
-    print("#embeddings", len(emb.embeddings))
 
-    for e in emb:
-        nodes = e.get_node_ids()
-        node_0 = nodes[0]
-        emb_0 = e[node_0]
-        label_0 = e.get_label(node_0)
-        print(node_0, "label", label_0, "emb dimension", len(emb_0))
-        print(emb_0)
-        print()
+if __name__ == "__main__":
+    pkl_files = [
+        # "arrow_head_graph.pkl",
+        # "beef_graph.pkl",
+        # "beetle_fly_graph.pkl",
+        # "herring_graph.pkl",
+        "adiac_dynamic_graph.pkl"
+    ]
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, "hub_embedding_results.txt")
+
+    with open(output_path, "w") as log_file:
+        for pkl_path in pkl_files:
+            process_dataset(pkl_path, log_file)

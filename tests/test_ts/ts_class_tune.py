@@ -17,26 +17,42 @@ from tigra.evaluation.clbase.skl import (
 emb_folders = [
     # "Plane_10_5_1.0_graph_dn2v",
     # "Plane_20_5_1.0_graph_dn2v",
-    "Plane_50_1_1.0_graph_dn2v",
-    "Plane_50_5_0.1_graph_dn2v",
-    "Plane_50_5_0.05_graph_dn2v",
-    "Plane_50_10_1.0_graph_dn2v",
-    "Plane_10_5_1.0_graph_stwalk",
-    "Plane_20_5_1.0_graph_stwalk",
-    "Plane_50_1_1.0_graph_stwalk",
-    "Plane_50_5_0.1_graph_stwalk",
-    "Plane_50_5_0.05_graph_stwalk",
-    "Plane_50_10_1.0_graph_stwalk",
-    "Plane_10_5_1.0_graph_deep_hub",
-    "Plane_20_5_1.0_graph_deep_hub",
-    "Plane_50_1_1.0_graph_deep_hub",
-    "Plane_50_5_0.1_graph_deep_hub",
-    "Plane_50_5_0.05_graph_deep_hub",
-    "Plane_50_10_1.0_graph_deep_hub",
-    "Plane_10_5_1.0_graph_deep_lid",
-    "Plane_50_5_0.1_graph_deep_lid",
-    "Plane_50_5_0.05_graph_deep_lid",
-    "Plane_50_10_1.0_graph_deep_lid",
+    # "Plane_50_1_1.0_graph_dn2v",
+    # "Plane_50_5_0.1_graph_dn2v",
+    # "Plane_50_5_0.05_graph_dn2v",
+    # "Plane_50_10_1.0_graph_dn2v",
+    # "Plane_10_5_1.0_graph_stwalk",
+    # "Plane_20_5_1.0_graph_stwalk",
+    # "Plane_50_1_1.0_graph_stwalk",
+    # "Plane_50_5_0.1_graph_stwalk",
+    # "Plane_50_5_0.05_graph_stwalk",
+    # "Plane_50_10_1.0_graph_stwalk",
+    # "Plane_10_5_1.0_graph_deep_hub",
+    # "Plane_20_5_1.0_graph_deep_hub",
+    # "Plane_50_1_1.0_graph_deep_hub",
+    # "Plane_50_5_0.1_graph_deep_hub",
+    # "Plane_50_5_0.05_graph_deep_hub",
+    # "Plane_50_10_1.0_graph_deep_hub",
+    # "Plane_10_5_1.0_graph_deep_lid",
+    # "Plane_50_5_0.1_graph_deep_lid",
+    # "Plane_50_5_0.05_graph_deep_lid",
+    # "Plane_50_10_1.0_graph_deep_lid",
+    # "arrow_head_emb_dn2v",
+    # "arrow_head_emb_stwalk",
+    # "beef_emb_dn2v",
+    # "beef_emb_stwalk",
+    # "beetle_fly_emb_dn2v",
+    # "beetle_fly_emb_stwalk",
+    "herring_emb_dn2v",
+    "herring_emb_stwalk",
+    # "arrow_head_emb_hub",
+    # "arrow_head_emb_lid",
+    # "beef_emb_hub",
+    # "beef_emb_lid",
+    # "beetle_fly_emb_hub",
+    # "beetle_fly_emb_lid",
+    # "herring_emb_hub",
+    # "herring_emb_lid",
 ]
 
 header = "model\taccuracy\tprecision\trecall\tf1\n"
@@ -51,7 +67,7 @@ factories_to_test = [
 
 if __name__ == "__main__":
 
-    with open("rezultati.txt", "a", encoding="utf-8") as f:
+    with open("rezultati2.txt", "a", encoding="utf-8") as f:
 
         for folder_name in emb_folders:
 

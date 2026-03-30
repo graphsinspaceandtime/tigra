@@ -97,10 +97,10 @@ def load_tigra_dgraph(fname):
 # expected to have dir Plane_50_5_1.0 with list of data files and labels file in the TIGRA root in case of running as standalone script from TIGRA/scripts
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(script_dir, "..", "Plane_50_5_1.0")
-    prefix_string = "Plane_50_5"
+    data_dir = os.path.join(script_dir, "..", "Haptics_50_5_1.0")
+    prefix_string = "Haptics_50_5_1.0"
 
-    labels = load_labels(data_dir, "Plane.csv")
+    labels = load_labels(data_dir, "Haptics.csv")
 
     loaded = load_data(data_dir, prefix_string)
     distance_tresholds = set()
@@ -118,5 +118,5 @@ if __name__ == "__main__":
     dyn_graph = tsgr(loaded, grt, labels)
     dyn_graph.info()
 
-    with open("plane_dynamic_graph.pkl", "wb") as f:
+    with open("haptics_dynamic_graph.pkl", "wb") as f:
         pickle.dump(dyn_graph.get_nx_graph_sequence(), f)
