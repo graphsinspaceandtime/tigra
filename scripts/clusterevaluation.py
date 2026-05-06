@@ -20,6 +20,8 @@ from tigra.embeddings.sota.factory import get_ctdne_factory
 from tigra.embeddings.embedding import FSEmbedding
 from tigra.evaluation.clustering_eval import ClusteringEval
 from tigra.core.greval import GraphReconstructionEval
+from tigra.core.loaders import load_event_sequence
+
 
 from data.bank import Databank
 import os
