@@ -12,7 +12,11 @@ import random
 
 
 from sklearn.metrics import (
-    f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
+    f1_score,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    confusion_matrix,
 )
 from sklearn.utils import resample
 
@@ -24,12 +28,11 @@ from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
 
-sys.path.append("..") 
+sys.path.append("..")
 sys.dont_write_bytecode = True
 
 
 class BaseAdapter:
-
     def fit(self, X, y):
         return self.model.fit(X, y)
 
@@ -37,25 +40,24 @@ class BaseAdapter:
         return self.model.predict(X)
 
     def evaluate_binarycl(self, X_train, y_train, X_test, y_test):
-
         self.fit(X_train, y_train)
-        
+
         preds = self.predict(X_test)
-        
+
         acc = accuracy_score(y_test, preds)
         f1 = f1_score(y_test, preds, zero_division=0)
         prec = precision_score(y_test, preds, zero_division=0)
         rec = recall_score(y_test, preds, zero_division=0)
-        
+
         try:
             tn, fp, fn, tp = confusion_matrix(y_test, preds, labels=[0, 1]).ravel()
         except ValueError:
             tn, fp, fn, tp = 0, 0, 0, 0
 
         pos_prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        pos_rec  = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        pos_rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         neg_prec = tn / (tn + fn) if (tn + fn) > 0 else 0.0
-        neg_rec  = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        neg_rec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
 
         return f1, acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec
 
@@ -67,12 +69,12 @@ class TabPFNAdapter(BaseAdapter):
         )
         self.name = "TabPFN"
         if use_gpu and torch.cuda.is_available():
-            self.model.device = 'cuda'
+            self.model.device = "cuda"
         else:
-            self.model.device = 'cpu'
+            self.model.device = "cpu"
 
     def fit(self, X, y):
-        MAX_SAMPLES = 800 
+        MAX_SAMPLES = 800
         if len(X) > MAX_SAMPLES:
             X, y = resample(X, y, n_samples=MAX_SAMPLES, random_state=42, stratify=y)
         with warnings.catch_warnings():
@@ -82,21 +84,22 @@ class TabPFNAdapter(BaseAdapter):
     def predict(self, X):
         return self.model.predict(X)
 
-    def get_params(self, deep=True): return {}
+    def get_params(self, deep=True):
+        return {}
 
 
 class XGBAdapter(BaseAdapter):
     def __init__(self):
         self.name = "XGBoost"
-        self.model = XGBClassifier(eval_metric='logloss', n_estimators=100, n_jobs=1)
+        self.model = XGBClassifier(eval_metric="logloss", n_estimators=100, n_jobs=1)
 
-    def fit(self, X, y): 
+    def fit(self, X, y):
         return self.model.fit(X, y)
 
-    def predict(self, X): 
+    def predict(self, X):
         return self.model.predict(X)
 
-    def get_params(self, deep=True): 
+    def get_params(self, deep=True):
         return self.model.get_params(deep)
 
 
@@ -107,15 +110,19 @@ class LGBMAdapter(BaseAdapter):
 
     def fit(self, X, y):
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*X does not have valid feature names.*")
+            warnings.filterwarnings(
+                "ignore", message=".*X does not have valid feature names.*"
+            )
             return self.model.fit(X, y)
 
     def predict(self, X):
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*X does not have valid feature names.*")
+            warnings.filterwarnings(
+                "ignore", message=".*X does not have valid feature names.*"
+            )
             return self.model.predict(X)
 
-    def get_params(self, deep=True): 
+    def get_params(self, deep=True):
         return self.model.get_params(deep)
 
 
@@ -124,30 +131,27 @@ class CatBoostAdapter(BaseAdapter):
         self.name = "CatBoost"
         self.model = CatBoostClassifier(iterations=100, verbose=0, thread_count=1)
 
-    def fit(self, X, y): 
+    def fit(self, X, y):
         return self.model.fit(X, y)
 
-    def predict(self, X): 
+    def predict(self, X):
         return self.model.predict(X)
 
-    def get_params(self, deep=True): 
+    def get_params(self, deep=True):
         return self.model.get_params(deep)
-
 
 
 from tigra.evaluation.diffusion import DiffusionPrediction
 
+
 class CustomDiffusionPrediction(DiffusionPrediction):
-   
     def __init__(self, embedding, dg, diffusion_process, classifiers_list, **kwargs):
-        
         super().__init__(embedding, dg, diffusion_process, **kwargs)
-        
-    
+
         self.ALL_MODELS = []
         for clf in classifiers_list:
             self.ALL_MODELS.append((clf, clf.name))
-        
+
         self.RF_MODELS = []
         self.KNN_MODELS = []
         self.NB_MODELS = []
@@ -174,27 +178,25 @@ if __name__ == "__main__":
         TabPFNAdapter(use_gpu=True),
         XGBAdapter(),
         LGBMAdapter(),
-        CatBoostAdapter()
+        CatBoostAdapter(),
     ]
 
     print("\n\n=== DIFFUSION PREDICTION BENCHMARK ===")
-    
 
     si = SI(verbose=False)
 
-
     dp = CustomDiffusionPrediction(
-        emb, 
-        dg, 
-        si, 
-        classifiers_list=my_classifiers,  
-        negative_sampling=True, 
-        verbose=True
+        emb,
+        dg,
+        si,
+        classifiers_list=my_classifiers,
+        negative_sampling=True,
+        verbose=True,
     )
-    
+
     print("Initializing Evaluation Data...")
     dp.init_evaluation()
-    
+
     print("\nRunning Evaluation...")
 
     f1, p, r, cl_name = dp.evaluate(model_type="ALL")

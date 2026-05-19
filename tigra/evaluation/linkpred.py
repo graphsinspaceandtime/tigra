@@ -8,7 +8,7 @@ from networkx.algorithms.link_prediction import jaccard_coefficient, adamic_adar
 import json
 
 # supervised learning imports
-#from tigra.evaluation.linkpred_classification.classifier import Classifier
+# from tigra.evaluation.linkpred_classification.classifier import Classifier
 
 from tigra.evaluation.clbase.classifier_base import Classifier
 
@@ -560,7 +560,7 @@ class SupervisedLinkPrediction(LinkPrediction):
             res_neg_rec,
         ) = self.classifier.score(y_test, y_pred)
         """
-        
+
         self.result = {
             "f1": res_f1,
             "accuracy": res_accuracy,

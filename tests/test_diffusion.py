@@ -19,8 +19,8 @@ if __name__ == "__main__":
     dg.info()
 
     emb = FSEmbedding(f"../../tigra_emb/dn2v/radoslaw_email")
-    #emb = FSEmbedding(f"../../tigra_emb/deep_hub/radoslaw-email")
-    #emb = FSEmbedding(f"../../tigra_emb/deep_lid/radoslaw-email")
+    # emb = FSEmbedding(f"../../tigra_emb/deep_hub/radoslaw-email")
+    # emb = FSEmbedding(f"../../tigra_emb/deep_lid/radoslaw-email")
     print("#embeddings", emb.num_embeddings())
 
     graph_sequence = dg.get_graph_sequence()
@@ -31,7 +31,6 @@ if __name__ == "__main__":
         gre = GraphReconstructionEval(graph, emb_i)
         f1 = gre.getF1()
         f1_list.append(f1)
-    
 
     from tigra.evaluation.diffusion import DiffusionPrediction
     from tigra.evaluation.diffusion import SI

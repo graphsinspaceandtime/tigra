@@ -6,6 +6,7 @@ databank = Databank()
 
 print("Test datasets")
 
+
 def form_graphs(es, tr="month"):
     dg = DynamicGraph()
     dg.init_from_event_sequence(es, tr, directed=False)

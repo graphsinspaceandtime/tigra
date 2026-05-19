@@ -283,8 +283,9 @@ class DynRLWalk_Factory(Factory):
 
             for line in conf_f:
                 line = line.strip()
-                if not line: continue
-                
+                if not line:
+                    continue
+
                 tokens = line.split(",")
                 dsname = tokens[0]
                 dim = int(tokens[1])
@@ -292,7 +293,7 @@ class DynRLWalk_Factory(Factory):
                 alpha = float(tokens[3])
                 bias = True if tokens[4].strip() == "True" else False
                 cumulative = True if tokens[5].strip() == "True" else False
-                
+
                 time_res = None
                 if len(tokens) > 6:
                     raw_res = tokens[6].strip()
@@ -318,12 +319,14 @@ class DynRLWalk_Factory(Factory):
             reward_bias=bias,
             num_walks=10,
             walk_length=40,
-            num_workers=1
+            num_workers=1,
         )
 
         es, default_time_res = load_event_sequence(dataset)
-        
-        final_res = time_res_override if time_res_override is not None else default_time_res
+
+        final_res = (
+            time_res_override if time_res_override is not None else default_time_res
+        )
 
         dg = DynamicGraph()
         dg.init_from_event_sequence(

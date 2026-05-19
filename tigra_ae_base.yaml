@@ -1,0 +1,39 @@
+name: tigra_ae
+channels:
+  - pytorch
+  - pyg
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  
+
+  - cmake
+  - cython
+  - compilers
+
+
+  - networkit>=10.0  
+  - numpy>=1.21
+  - scipy>=1.7
+  - pandas
+  - scikit-learn
+  - networkx>=2.6
+  
+  # (CPU)
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cpuonly
+
+  - pyg
+  - pytorch-scatter
+  - pytorch-sparse
+  - pytorch-cluster
+  - pytorch-spline-conv
+
+  - tqdm
+  - pyyaml
+  - ipykernel
