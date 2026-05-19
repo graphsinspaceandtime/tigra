@@ -13,7 +13,7 @@ from tigra.evaluation.linkpred import (
     combine_pair_operation_factory,
 )
 
-#from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
+# from tigra.evaluation.linkpred_classification.skl import skl_classifiers_factory
 from tigra.evaluation.clbase.skl import skl_classifiers_factory
 
 embeddings_path = "../../../embeddings"

@@ -30,55 +30,51 @@ if __name__ == "__main__":
     org_graphs = dg.get_graph_sequence()
     final_graph_wrapper = org_graphs[-1]
 
-
     dimensions_grid = [10, 25, 50, 100, 200]
-    
+
     rl_params_grid = [
-        {"eps": 0.1, "alpha": 0.1, "bias": False}, 
-        {"eps": 0.3, "alpha": 0.1, "bias": False}, 
-        {"eps": 0.2, "alpha": 0.1, "bias": True}, 
+        {"eps": 0.1, "alpha": 0.1, "bias": False},
+        {"eps": 0.3, "alpha": 0.1, "bias": False},
+        {"eps": 0.2, "alpha": 0.1, "bias": True},
     ]
 
-
-    print(f"{'DIM':<4} {'EPS':<5} {'ALPHA':<6} {'BIAS':<6} | {'PREC':<8} {'REC':<8} {'F1':<8}")
-
+    print(
+        f"{'DIM':<4} {'EPS':<5} {'ALPHA':<6} {'BIAS':<6} | {'PREC':<8} {'REC':<8} {'F1':<8}"
+    )
 
     best_f1 = -1.0
     best_config = {}
 
-
     for dim in dimensions_grid:
-        
         for params in rl_params_grid:
-            
-
             rl_model = DynRLWalk(
-                dim=dim,  
-                epsilon=params["eps"], 
-                alpha=params["alpha"], 
+                dim=dim,
+                epsilon=params["eps"],
+                alpha=params["alpha"],
                 reward_bias=params["bias"],
-                num_walks=10, 
-                walk_length=40, 
-                num_workers=1
+                num_walks=10,
+                walk_length=40,
+                num_workers=1,
             )
-            
+
             try:
                 rl_embeddings = rl_model.construct(dg)
                 last_emb_rl = rl_embeddings[-1]
 
-
                 gre_rl = GraphReconstructionEval(final_graph_wrapper, last_emb_rl)
-                
+
                 p = gre_rl.get_avg_precision()
                 r = gre_rl.get_avg_recall()
                 f1 = gre_rl.getF1()
-                
-                print(f"{dim:<4} {params['eps']:<5} {params['alpha']:<6} {str(params['bias']):<6} | {p:.4f}   {r:.4f}   {f1:.4f}")
-                
+
+                print(
+                    f"{dim:<4} {params['eps']:<5} {params['alpha']:<6} {str(params['bias']):<6} | {p:.4f}   {r:.4f}   {f1:.4f}"
+                )
+
                 if f1 > best_f1:
                     best_f1 = f1
                     best_config = {"dim": dim, **params}
-                    
+
             except Exception as e:
                 print(f"{dim:<4} {params['eps']:<5} ERROR: {e}")
 
