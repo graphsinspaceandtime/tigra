@@ -209,7 +209,7 @@ class DiffusionPrediction:
             self.NB_MODELS     + \
             self.KNN_MODELS    + \
             self.SVM_MODELS    + \
-            self.LR_MODELS
+            self.LR_MODELS     + \
             self.TABPFN_MODELS + \
             self.XGB_MODELS    + \
             self.CAT_MODELS    + \
