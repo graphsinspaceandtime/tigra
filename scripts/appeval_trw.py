@@ -9,7 +9,7 @@ sys.dont_write_bytecode = True
 from data.bank import Databank
 from tigra.core.loaders import load_event_sequence
 
-from tigra.evaluation.trw_eval import SLPEval
+from tigra.evaluation.trw_eval import SLPEval, ULPEval
 
 import random 
 import numpy as np
@@ -22,13 +22,21 @@ print()
 
 def test_slp(index):
     dataset_name = datasets[index]
-    print("Applicative evaluation on ", dataset_name)
+    print("Supervised link prediction evaluation on ", dataset_name)
     es, _ = load_event_sequence(dataset_name)
 
     slpe = SLPEval(index, es)
     slpe.eval()
 
+def test_ulp(index):
+    dataset_name = datasets[index]
+    print("Unsupervised linke prediction evaluation on ", dataset_name)
+    es, _ = load_event_sequence(dataset_name)
+
+    ulpe = ULPEval(index, es)
+    ulpe.eval()
+
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
-    test_slp(0)
+    test_ulp(0)
