@@ -6,10 +6,11 @@ sys.path.append("..")
 sys.dont_write_bytecode = True
 
 
+
 from data.bank import Databank
 from tigra.core.loaders import load_event_sequence
 
-from tigra.evaluation.trw_eval import SLPEval, ULPEval
+from tigra.evaluation.trw_eval import SLPEval, ULPEval, CLEval
 
 import random 
 import numpy as np
@@ -36,7 +37,16 @@ def test_ulp(index):
     ulpe = ULPEval(index, es)
     ulpe.eval()
 
+# index: 5, 6
+def test_cl(index):
+    dataset_name = datasets[index]
+    print("Classification evaluation on ", dataset_name)
+    es, _ = load_event_sequence(dataset_name)
+    
+    cle = CLEval(index, es)
+    cle.eval()
+
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
-    test_ulp(0)
+    test_cl(5)

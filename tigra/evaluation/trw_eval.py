@@ -1,5 +1,12 @@
 # applicative evaluation of dynamic graph embedding methods based on temporal random walks
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+warnings.filterwarnings("ignore", message=".*use_reentrant.*")
+warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore", category=UserWarning, module="torch")
+
 import networkx as nx
 import numpy as np
 import random
@@ -17,10 +24,6 @@ from tigra.evaluation.clbase.boost import XGB, CAT, LGBM
 from sklearn.metrics import roc_auc_score, average_precision_score
 
 from networkx.algorithms.link_prediction import jaccard_coefficient, adamic_adar_index
-
-import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
-warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 # datasets
@@ -97,6 +100,39 @@ def create_embedding_lid(tag, dataset_index):
     emb = dtw.construct(tag)[0]
     return emb
 
+def get_classification_models():
+    return [
+        (RF_SKLC(numEstimators=5), "RF-5"),
+        (RF_SKLC(numEstimators=10), "RF-10"),
+        (RF_SKLC(numEstimators=15), "RF-15"),
+        (RF_SKLC(numEstimators=20), "RF-20"),
+        (RF_SKLC(numEstimators=25), "RF-25"),
+        (RF_SKLC(numEstimators=50), "RF-50"),
+        (RF_SKLC(numEstimators=75), "RF-75"),
+        (RF_SKLC(numEstimators=100), "RF-100"),
+        (NB_SKLC(), "NB"),
+        (KNN_SKLC(numNeighbors=1), "KNN-1"),
+        (KNN_SKLC(numNeighbors=2), "KNN-2"),
+        (KNN_SKLC(numNeighbors=3), "KNN-3"),
+        (KNN_SKLC(numNeighbors=4), "KNN-4"),
+        (KNN_SKLC(numNeighbors=5), "KNN-5"),
+        (KNN_SKLC(numNeighbors=10), "KNN-10"),
+        (KNN_SKLC(numNeighbors=15), "KNN-15"),
+        (KNN_SKLC(numNeighbors=20), "KNN-20"),
+        (KNN_SKLC(numNeighbors=25), "KNN-25"),
+        (SVM_SKLC(kernel="rbf"), "SVM-RBF"),
+        (SVM_SKLC(kernel="linear"), "SVM-LIN"),
+        (SVM_SKLC(kernel="poly"), "SVM-POLY"),
+        (SVM_SKLC(kernel="sigmoid"), "SVM-SIGM"),
+        (LR_SKLC(penalty=None), "LR-NOP"),
+        (LR_SKLC(penalty="l1"), "LR-L1"),
+        (LR_SKLC(penalty="l2"), "LR-L2"),
+        (LR_SKLC(penalty="elasticnet"), "LR-ELNET"),
+        (TPFN(), "TPFN"),
+        (XGB(), "XGB"),
+        (CAT(), "CAT"),
+        (LGBM(), "LGBM")
+    ]
 
 # Base class for link prediction
 class LPBase:
@@ -195,38 +231,7 @@ class SLPEval(LPBase):
 
 
     def init_classification_models(self):
-        self.models = [
-            (RF_SKLC(numEstimators=5), "RF-5"),
-            (RF_SKLC(numEstimators=10), "RF-10"),
-            (RF_SKLC(numEstimators=15), "RF-15"),
-            (RF_SKLC(numEstimators=20), "RF-20"),
-            (RF_SKLC(numEstimators=25), "RF-25"),
-            (RF_SKLC(numEstimators=50), "RF-50"),
-            (RF_SKLC(numEstimators=75), "RF-75"),
-            (RF_SKLC(numEstimators=100), "RF-100"),
-            (NB_SKLC(), "NB"),
-            (KNN_SKLC(numNeighbors=1), "KNN-1"),
-            (KNN_SKLC(numNeighbors=2), "KNN-2"),
-            (KNN_SKLC(numNeighbors=3), "KNN-3"),
-            (KNN_SKLC(numNeighbors=4), "KNN-4"),
-            (KNN_SKLC(numNeighbors=5), "KNN-5"),
-            (KNN_SKLC(numNeighbors=10), "KNN-10"),
-            (KNN_SKLC(numNeighbors=15), "KNN-15"),
-            (KNN_SKLC(numNeighbors=20), "KNN-20"),
-            (KNN_SKLC(numNeighbors=25), "KNN-25"),
-            (SVM_SKLC(kernel="rbf"), "SVM-RBF"),
-            (SVM_SKLC(kernel="linear"), "SVM-LIN"),
-            (SVM_SKLC(kernel="poly"), "SVM-POLY"),
-            (SVM_SKLC(kernel="sigmoid"), "SVM-SIGM"),
-            (LR_SKLC(penalty=None), "LR-NOP"),
-            (LR_SKLC(penalty="l1"), "LR-L1"),
-            (LR_SKLC(penalty="l2"), "LR-L2"),
-            (LR_SKLC(penalty="elasticnet"), "LR-ELNET"),
-            (TPFN(), "TPFN"),
-            (XGB(), "XGB"),
-            (CAT(), "CAT"),
-            (LGBM(), "LGBM")
-        ]
+        self.models = get_classification_models()
 
 
     def identify_positive_negative_examples(self):
@@ -453,3 +458,119 @@ class ULPEval(LPBase):
         print("EVALUATING DEEP-LID-TEMPORAL-WALK")
         self.lid_emb = create_embedding_lid(self.TAG, self.dataset_index)
         self.compute_sim_scores(self.lid_emb)
+
+
+# classification evaluation
+# ia-hospital-ward-proximity-attr    --> 5
+# ia-primary-school-proximity-attr   --> 6
+class CLEval:
+    def __init__(self, dataset_index, event_sequence):
+        self.dataset_index = dataset_index
+        self.models = get_classification_models()
+        self.TAG = TemporalAggregateGraph("TAG", event_sequence)
+        self.DAG = DynamicAggregateGraph("DAG", event_sequence, directed=False)
+
+        self.label_dict = {}
+        num_label_warns = 0
+        classes = set()
+
+        for e in event_sequence:
+            src, dst = e.src, e.dst
+            if (
+                e.event_data != None
+                and e.event_data["src_class"] != None
+                and e.event_data["dst_class"] != None
+            ):
+                src_label = e.event_data["src_class"]
+                dst_label = e.event_data["dst_class"]
+
+                classes.add(src_label)
+                classes.add(dst_label)
+                
+                if src in self.label_dict:
+                    old_src_label = self.label_dict[src]
+                    if src_label != old_src_label:
+                        print("[Warning, label]", src, old_src_label, src_label)
+                        num_label_warns += 1
+
+                if dst in self.label_dict:
+                    old_dst_label = self.label_dict[dst]
+                    if dst_label != old_dst_label:
+                        print("[Warning, label]", dst, old_dst_label, dst_label)
+                        num_label_warns += 1
+                    
+                self.label_dict[src] = e.event_data["src_class"]
+                self.label_dict[dst] = e.event_data["dst_class"]
+
+        print("# labeled nodes", len(self.label_dict))
+        print("# events", event_sequence.num_events())
+        print("# TAG nodes", self.TAG.G.number_of_nodes())
+        print("# DAG nodes", self.DAG.G.number_of_nodes())
+        print("# label warnings", num_label_warns)
+        print("# classes", classes)
+
+    def make_ml_data(self, embedding):
+        node_ids = embedding.get_node_ids()
+        self.node_vectors = [embedding[node_id] for node_id in node_ids]
+        self.labels = [self.label_dict[node_id] for node_id in node_ids]
+
+    def train_and_evaluate_classifiers(self):
+        best_f1, best_f1_cl, best_f1_prec, best_f1_rec = 0, None, 0, 0
+        
+        print("MODEL, ACC, F1, PREC, REC")
+        print(len(self.models))
+        
+        for model in self.models:
+            try:
+                sk_model = model[0]
+                model_name = model[1]
+            
+                #f1, acc, prec, rec, pos_prec, pos_rec, neg_prec, neg_rec = sk_model.evaluate_binarycl(
+                #        self.training_X, self.training_y, self.test_X, self.test_y
+                #    )
+
+                acc, prec, rec, f1 = sk_model.evaluate_kfold_cv(self.node_vectors, self.labels, n_splits=5)
+        
+                if f1 > best_f1:
+                    best_f1 = f1
+                    best_f1_cl = model_name
+                    best_f1_prec = prec
+                    best_f1_rec = rec
+        
+                s = model_name + ","
+                s += str(round(acc, 4)) + ","
+                s += str(round(f1, 4)) + ","
+                s += str(round(prec, 4)) + ","
+                s += str(round(rec, 4))
+                
+                print(s)
+            except ValueError:
+                pass
+    
+        print("BEST")
+        print(best_f1, best_f1_cl)
+        return best_f1, best_f1_prec, best_f1_rec, best_f1_cl
+
+    def eval(self):
+        print("EVALUATING CTDNE")
+        self.ctdne_emb = create_embedding_ctdne(self.DAG, self.dataset_index)
+        self.make_ml_data(self.ctdne_emb)
+        self.train_and_evaluate_classifiers()
+    
+        print()
+        print("EVALUATING DEEP-TEMPORAL-WALK")
+        self.baseline_emb = create_embedding_baseline(self.TAG, self.dataset_index)
+        self.make_ml_data(self.baseline_emb)
+        self.train_and_evaluate_classifiers()
+    
+        print()
+        print("EVALUATING DEEP-HUB-TEMPORAL-WALK")
+        self.hub_emb = create_embedding_hub(self.TAG, self.dataset_index)
+        self.make_ml_data(self.hub_emb)
+        self.train_and_evaluate_classifiers()
+    
+        print()
+        print("EVALUATING DEEP-LID-TEMPORAL-WALK")
+        self.lid_emb = create_embedding_lid(self.TAG, self.dataset_index)
+        self.make_ml_data(self.lid_emb)
+        self.train_and_evaluate_classifiers()
