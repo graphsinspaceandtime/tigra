@@ -10,7 +10,7 @@ sys.dont_write_bytecode = True
 from data.bank import Databank
 from tigra.core.loaders import load_event_sequence
 
-from tigra.evaluation.trw_eval import SLPEval, ULPEval, CLEval
+from tigra.evaluation.trw_eval import SLPEval, ULPEval, CLEval, ClusteringEval
 
 import random 
 import numpy as np
@@ -46,7 +46,19 @@ def test_cl(index):
     cle = CLEval(index, es)
     cle.eval()
 
+def test_clustering(index):
+    dataset_name = datasets[index]
+    print("Clustering evaluation ", dataset_name)
+    es, _ = load_event_sequence(dataset_name)
+
+    cle = ClusteringEval(index, es)
+    cle.eval()
+
+
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
-    test_cl(5)
+
+    test_clustering(0)
+
+    #test_cl(5)

@@ -26,6 +26,14 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 from networkx.algorithms.link_prediction import jaccard_coefficient, adamic_adar_index
 
 
+from networkx.algorithms.community.quality import modularity
+from networkx.algorithms.community import louvain_communities
+
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+from kneed import KneeLocator
+
+
 # datasets
 # ['radoslaw-email', 'fb-forum', 'fb-messages', 'ia-contacts_hypertext2009', 'ia-enron-employees', 
 #  'ia-hospital-ward-proximity-attr', 'ia-primary-school-proximity-attr', 'ia-reality-call', 'CollegeMsg', 'email-Eu-core-temporal', 
@@ -574,3 +582,98 @@ class CLEval:
         self.lid_emb = create_embedding_lid(self.TAG, self.dataset_index)
         self.make_ml_data(self.lid_emb)
         self.train_and_evaluate_classifiers()
+
+
+# clustering evaluation
+class ClusteringEval:
+    def __init__(self, dataset_index, event_sequence):
+        self.dataset_index = dataset_index
+        self.TAG = TemporalAggregateGraph("TAG", event_sequence)
+
+        #lc_partition = louvain_communities(self.TAG.G)
+        #print("#communities", len(lc_partition))
+        #q = modularity(self.TAG.G, lc_partition)
+        #print("LOUV, Q", q)
+
+    def eval_kmeans(self, emb_base, emb_hub, emb_lid):
+        i_base, i_hub, i_lid = [], [], []
+
+        print("Silhouette score")
+        print("NUM-CLUSTERS,DEEP-TW,DEEP-HUB-TW,DEEP-LID-TW")
+        for num_clusters in range(2, 21):
+            node_ids = emb_base.get_node_ids()
+            node_vectors = np.array([emb_base[node] for node in node_ids])
+            km = KMeans(random_state=42, n_init="auto", n_clusters=num_clusters).fit(node_vectors)
+            labels = km.labels_
+            ss_base = silhouette_score(node_vectors, labels)
+            i_base.append(km.inertia_)
+
+            node_ids = emb_hub.get_node_ids()
+            node_vectors = np.array([emb_hub[node] for node in node_ids])
+            km = KMeans(random_state=42, n_init="auto", n_clusters=num_clusters).fit(node_vectors)
+            labels = km.labels_
+            ss_hub = silhouette_score(node_vectors, labels)
+            i_hub.append(km.inertia_)
+
+            node_ids = emb_lid.get_node_ids()
+            node_vectors = np.array([emb_lid[node] for node in node_ids])
+            km = KMeans(random_state=42, n_init="auto", n_clusters=num_clusters).fit(node_vectors)
+            labels = km.labels_
+            ss_lid = silhouette_score(node_vectors, labels)
+            i_lid.append(km.inertia_)
+
+            s = str(num_clusters) + "," + str(round(ss_base, 4)) + "," + str(round(ss_hub, 4)) + "," + str(round(ss_lid, 4))
+            print(s)
+
+        kl = KneeLocator(list(range(2, 21)), i_base, curve="convex", direction="decreasing")
+        print("BASE K", kl.elbow)
+
+        kl = KneeLocator(list(range(2, 21)), i_hub, curve="convex", direction="decreasing")
+        print("HUB K", kl.elbow)
+
+        kl = KneeLocator(list(range(2, 21)), i_lid, curve="convex", direction="decreasing")
+        print("LID K", kl.elbow)
+
+        print("Inertia")
+        print("NUM-CLUSTERS,DEEP-TW,DEEP-HUB-TW,DEEP-LID-TW")
+        for i in range(2, 21):
+            s = str(i) + "," + str(round(i_base[i - 2], 4)) + "," + str(round(i_hub[i - 2], 4)) + "," + str(round(i_lid[i - 2], 4))
+            print(s)
+
+
+    def eval(self):
+        baseline_emb = create_embedding_baseline(self.TAG, self.dataset_index)
+        hub_emb = create_embedding_hub(self.TAG, self.dataset_index)
+        lid_emb = create_embedding_lid(self.TAG, self.dataset_index)
+        self.eval_kmeans(baseline_emb, hub_emb, lid_emb)
+
+        
+        """
+        node_ids = self.baseline_emb.get_node_ids()
+        node_vectors = np.array([self.baseline_emb[node] for node in node_ids])
+
+        num_clusters = 2
+        for num_clusters in range(2, 15):
+            print(num_clusters)
+            km = KMeans(random_state=42, n_init="auto", n_clusters=num_clusters).fit(node_vectors)
+            labels = km.labels_
+            print(labels)
+            ss = silhouette_score(node_vectors, labels)
+            print("SS", ss)
+
+            partition = list()
+            for i in range(num_clusters):
+                partition.append(set())
+
+            for i in range(len(node_ids)):
+                nid = node_ids[i]
+                lab = labels[i]
+                partition[lab].add(nid)
+
+            q = modularity(self.TAG.G, partition)
+            print("Q", q)
+            print()
+        """
+
+        
+    
