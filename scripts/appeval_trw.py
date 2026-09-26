@@ -10,7 +10,7 @@ sys.dont_write_bytecode = True
 from data.bank import Databank
 from tigra.core.loaders import load_event_sequence
 
-from tigra.evaluation.trw_eval import SLPEval, ULPEval, CLEval, ClusteringEval
+from tigra.evaluation.trw_eval import SLPEval, ULPEval, CLEval, ClusteringEval, AnomEval
 
 import random 
 import numpy as np
@@ -54,11 +54,22 @@ def test_clustering(index):
     cle = ClusteringEval(index, es)
     cle.eval()
 
+def test_anom(index):
+    dataset_name = datasets[index]
+    print("Anomaly evaluation ", dataset_name)
+    es, _ = load_event_sequence(dataset_name)
+    
+    ae = AnomEval(index, es)
+    ae.eval()
+
 
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
 
-    test_clustering(0)
-
     #test_cl(5)
+    #test_slp(9)
+    #test_ulp(0)
+    #test_clustering(0)
+    
+    test_anom(9)

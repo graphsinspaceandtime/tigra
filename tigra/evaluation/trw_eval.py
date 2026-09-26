@@ -136,10 +136,10 @@ def get_classification_models():
         (LR_SKLC(penalty="l1"), "LR-L1"),
         (LR_SKLC(penalty="l2"), "LR-L2"),
         (LR_SKLC(penalty="elasticnet"), "LR-ELNET"),
-        (TPFN(), "TPFN"),
-        (XGB(), "XGB"),
-        (CAT(), "CAT"),
-        (LGBM(), "LGBM")
+        #(TPFN(), "TPFN"),
+        #(XGB(), "XGB"),
+        #(CAT(), "CAT"),
+        #(LGBM(), "LGBM")
     ]
 
 # Base class for link prediction
@@ -214,10 +214,10 @@ class SLPEval(LPBase):
 
 
     def eval(self):
-        print("EVALUATING CTDNE")
-        self.ctdne_emb = create_embedding_ctdne(self.DAG, self.dataset_index)
-        self.make_ml_data(self.ctdne_emb)
-        self.train_and_evaluate_classifiers()
+        #print("EVALUATING CTDNE")
+        #self.ctdne_emb = create_embedding_ctdne(self.DAG, self.dataset_index)
+        #self.make_ml_data(self.ctdne_emb)
+        #self.train_and_evaluate_classifiers()
 
         print()
         print("EVALUATING DEEP-TEMPORAL-WALK")
@@ -552,7 +552,7 @@ class CLEval:
                 s += str(round(rec, 4))
                 
                 print(s)
-            except ValueError:
+            except Exception:
                 pass
     
         print("BEST")
@@ -560,10 +560,10 @@ class CLEval:
         return best_f1, best_f1_prec, best_f1_rec, best_f1_cl
 
     def eval(self):
-        print("EVALUATING CTDNE")
-        self.ctdne_emb = create_embedding_ctdne(self.DAG, self.dataset_index)
-        self.make_ml_data(self.ctdne_emb)
-        self.train_and_evaluate_classifiers()
+        #print("EVALUATING CTDNE")
+        #self.ctdne_emb = create_embedding_ctdne(self.DAG, self.dataset_index)
+        #self.make_ml_data(self.ctdne_emb)
+        #self.train_and_evaluate_classifiers()
     
         print()
         print("EVALUATING DEEP-TEMPORAL-WALK")
@@ -675,5 +675,93 @@ class ClusteringEval:
             print()
         """
 
-        
+def js(list1, list2):
+    s1 = set(list1)
+    s2 = set(list2)
     
+    # Handle the empty set edge case to prevent ZeroDivisionError
+    if not s1 and not s2:
+        return 1.0
+        
+    actual_intersection = len(s1.intersection(s2))
+    actual_union = len(s1.union(s2))
+    
+    return actual_intersection / actual_union
+
+from sklearn.svm import OneClassSVM
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.ensemble import IsolationForest
+from sklearn.covariance import EllipticEnvelope
+
+class AnomEval:
+    def __init__(self, dataset_index, event_sequence):
+        self.dataset_index = dataset_index
+        self.TAG = TemporalAggregateGraph("TAG", event_sequence)
+
+    def detect_anomalies(self, emb):
+        node_ids = emb.get_node_ids()
+        node_vectors = np.array([emb[node] for node in node_ids])
+        clf = OneClassSVM(gamma='auto').fit(node_vectors)
+        oc_outliers = clf.predict(node_vectors)
+        #print(oc_outliers)
+
+        clf = LocalOutlierFactor(contamination=0.05)
+        lof_outliers = clf.fit_predict(node_vectors)
+        #print(lof_outliers)
+
+        clf = IsolationForest(random_state=0, contamination=0.05).fit(node_vectors)
+        if_outliers = clf.predict(node_vectors)
+        #print(if_outliers)
+
+        cov = EllipticEnvelope(random_state=0, contamination=0.05).fit(node_vectors)
+        ee_outliers = cov.predict(node_vectors)
+
+        strong_evidence, medium_evidence = [], []
+
+        print(len(node_ids))
+        for i in range(len(node_ids)):
+            node_id = node_ids[i]
+            a1 = 1 if oc_outliers[i] == -1 else 0
+            a2 = 1 if lof_outliers[i] == -1 else 0
+            a3 = 1 if if_outliers[i] == -1 else 0
+            a4 = 1 if ee_outliers[i] == -1 else 0
+
+            score = a1 + a2 + a3 + a4
+
+            if score == 4:
+                strong_evidence.append(node_id)
+            elif score == 3:
+                medium_evidence.append(node_id)
+
+        return strong_evidence
+
+
+    def eval(self):
+        baseline_emb = create_embedding_baseline(self.TAG, self.dataset_index)
+        hub_emb = create_embedding_hub(self.TAG, self.dataset_index)
+        lid_emb = create_embedding_lid(self.TAG, self.dataset_index)
+
+        nodes = self.TAG.G.number_of_nodes()
+
+        #print("DEEP-TW")
+        s1 = self.detect_anomalies(baseline_emb)
+        #print(len(s1))
+        #print(s1)
+
+        #print("DEEP-HUB-TW")
+        s2 = self.detect_anomalies(hub_emb)
+        #print(len(s2))
+        #print(s2)
+
+        #print("DEEP-LID-TW")
+        s3 = self.detect_anomalies(lid_emb)
+        #print(len(s3))
+        #print(s3)
+
+        j12, j13, j23 = js(s1, s2), js(s1, s3), js(s2, s3)
+
+        #print(len(s1), len(s2), len(s3), j12, j13, j23)
+        
+        s = str(nodes) + "," + str(len(s1)) + "," + str(len(s2)) + "," + str(len(s3)) + ","
+        s += str(round(j12, 4)) + "," + str(round(j13, 4)) + "," + str(round(j23, 4))
+        print(s)
