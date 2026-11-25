@@ -1,132 +1,263 @@
-# TIGRA
+<p align="center">
+  <img src="https://tigraphs.pmf.uns.ac.rs/wp-content/uploads/2023/12/cropped-tigar-logo-final-3.png" alt="TIGRA logo" width="140">
+</p>
 
-> Graphs in Space and Time : Graph Embeddings for Machine Learning in Complex
-> Dynamical Systems
+<h1 align="center">TIGRA</h1>
 
-Tigra software library
+<p align="center">
+  <b>Graphs in Space and Time: Graph Embeddings for Machine Learning in Complex Dynamical Systems</b>
+</p>
 
-TODO:
-- autori
-- uputstva za condu
-- tutorijali
-- etc.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache-2.0"></a>
+  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12">
+  <a href="https://tigraphs.pmf.uns.ac.rs/"><img src="https://img.shields.io/badge/project-website-green.svg" alt="Project website"></a>
+</p>
 
-## Downloading datasets
+TIGRA is a Python library for **learning, evaluating and applying node embeddings
+of dynamic (temporal) graphs**. It turns a stream of timestamped interactions
+into a sequence of graph snapshots, embeds each snapshot with one of many
+dynamic embedding methods, and evaluates the embeddings on downstream tasks
+such as link prediction, node classification, clustering, diffusion prediction
+and anomaly detection.
 
-The datasets are not stored inside the git repository since they are quite
-large. They can however be downloaded using a simple bash script
-[get_datasets.sh](data/get_datasets.sh). You can run it using the `bash`
-command.
+
+
+## Features
+
+**Dynamic graph core** (`tigra.core`)
+- `EventSequence` / `Event`: timestamped interaction streams
+- `DynamicGraph`: snapshot sequences built from events at a chosen time
+  resolution (day, week, month, 3/6 months, year), optionally cumulative
+- Graph reconstruction evaluation
+
+**Embedding methods** (`tigra.embeddings`)
+
+| Family | Methods |
+|---|---|
+| Random-walk baselines | `DynDeepWalk`, `DynN2V` (dynamic node2vec) |
+| Hubness-aware walks | `HubRandomWalk`, `DynDeepHubWalk` |
+| LID-aware walks | `DynN2V_LIDRW`, `DynN2V_LIDDelta`, `DynN2V_NWLID`, `DynN2V_PQLID`, `DynDeepLIDWalk` |
+| Reinforcement learning | `DynRLWalk` (multi-armed bandit walk sampler) |
+| Graph autoencoders | `BasicDynAE`, `HubDynAE`, `LIDDynAE`, `DistanceDynAE`, `HubDistanceDynAE`, `LIDDistanceDynAE` |
+| State-of-the-art wrappers | CTDNE, dynnode2vec, STWalk, DynGEM, DynAE, DynRNN, DynAERNN, TIMERS (via CTGCN) |
+
+Hyperparameter tuning helpers are in `tigra.embeddings.hypertuner` and
+`tigra.embeddings.de_hypertuner`.
+
+**Evaluation and applications** (`tigra.evaluation`)
+- Link prediction (dot product, cosine, L1/L2, Hadamard, concatenation features)
+- Node classification (scikit-learn, boosting, PyTorch MLP, TabPFN back-ends)
+- Clustering
+- Diffusion (SI process) prediction
+- Anomaly detection
+- Hubness and LID analysis of embedding spaces
+
+**Synthetic generators** (`tigra.generators`)
+- Dynamic Barabási-Albert (DBA), dynamic Erdős-Rényi (DER), (dynamic) stochastic
+  block models (SBM, DSBM, SBTM)
+
+---
+
+## Installation
+
+TIGRA is developed and tested on **Linux with Python 3.12** and uses
+[Conda](https://docs.conda.io/) for dependency management.
 
 ```sh
-cd data
-bash get_datasets.sh
+git clone https://github.com/graphsinspaceandtime/tigra.git
+cd tigra
+
+conda env create -f environment.tigranew.yml
+conda activate tigranew
+
+pip install -r requirements.txt
+pip install -e .
 ```
 
-This scripts depends on `curl` command so make sure it's installed on your
-system.
+To update the environment after `environment.tigranew.yml` changes:
 
-## Set up Conda environment
+```sh
+conda env update -f environment.tigranew.yml
+```
 
-### Install Conda
+<details>
+<summary><b>Machine-specific settings (optional)</b></summary>
 
-Only Linux distributions are documented here since they are a bit difficult to
-handle. Windows and macOS should be straight forward if you follow the Conda
-[installation documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
+Machine-specific environment variables (e.g. the number of CPUs) can be kept in
+a local, git-ignored `local.yaml`. Copy the example and apply it:
 
-#### Ubuntu
+```sh
+cp local.example.yaml local.yaml   # edit as needed
+conda env update -f local.yaml
+```
+</details>
+
+<details>
+<summary><b>Other environments</b></summary>
+
+Some libraries are hard to install together, so separate environments are
+provided:
+
+| Environment | File | Notes |
+|---|---|---|
+| Main | `environment.tigranew.yml` | Recommended |
+| PyTorch Geometric Temporal | `environment.torch_geometric_temporal.yaml` | For PyG Temporal baselines |
+| Windows | `win-environment.yaml` | Not regularly tested |
+
+> **Note:** the `dynnode2vec` package only supports Python ≤ 3.8. Use a
+> separate Python 3.8 environment if you need the `Dynnode2vec` wrapper.
+</details>
+
+<details>
+<summary><b>Installing Conda on Linux</b></summary>
+
+Ubuntu:
 
 ```sh
 curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
-echo 'export PATH="$PATH:$HOME/miniconda3/condabin"' | tee -a $HOME/.bash_profile
+conda init   # then restart the shell
 ```
 
-#### Fedora
+Fedora:
 
 ```sh
 sudo dnf install conda
-```
-
-### Configure Conda environment
-
-Initialize Conda for shell interaction. This is requred before doing any of the
-following steps. It is recommended to restart the shell session (terminal
-application) before moving on to the next step.
-
-```sh
 conda init
 ```
 
-Create the preconfigured environment for the TIGRA library. It contains most of
-the required libraries for testing and usage of all TIGRA software.
+To stop the `base` environment from activating automatically:
+`conda config --set auto_activate_base false`.
+</details>
+
+---
+
+## Datasets
+
+Datasets are **not** stored in the repository. Download them with:
 
 ```sh
-conda env create -f environment.tigranew.yaml
+cd data
+bash get_datasets.sh        # Linux / macOS (requires curl)
+# or, on Windows:
+# powershell -File get_datasets.ps1
 ```
 
-If environment configuration sometimes changes, the created environment should
-be updated accordingly. The following command does that. It is not required to
-execute the command all the time, only when the yaml file changes.
+This fetches the following temporal networks into `data/`:
 
-```sh
-conda env update -f environment.tigranew.yaml
+| Source | Datasets |
+|---|---|
+| [Network Repository](https://networkrepository.com/) | `radoslaw-email`, `fb-forum`, `fb-messages`, `ia-contacts_hypertext2009`, `ia-enron-employees`, `ia-hospital-ward-proximity-attr`, `ia-primary-school-proximity-attr`, `ia-reality-call` |
+| [SNAP](https://snap.stanford.edu/data/#temporal) | `CollegeMsg`, `email-Eu-core-temporal`, `sx-askubuntu`, `sx-mathoverflow`, `sx-superuser`, `wiki-talk-temporal` |
+| Synthetic (included) | `synthetic-dba`, `synthetic-dbac`, `synthetic-der`, `synthetic-dpp` |
+
+
+---
+
+## Quick start
+
+Run from the repository root, so that both `tigra` and the `data` package can be
+imported:
+
+```python
+from tigra.core.loaders import load_event_sequence
+from tigra.core.dgraph import DynamicGraph
+from tigra.core.greval import GraphReconstructionEval
+from tigra.embeddings.rndw.rndwbase import DynN2V
+from tigra.embeddings.rndw.rlwalk import DynRLWalk
+
+# 1. Load a temporal network as a sequence of timestamped events
+events, resolution = load_event_sequence("radoslaw-email")
+print("events:", events.num_events(), "| days:", events.get_timespan_in_days())
+
+# 2. Build a sequence of graph snapshots
+dg = DynamicGraph()
+dg.init_from_event_sequence(events, time_resolution=resolution, directed=False)
+dg.info()
+
+# 3. Embed every snapshot
+model = DynRLWalk(dim=128, epsilon=0.1, alpha=0.1)  # or DynN2V(128, 1, 1), ...
+model.make_embedding(dg)
+
+# 4. Evaluate, e.g. graph reconstruction per snapshot
+for t, graph in enumerate(dg.get_graph_sequence()):
+    ev = GraphReconstructionEval(graph, model[t])
+    print(f"snapshot {t}: F1 = {ev.getF1():.3f}")
+
+# 5. Save embeddings (one .emb file per snapshot)
+model.save_embedding("embeddings/radoslaw-email/DynRLWalk")
 ```
 
-There is also an option to add machine specific configuration of the
-environment such as some variables. This will allows easier maintanance and
-configuration between machines with different hardware specifications. In this
-repository it is a convention to use the `local.yaml` configuration file for
-that. An example of such file is available in [local.example.yaml](./local.example.yaml)
-file. It can be applied by updating the created environment.
+More complete examples are in `tests/` and `scripts/`.
 
-```sh
-conda env update -f local.yaml
+---
+
+## Repository structure
+
+```
+tigra/
+├── core/          # Event sequences, dynamic graphs, loaders, reconstruction eval
+├── data/          # Data loading utilities
+├── embeddings/
+│   ├── rndw/      # Random-walk methods (DeepWalk, node2vec, hubness, LID, RL, hybrid)
+│   ├── ae/        # Dynamic graph autoencoders
+│   └── sota/      # Wrappers around state-of-the-art methods
+├── evaluation/    # Link prediction, classification, clustering, diffusion, anomalies, hubness, LID
+└── generators/    # Synthetic dynamic graph generators
+data/              # Dataset download scripts and the Databank loader
+configs/           # Experiment / hyperparameter configurations
+tests/             # Tests and example experiment scripts
+scripts/           # Experiment scripts
 ```
 
-Activate the conda environment. This configures shell parameters to use packages
-and libraries that are installed in the environment.
 
-```sh
-conda activate tigra
-```
+---
 
-Install remaining packages which are not available in PyPl repositores. Do this
-only once you're in the conda environment.
+## Authors
 
-```sh
-pip install -r requirements.txt
-```
 
-Also needed for developent (for using tigra as a global package inside the
-module itself) you will need to install the module as an editable with pip. To
-do this, run the following command in the root of the repository.
+TIGRA is developed at the Faculty of Sciences, University of Novi Sad, Serbia.
 
-```sh
-pip install -e .
-```
+- Miloš Radovanović
+- Vladimir Kurbalija
+- Miloš Stojaković
+- Mirjana Ivanović
+- Miloš Savić
+- Marko Savić
+- Dušica Knežević
+- Aleksandar Tomčić
+- Jela Babić
+- Dušan Simić
 
-When you're done working with the software, you can exit the environment by
-deactivating it.
+Contributions are welcome. Please open an issue or a pull request.
 
-```sh
-conda deactivate
-```
+---
 
-### Other environments
+## Acknowledgements
 
-There are some other conda environments which are used for libraries that are
-hard to configure with other environments. To activate them, run the same
-commands for creating, updating, activating and deactivating as for the main
-environment but with a different file specified.
+This work was supported by the Science Fund of the Republic of Serbia,
+project TIGRA (*Graphs in Space and Time: Graph Embeddings for Machine Learning
+in Complex Dynamical Systems*), grant no. #7462.
 
-| Environment                | File                                                                                   |
-|----------------------------|----------------------------------------------------------------------------------------|
-| PyTorch Geometric Temporal | [environment.torch_geometric_temporal.yaml](environment.torch_geometric_temporal.yaml) |
 
-### Conda FAQ
+---
 
-1. Q: There is `base` in the shell (terminal) prompt after I install conda.
+## Third-party code
 
-   A: This is the base environment in conda which is automatically activated.
-      Automatic activation can be disabled. https://stackoverflow.com/a/57642532
+TIGRA includes code adapted from the following MIT-licensed projects. Their
+original license notices are kept in the corresponding directories:
+
+| Component | Location | Upstream |
+|---|---|---|
+| CTGCN (and its DynGEM / DynAE / DynRNN / DynAERNN / TIMERS baselines) | `tigra/embeddings/sota/CTGCN/` | [jhljx/CTGCN](https://github.com/jhljx/CTGCN) |
+| CTDNE | `tigra/embeddings/sota/ctdnesrc/` | [urielsinger/CTDNE](https://github.com/urielsinger/CTDNE) |
+| STWalk | `tigra/embeddings/sota/stwalk.py` | [supriya-gdptl/STWalk](https://github.com/supriya-gdptl/STWalk) |
+
+---
+
+## License
+
+TIGRA is released under the [Apache License 2.0](LICENSE). 
+
+Copyright © 2023–2026 The TIGRA authors.
