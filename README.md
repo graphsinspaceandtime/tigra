@@ -237,7 +237,7 @@ Contributions are welcome. Please open an issue or a pull request.
 ## Acknowledgements
 
 This work was supported by the Science Fund of the Republic of Serbia,
-project TIGRA (*Graphs in Space and Time: Graph Embeddings for Machine Learning
+<a href="https://tigraphs.net/">project TIGRA</a> (*Graphs in Space and Time: Graph Embeddings for Machine Learning
 in Complex Dynamical Systems*), grant no. #7462.
 
 
