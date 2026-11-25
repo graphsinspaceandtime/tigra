@@ -11,7 +11,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache-2.0"></a>
   <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12">
-  <a href="https://tigraphs.pmf.uns.ac.rs/"><img src="https://img.shields.io/badge/project-website-green.svg" alt="Project website"></a>
+  <a href="https://tigraphs.net/"><img src="https://img.shields.io/badge/project-website-green.svg" alt="Project website"></a>
 </p>
 
 TIGRA is a Python library for **learning, evaluating and applying node embeddings
@@ -19,7 +19,7 @@ of dynamic (temporal) graphs**. It turns a stream of timestamped interactions
 into a sequence of graph snapshots, embeds each snapshot with one of many
 dynamic embedding methods, and evaluates the embeddings on downstream tasks
 such as link prediction, node classification, clustering, diffusion prediction
-and anomaly detection.
+and anomaly detection. Project website: https://tigraphs.net/
 
 
 
